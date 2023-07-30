@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+apply from: "maven-publish.gradle"
+
 android {
     // http://tools.android.com/tech-docs/new-build-system/tips
     //noinspection GroovyAssignabilityCheck

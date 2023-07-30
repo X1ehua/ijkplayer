@@ -1,0 +1,31 @@
+apply plugin: 'maven-publish'
+
+def RELEASE_REPOSITORY_URL = "http://???.com/maven-repo"
+def REPO_USERNAME = "admin"
+def REPO_PASSWORD = "123ABC"
+
+afterEvaluate {
+    publishing {
+        /*
+        repositories {
+            maven {
+                allowInsecureProtocol(true)
+                name("rainbowengine")
+                url = RELEASE_REPOSITORY_URL
+                credentials {
+                    username = REPO_USERNAME
+                    password = REPO_PASSWORD
+                }
+            }
+        }
+        */
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'tv.danmaku.ijk.media' // :ijkplayer-java
+                artifactId = POM_ARTIFACT_ID
+                version = VERSION_NAME
+            }
+        }
+    }
+}
