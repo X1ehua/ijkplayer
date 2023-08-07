@@ -78,6 +78,7 @@ static GLboolean yuv420p_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_VoutOve
             return GL_FALSE;
     }
 
+    // HUAWEI AR 也使用此格式
     for (int i = 0; i < 3; ++i) {
         int plane = planes[i];
 

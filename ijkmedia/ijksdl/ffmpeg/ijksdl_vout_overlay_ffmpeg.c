@@ -43,7 +43,7 @@ struct SDL_VoutOverlay_Opaque {
 
     AVFrame *linked_frame;
 
-    Uint16 pitches[AV_NUM_DATA_POINTERS];
+    Uint16 pitches[AV_NUM_DATA_POINTERS]; // 8, defined in libavutil/frame.h
     Uint8 *pixels[AV_NUM_DATA_POINTERS];
 
     int no_neon_warned;
@@ -207,6 +207,12 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
             return -1;
     }
 
+    // debug
+    static bool logged = false;
+    if (!logged) {
+        ALOGE(">>> func_fill_frame(): use_linked_frame %d", (int)use_linked_frame);
+        logged = true;
+    }
 
     // setup frame
     if (use_linked_frame) {
@@ -345,7 +351,7 @@ SDL_VoutOverlay *SDL_VoutFFmpeg_CreateOverlay(int width, int height, int frame_f
         if (width > 0)
             buf_width = 1 << (sizeof(int) * 8 - __builtin_clz(width));
 #else
-        buf_width = IJKALIGN(width, 16); // unknown platform
+        buf_width = IJKALIGN(width, 16); // unknown platform, same as Android
 #endif
         opaque->planes = 3;
         break;

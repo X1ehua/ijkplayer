@@ -44,7 +44,7 @@ typedef struct SDL_VoutOverlay_Opaque {
 
     SDL_AMediaCodecBufferProxy *buffer_proxy;
 
-    Uint16 pitches[AV_NUM_DATA_POINTERS];
+    Uint16 pitches[AV_NUM_DATA_POINTERS]; // 8, defined in libavutil/frame.h
     Uint8 *pixels[AV_NUM_DATA_POINTERS];
 } SDL_VoutOverlay_Opaque;
 
@@ -128,6 +128,12 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
     overlay->pitches[0] = 0;
     overlay->pitches[1] = 0;
     overlay->is_private = 1;
+
+    static bool logged = false;
+    if (!logged) {
+        LOGE(">>> func_fill_frame() in ijksdk_vout_overlay_android_mediacodec.c invoked!");
+        logged = true;
+    }
 
     overlay->w = (int)frame->width;
     overlay->h = (int)frame->height;

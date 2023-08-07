@@ -1499,6 +1499,11 @@ static int drain_output_buffer2(JNIEnv *env, IJKFF_Pipenode *node, int64_t timeU
                 }
             }
         }
+        static bool logged = false;
+        if (!logged) {
+            LOGE(">>> ffp_queue_picture() #1 %s:%d", __FILE__, __LINE__);
+            logged = true;
+        }
         ret = ffp_queue_picture(ffp, frame, pts, duration, av_frame_get_pkt_pos(frame), is->viddec.pkt_serial);
         if (ret) {
             if (frame->opaque)
@@ -1639,6 +1644,10 @@ static int func_run_sync(IJKFF_Pipenode *node)
                         }
                     }
                 }
+            }
+            if (!logged) {
+                LOGE(">>> ffp_queue_picture() #2 %s:%d", __FILE__, __LINE__);
+                logged = true;
             }
             ret = ffp_queue_picture(ffp, frame, pts, duration, av_frame_get_pkt_pos(frame), is->viddec.pkt_serial);
             if (ret) {
