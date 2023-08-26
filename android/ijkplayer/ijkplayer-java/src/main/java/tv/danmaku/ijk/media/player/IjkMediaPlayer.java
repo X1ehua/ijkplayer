@@ -41,6 +41,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
@@ -48,7 +49,9 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.security.InvalidParameterException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
@@ -66,7 +69,8 @@ import tv.danmaku.ijk.media.player.pragma.DebugLog;
  *         Java wrapper of ffplay.
  */
 public final class IjkMediaPlayer extends AbstractMediaPlayer {
-    private final static String TAG = IjkMediaPlayer.class.getName();
+    //private final static String TAG = IjkMediaPlayer.class.getName();
+    private final static String TAG = "IjkMediaPlayer";
 
     private static final int MEDIA_NOP = 0; // interface test message
     private static final int MEDIA_PREPARED = 1;
@@ -1029,7 +1033,8 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
                         DebugLog.i(TAG, "Info: MEDIA_INFO_VIDEO_RENDERING_START\n");
                         break;
                 }
-                player.notifyOnInfo(msg.arg1, msg.arg2);
+                Log.e("IJKMEDIA", "MEDIA_INFO skipped");
+                //player.notifyOnInfo(msg.arg1, msg.arg2);
                 // No real default action so far.
                 return;
             case MEDIA_TIMED_TEXT:
@@ -1078,6 +1083,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         if (what == MEDIA_INFO && arg1 == MEDIA_INFO_STARTED_AS_NEXT) {
             // this acquires the wakelock if needed, and sets the client side
             // state
+            Log.w("IJKMEDIA", ">>>>>> mp.start()");
             mp.start();
         }
         if (mp.mEventHandler != null) {
@@ -1231,9 +1237,10 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
             Log.i(TAG, String.format(Locale.US, "onSelectCodec: mime=%s, profile=%d, level=%d", mimeType, profile, level));
             ArrayList<IjkMediaCodecInfo> candidateCodecList = new ArrayList<IjkMediaCodecInfo>();
             int numCodecs = MediaCodecList.getCodecCount();
+            Log.d(TAG, String.format(Locale.US, "%d codecs found", numCodecs));
             for (int i = 0; i < numCodecs; i++) {
                 MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
-                Log.d(TAG, String.format(Locale.US, "  found codec: %s", codecInfo.getName()));
+                //Log.d(TAG, String.format(Locale.US, "  found codec: %s", codecInfo.getName()));
                 if (codecInfo.isEncoder())
                     continue;
 
@@ -1284,4 +1291,25 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public static native void native_profileBegin(String libName);
     public static native void native_profileEnd();
     public static native void native_setLogLevel(int level);
+
+    public native int native_startRecord(String file);
+    public native int native_stopRecord();
+
+    public void startRecord() {
+        String dt = new SimpleDateFormat("MMdd-HHmmss").format(new Date());
+        // /data/data/org.dync.ijkplayer
+        String videoPath = "/sdcard/Movies/CCLive-" + dt + ".mp4";
+        int ret = native_startRecord(videoPath);
+        if (ret != 0) {
+            //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
+            Log.e("ijk", ">> native_startRecord() failed: " + ret);
+        }
+    }
+
+    public void stopRecord() {
+        int ret = native_stopRecord();
+        if (ret != 0) {
+            Log.e("ijk", ">> native_stopRecord() failed: " + ret);
+        }
+    }
 }

@@ -561,7 +561,7 @@ LABEL_RETURN:
 static void
 IjkMediaPlayer_setOptionLong(JNIEnv *env, jobject thiz, jint category, jobject name, jlong value)
 {
-    MPTRACE("%s\n", __func__);
+    //MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     const char *c_name = NULL;
     JNI_CHECK_GOTO(mp, env, "java/lang/IllegalStateException", "mpjni: setOptionLong: null mp", LABEL_RETURN);
@@ -749,6 +749,7 @@ IjkMediaPlayer_native_init(JNIEnv *env)
 static void
 IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this)
 {
+    ALOGE(">>> IjkMediaPlayer_native_setup() #1");
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = ijkmp_android_create(message_loop);
     JNI_CHECK_GOTO(mp, env, "java/lang/OutOfMemoryError", "mpjni: native_setup: ijkmp_create() failed", LABEL_RETURN);
@@ -893,20 +894,28 @@ inline static void post_event2(JNIEnv *env, jobject weak_this, int what, int arg
     // MPTRACE("post_event2()=void");
 }
 
+static int counter = 0;
+
 static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
 {
     jobject weak_thiz = (jobject) ijkmp_get_weak_thiz(mp);
     JNI_CHECK_GOTO(weak_thiz, env, NULL, "mpjni: message_loop_n: null weak_thiz", LABEL_RETURN);
 
-    while (1) {
+    if (counter++ == 1) {
+        ALOGE(">> message_loop_n() #1");
+    }
+
+    while (1) { // 两次 loop 之间约 0.5 ~ 0.61 秒
         AVMessage msg;
 
         int retval = ijkmp_get_msg(mp, &msg, 1);
+        // ALOGE(">> message_loop_n() #2: %d", retval);
         if (retval < 0)
             break;
 
         // block-get should never return 0
         assert(retval > 0);
+        // ALOGW(">> message_loop_n() #3: %d %d", counter, msg.what);
 
         switch (msg.what) {
         case FFP_MSG_FLUSH:
@@ -942,7 +951,7 @@ static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_AUDIO_RENDERING_START, 0);
             break;
         case FFP_MSG_VIDEO_ROTATION_CHANGED:
-            MPTRACE("FFP_MSG_VIDEO_ROTATION_CHANGED: %d\n", msg.arg1);
+            MPTRACE(">> FFP_MSG_VIDEO_ROTATION_CHANGED: %d\n", msg.arg1);
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_VIDEO_ROTATION_CHANGED, msg.arg1);
             break;
         case FFP_MSG_AUDIO_DECODED_START:
@@ -1032,7 +1041,7 @@ LABEL_RETURN:
 
 static int message_loop(void *arg)
 {
-    MPTRACE("%s\n", __func__);
+    MPTRACE(">>> %s\n", __func__);
 
     JNIEnv *env = NULL;
     if (JNI_OK != SDL_JNI_SetupThreadEnv(&env)) {
@@ -1127,8 +1136,33 @@ LABEL_RETURN:
     return;
 }
 
+static jint
+IjkMediaPlayer_native_startRecord(JNIEnv* env, jobject thiz, jstring path)
+{
+    jint retval = 0;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: startRecord: null mp", LABEL_RETURN);
+    const char *nativeString = (*env)->GetStringUTFChars(env, path, 0);
+    retval = ijkmp_start_record(mp, nativeString);
 
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return retval;
+}
 
+static jint
+IjkMediaPlayer_native_stopRecord(JNIEnv *env, jobject thiz)
+{
+    jint retval = 0;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: stopRecord: null mp", LABEL_RETURN);
+
+    retval = ijkmp_stop_record(mp);
+
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return retval;
+}
 
 
 // ----------------------------------------------------------------------------
@@ -1180,6 +1214,9 @@ static JNINativeMethod g_methods[] = {
 
     { "native_setLogLevel",     "(I)V",                     (void *) IjkMediaPlayer_native_setLogLevel },
     { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V", (void *) IjkMediaPlayer_setFrameAtTime },
+
+    { "native_startRecord",     "(Ljava/lang/String;)I",    (void *) IjkMediaPlayer_native_startRecord},
+    { "native_stopRecord",      "()I",                      (void *) IjkMediaPlayer_native_stopRecord},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)

@@ -93,7 +93,7 @@ static GLboolean rgb565_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_VoutOver
 
 IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_rgb565()
 {
-    ALOGI("create render rgb565\n");
+    ALOGI(">> create render rgb565\n");
     IJK_GLES2_Renderer *renderer = IJK_GLES2_Renderer_create_base(IJK_GLES2_getFragmentShader_rgb());
     if (!renderer)
         goto fail;
@@ -159,7 +159,7 @@ static GLboolean rgb888_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_VoutOver
 
 IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_rgb888()
 {
-    ALOGI("create render rgb888\n");
+    ALOGI(">> create render rgb888\n");
     IJK_GLES2_Renderer *renderer = IJK_GLES2_Renderer_create_base(IJK_GLES2_getFragmentShader_rgb());
     if (!renderer)
         goto fail;
@@ -225,7 +225,7 @@ static GLboolean rgbx8888_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_VoutOv
 
 IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_rgbx8888()
 {
-    ALOGI("create render rgbx8888\n");
+    ALOGI(">> create render rgbx8888\n");
     IJK_GLES2_Renderer *renderer = IJK_GLES2_Renderer_create_base(IJK_GLES2_getFragmentShader_rgb());
     if (!renderer)
         goto fail;

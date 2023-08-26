@@ -162,6 +162,9 @@ IJK_GLES2_Renderer *IJK_GLES2_Renderer_create(SDL_VoutOverlay *overlay)
     IJK_GLES2_printString("Renderer", GL_RENDERER);
     IJK_GLES2_printString("Extensions", GL_EXTENSIONS);
 
+    ALOGW(">> overlay->format: 0x%x", overlay->format);
+    ALOGW(">> SDL_FCC_RV32: 0x%x", SDL_FCC_RV32);
+
     IJK_GLES2_Renderer *renderer = NULL;
     switch (overlay->format) {
         case SDL_FCC_RV16:      renderer = IJK_GLES2_Renderer_create_rgb565(); break;

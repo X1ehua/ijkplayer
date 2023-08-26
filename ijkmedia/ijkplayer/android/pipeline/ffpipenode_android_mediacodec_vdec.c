@@ -175,7 +175,9 @@ static int recreate_format_l(JNIEnv *env, IJKFF_Pipenode *node)
     FFPlayer              *ffp            = opaque->ffp;
     int                    rotate_degrees = 0;
 
-    ALOGI("AMediaFormat: %s, %dx%d\n", opaque->mcc.mime_type, opaque->codecpar->width, opaque->codecpar->height);
+    // [reached] AMediaFormat: video/avc, 320x180
+    ALOGI(">> AMediaFormat: %s, %dx%d, codec_id %d [AV_CODEC_ID_H264 %d]\n", opaque->mcc.mime_type,
+        opaque->codecpar->width, opaque->codecpar->height, opaque->codecpar->codec_id, AV_CODEC_ID_H264);
     SDL_AMediaFormat_deleteP(&opaque->output_aformat);
     opaque->input_aformat = SDL_AMediaFormatJava_createVideoFormat(env, opaque->mcc.mime_type, opaque->codecpar->width, opaque->codecpar->height);
     if (opaque->codecpar->extradata && opaque->codecpar->extradata_size > 0) {
@@ -184,6 +186,7 @@ static int recreate_format_l(JNIEnv *env, IJKFF_Pipenode *node)
                 && (opaque->codecpar->extradata[0] == 1 || opaque->codecpar->extradata[1] == 1))) {
 #if AMC_USE_AVBITSTREAM_FILTER
             if (opaque->codecpar->codec_id == AV_CODEC_ID_H264) {
+                ALOGW(">> AV_CODEC_ID_H264 #101");
                 opaque->bsfc = av_bitstream_filter_init("h264_mp4toannexb");
                 if (!opaque->bsfc) {
                     ALOGE("Cannot open the h264_mp4toannexb BSF!\n");
@@ -216,6 +219,7 @@ static int recreate_format_l(JNIEnv *env, IJKFF_Pipenode *node)
                 goto fail;
             }
             if (opaque->codecpar->codec_id == AV_CODEC_ID_H264) {
+                ALOGW(">> AV_CODEC_ID_H264 #102");
                 if (0 != convert_sps_pps(opaque->codecpar->extradata, opaque->codecpar->extradata_size,
                                          convert_buffer, convert_size,
                                          &sps_pps_size, &opaque->nal_size)) {
@@ -1444,6 +1448,8 @@ static void func_destroy(IJKFF_Pipenode *node)
     }
 }
 
+static int logged2 = 0;
+
 static int drain_output_buffer2(JNIEnv *env, IJKFF_Pipenode *node, int64_t timeUs, int *dequeue_count, AVFrame *frame, AVRational frame_rate)
 {
     IJKFF_Pipenode_Opaque *opaque    = node->opaque;
@@ -1499,10 +1505,8 @@ static int drain_output_buffer2(JNIEnv *env, IJKFF_Pipenode *node, int64_t timeU
                 }
             }
         }
-        static bool logged = false;
-        if (!logged) {
-            LOGE(">>> ffp_queue_picture() #1 %s:%d", __FILE__, __LINE__);
-            logged = true;
+        if (logged2++ < 2) {
+            ALOGE(">>> ffp_queue_picture() #1 %s:%d", __FILE__, logged2);
         }
         ret = ffp_queue_picture(ffp, frame, pts, duration, av_frame_get_pkt_pos(frame), is->viddec.pkt_serial);
         if (ret) {
@@ -1563,6 +1567,8 @@ fail:
     ALOGI("MediaCodec: %s: exit: %d", __func__, ret);
     return ret;
 }
+
+static int logged22 = 0;
 
 static int func_run_sync(IJKFF_Pipenode *node)
 {
@@ -1645,9 +1651,8 @@ static int func_run_sync(IJKFF_Pipenode *node)
                     }
                 }
             }
-            if (!logged) {
-                LOGE(">>> ffp_queue_picture() #2 %s:%d", __FILE__, __LINE__);
-                logged = true;
+            if (logged22++ < 2) {
+                ALOGE(">>> ffp_queue_picture() #2, %d", logged22);
             }
             ret = ffp_queue_picture(ffp, frame, pts, duration, av_frame_get_pkt_pos(frame), is->viddec.pkt_serial);
             if (ret) {

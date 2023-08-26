@@ -97,8 +97,10 @@ static SDL_VoutOverlay *func_create_overlay_l(int width, int height, int frame_f
 {
     switch (frame_format) {
     case IJK_AV_PIX_FMT__ANDROID_MEDIACODEC:
+        ALOGW(">> SDL_VoutAMediaCodec_CreateOverlay");
         return SDL_VoutAMediaCodec_CreateOverlay(width, height, vout);
     default:
+        ALOGW(">> SDL_VoutFFmpeg_CreateOverlay");
         return SDL_VoutFFmpeg_CreateOverlay(width, height, frame_format, vout);
     }
 }
@@ -139,10 +141,15 @@ static void func_free_l(SDL_Vout *vout)
     SDL_Vout_FreeInternal(vout);
 }
 
+static int logged4 = 0;
+
 static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
 {
     SDL_Vout_Opaque *opaque = vout->opaque;
     ANativeWindow *native_window = opaque->native_window;
+
+    // ALOGW(">> func_display_overlay_l() #101 %x, %x", native_window, overlay);
+    // if (overlay) ALOGW(">> overlay->w & h: %d x %d", overlay->w, overlay->h);
 
     if (!native_window) {
         if (!opaque->null_native_window_warned) {
@@ -164,24 +171,31 @@ static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
         return -1;
     }
 
-    static bool logged = false;
-    if (!logged) {
-        LOGE("overlay->format %d", (int)(overlay->format));
-        logged = true;
+    /* 为何有时有此 log，有时没有 ??? */
+    if (logged4++ < 2) {
+        ALOGE(">> overlay->format %x, logged %d", (int)(overlay->format), logged4);
+        ALOGE("\tSDL_FCC__AMC: %x", SDL_FCC__AMC); // 434d415f
+        ALOGE("\tSDL_FCC_RV24: %x", SDL_FCC_RV24);
+        ALOGE("\tSDL_FCC_I420: %x", SDL_FCC_I420);
+        ALOGE("\tSDL_FCC_I444P10LE: %x", SDL_FCC_I444P10LE);
+        ALOGE("\tSDL_FCC_YV12: %x", SDL_FCC_YV12);
+        ALOGE("\tSDL_FCC_RV16: %x", SDL_FCC_RV16);
+        ALOGE("\tSDL_FCC_RV32: %x", SDL_FCC_RV32);
     }
 
+    // ALOGW(">> overlay->format %x [SDL_FCC_RV32 %x]", (int)(overlay->format), SDL_FCC_RV32);
     switch(overlay->format) {
     case SDL_FCC__AMC: {
         // only ANativeWindow support
         IJK_EGL_terminate(opaque->egl);
-        //LOGE("overlay->format == SDL_FCC__AMC >> SDL_VoutOverlayAMediaCodec_releaseFrame_l()");
+        if (logged4 < 5) ALOGE("overlay->format == SDL_FCC__AMC >> SDL_VoutOverlayAMediaCodec_releaseFrame_l()");
         return SDL_VoutOverlayAMediaCodec_releaseFrame_l(overlay, NULL, true);
     }
     case SDL_FCC_RV24:
     case SDL_FCC_I420:
     case SDL_FCC_I444P10LE: {
         // only GLES support
-        //LOGE("overlay->format == SDL_FCC_[RV24 | I420 | I444P10LE] >> IJK_EGL_display()");
+        ALOGE("overlay->format == SDL_FCC_[RV24 | I420 | I444P10LE] >> IJK_EGL_display()");
         if (opaque->egl)
             return IJK_EGL_display(opaque->egl, native_window, overlay);
         break;
@@ -189,10 +203,12 @@ static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
     case SDL_FCC_YV12:
     case SDL_FCC_RV16:
     case SDL_FCC_RV32: {
-        //LOGE("overlay->format == SDL_FCC_[YV12 | RV16 | RV32] >> IJK_EGL_display()");
+        ALOGE("overlay->format == SDL_FCC_[YV12 | RV16 | RV32] >> IJK_EGL_display()");
         // both GLES & ANativeWindow support
-        if (vout->overlay_format == SDL_FCC__GLES2 && opaque->egl)
+        if (vout->overlay_format == SDL_FCC__GLES2 && opaque->egl) {
+            ALOGW(">> case SDL_FCC_RV32: IJK_EGL_display()");
             return IJK_EGL_display(opaque->egl, native_window, overlay);
+        }
         break;
     }
     }
@@ -231,6 +247,7 @@ SDL_Vout *SDL_VoutAndroid_CreateForANativeWindow()
     if (!opaque->egl)
         goto fail;
 
+    ALOGW(">> vout->display_overlay = func_display_overlay");
     vout->opaque_class    = &g_nativewindow_class;
     vout->create_overlay  = func_create_overlay;
     vout->free_l          = func_free_l;
@@ -373,14 +390,17 @@ static int SDL_VoutAndroid_releaseBufferProxy_l(SDL_Vout *vout, SDL_AMediaCodecB
     if (!proxy)
         return 0;
 
-    AMCTRACE("%s: [%d] -------- proxy %d: vout: %d idx: %d render: %s fake: %s",
-        __func__,
-        proxy->buffer_id,
-        proxy->acodec_serial,
-        SDL_AMediaCodec_getSerial(opaque->acodec),
-        proxy->buffer_index,
-        render ? "true" : "false",
-        (proxy->buffer_info.flags & AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME) ? "YES" : "NO");
+    if (logged4 < 5) {
+        ALOGW("%s: [%d] -------- proxy %d: vout: %d idx: %d render: %s fake: %s",
+            __func__,
+            proxy->buffer_id,
+            proxy->acodec_serial,
+            SDL_AMediaCodec_getSerial(opaque->acodec),
+            proxy->buffer_index,
+            render ? "true" : "false",
+            (proxy->buffer_info.flags & AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME) ? "YES" : "NO");
+    }
+
     ISDL_Array__push_back(&opaque->overlay_pool, proxy);
 
     if (!SDL_AMediaCodec_isSameSerial(opaque->acodec, proxy->acodec_serial)) {
@@ -403,7 +423,9 @@ static int SDL_VoutAndroid_releaseBufferProxy_l(SDL_Vout *vout, SDL_AMediaCodecB
         return 0;
     }
 
-    sdl_amedia_status_t amc_ret = SDL_AMediaCodec_releaseOutputBuffer(opaque->acodec, proxy->buffer_index, render);    
+    sdl_amedia_status_t amc_ret = SDL_AMediaCodec_releaseOutputBuffer(opaque->acodec, proxy->buffer_index, render);
+    if (logged4 < 5) ALOGW(">>> SDL_AMediaCodec_releaseOutputBuffer() amc_ret %d", amc_ret);
+
     if (amc_ret != SDL_AMEDIA_OK) {
         ALOGW("%s: [%d] !!!!!!!! proxy %d: vout: %d idx: %d render: %s, fake: %s",
             __func__,

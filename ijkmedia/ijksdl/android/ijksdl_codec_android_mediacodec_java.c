@@ -279,6 +279,8 @@ sdl_amedia_status_t SDL_AMediaCodecJava_queueInputBuffer(SDL_AMediaCodec* acodec
     return SDL_AMEDIA_OK;
 }
 
+static int logged3 = 0;
+
 ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMediaCodecBufferInfo *info, int64_t timeoutUs)
 {
     AMCTRACE("%s(%d)", __func__, (int)timeoutUs);
@@ -310,7 +312,9 @@ ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMe
         } else if (idx == AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED) {
             ALOGI("%s: INFO_OUTPUT_FORMAT_CHANGED\n", __func__);
         } else if (idx >= 0) {
-            AMCTRACE("%s: buffer ready (%d) ====================\n", __func__, idx);
+            if (logged3++ < 2) {
+                ALOGI("%s: buffer ready (%d) ==================== %d", __func__, idx, logged3);
+            }
             if (info) {
                 info->offset              = J4AC_MediaCodec__BufferInfo__offset__get__catchAll(env, opaque->output_buffer_info);
                 info->size                = J4AC_MediaCodec__BufferInfo__size__get__catchAll(env, opaque->output_buffer_info);
@@ -326,17 +330,20 @@ ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMe
 
 sdl_amedia_status_t SDL_AMediaCodecJava_releaseOutputBuffer(SDL_AMediaCodec* acodec, size_t idx, bool render)
 {
-    AMCTRACE("%s", __func__);
+    // ALOGI(">> SDL_AMediaCodecJava_releaseOutputBuffer() #%d", __LINE__);
 
     JNIEnv *env = NULL;
     if (JNI_OK != SDL_JNI_SetupThreadEnv(&env)) {
-        ALOGE("%s(%d, %s): SetupThreadEnv failed", __func__, (int)idx, render ? "true" : "false");
+        ALOGE(">> %s(%d, %s): SetupThreadEnv failed", __func__, (int)idx, render ? "true" : "false");
         return SDL_AMEDIA_ERROR_UNKNOWN;
     }
 
     SDL_AMediaCodec_Opaque *opaque = (SDL_AMediaCodec_Opaque *)acodec->opaque;
     jobject android_media_codec = opaque->android_media_codec;
+
+    // android.media.MediaCodec.releaseOutputBuffer()
     J4AC_MediaCodec__releaseOutputBuffer(env, android_media_codec, (jint)idx, (jboolean)render);
+
     if (J4A_ExceptionCheck__catchAll(env)) {
         ALOGE("%s: releaseOutputBuffer\n", __func__);
         return SDL_AMEDIA_ERROR_UNKNOWN;
@@ -385,6 +392,7 @@ static SDL_AMediaCodec* SDL_AMediaCodecJava_init(JNIEnv *env, jobject android_me
 
     acodec->func_dequeueOutputBuffer    = SDL_AMediaCodecJava_dequeueOutputBuffer;
     acodec->func_getOutputFormat        = SDL_AMediaCodecJava_getOutputFormat;
+    ALOGW(">> func_releaseOutputBuffer  = SDL_AMediaCodecJava_releaseOutputBuffer");
     acodec->func_releaseOutputBuffer    = SDL_AMediaCodecJava_releaseOutputBuffer;
 
     acodec->func_isInputBuffersValid    = SDL_AMediaCodecJava_isInputBuffersValid;

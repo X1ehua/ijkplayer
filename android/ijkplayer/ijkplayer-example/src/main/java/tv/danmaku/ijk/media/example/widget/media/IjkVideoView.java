@@ -581,6 +581,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                 }
             };
 
+    // NOTE: ijkplayer_jni.c message_loop_n() post_event(MEDIA_BUFFERING_UPDATE, ...) 流转至此
     private IMediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
             new IMediaPlayer.OnBufferingUpdateListener() {
                 public void onBufferingUpdate(IMediaPlayer mp, int percent) {

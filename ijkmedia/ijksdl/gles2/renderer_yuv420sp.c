@@ -77,6 +77,7 @@ static GLboolean yuv420sp_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_VoutOv
             return GL_FALSE;
     }
 
+    av_log(NULL, AV_LOG_ERROR, ">> widths & heights %d %d, %d %d", widths[0], heights[0], widths[1], heights[1]);
     glBindTexture(GL_TEXTURE_2D, renderer->plane_textures[0]);
     glTexImage2D(GL_TEXTURE_2D,
                  0,
@@ -116,6 +117,7 @@ IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_yuv420sp()
     renderer->func_use            = yuv420sp_use;
     renderer->func_getBufferWidth = yuv420sp_getBufferWidth;
     renderer->func_uploadTexture  = yuv420sp_uploadTexture;
+    av_log(NULL, AV_LOG_ERROR, ">> create render yuv420sp, renderer->func_uploadTexture = yuv420sp_uploadTextur");
 
     return renderer;
 fail:

@@ -27,6 +27,8 @@
 
 #include <stdio.h>
 
+// #define __ANDROID__
+
 #ifdef __ANDROID__
 
 #include <android/log.h>

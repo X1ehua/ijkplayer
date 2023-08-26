@@ -157,6 +157,8 @@ static int func_unlock(SDL_VoutOverlay *overlay)
     return SDL_UnlockMutex(opaque->mutex);
 }
 
+static int logged6 = 0;
+
 static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
 {
     assert(overlay);
@@ -208,10 +210,8 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
     }
 
     // debug
-    static bool logged = false;
-    if (!logged) {
-        ALOGE(">>> func_fill_frame(): use_linked_frame %d", (int)use_linked_frame);
-        logged = true;
+    if (logged6++ < 2) { // reached, use_linked_frame 0
+        ALOGE(">>> func_fill_frame(): use_linked_frame %d, %d", (int)use_linked_frame, logged6);
     }
 
     // setup frame
@@ -310,6 +310,7 @@ SDL_VoutOverlay *SDL_VoutFFmpeg_CreateOverlay(int width, int height, int frame_f
         }
     }
 
+    // SDL_VoutFFmpeg_CreateOverlay(w=854, h=480, fmt=RV32(0x32335652, dp=0x717b94f3d0)
     SDLTRACE("SDL_VoutFFmpeg_CreateOverlay(w=%d, h=%d, fmt=%.4s(0x%x, dp=%p)\n",
         width, height, (const char*) &overlay_format, overlay_format, display);
 

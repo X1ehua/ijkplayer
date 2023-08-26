@@ -330,6 +330,12 @@ public class AndroidMediaPlayer extends AbstractMediaPlayer {
     public void setKeepInBackground(boolean keepInBackground) {
     }
 
+    @Override
+    public void startRecord() {}
+
+    @Override
+    public void stopRecord() {}
+
     /*--------------------
      * Listeners adapter
      */

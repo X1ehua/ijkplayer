@@ -95,7 +95,7 @@ static GLboolean yuv444p10le_uploadTexture(IJK_GLES2_Renderer *renderer, SDL_Vou
 
 IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_yuv444p10le()
 {
-    ALOGI("create render yuv444p10le\n");
+    ALOGI(">> create render yuv444p10le\n");
     IJK_GLES2_Renderer *renderer = IJK_GLES2_Renderer_create_base(IJK_GLES2_getFragmentShader_yuv444p10le());
     if (!renderer)
         goto fail;

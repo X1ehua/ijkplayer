@@ -76,7 +76,7 @@ inline static int msg_queue_put_private(MessageQueue *q, AVMessage *msg)
         q->recycle_count++;
     } else {
         q->alloc_count++;
-        msg1 = av_malloc(sizeof(AVMessage));
+        msg1 = av_malloc(sizeof(AVMessage)); // malloc
     }
 #ifdef FFP_SHOW_MSG_RECYCLE
     int total_count = q->recycle_count + q->alloc_count;
@@ -141,7 +141,7 @@ inline static void msg_queue_put_simple3(MessageQueue *q, int what, int arg1, in
     msg.what = what;
     msg.arg1 = arg1;
     msg.arg2 = arg2;
-    msg_queue_put(q, &msg);
+    msg_queue_put(q, &msg); // q: ffp->msg_queue
 }
 
 inline static void msg_obj_free_l(void *obj)

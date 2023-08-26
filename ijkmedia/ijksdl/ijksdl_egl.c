@@ -278,6 +278,7 @@ static EGLBoolean IJK_EGL_prepareRenderer(IJK_EGL* egl, SDL_VoutOverlay *overlay
         IJK_GLES2_Renderer_reset(opaque->renderer);
         IJK_GLES2_Renderer_freeP(&opaque->renderer);
 
+        ALOGW(">> IJK_GLES2_Renderer_create");
         opaque->renderer = IJK_GLES2_Renderer_create(overlay);
         if (!opaque->renderer) {
             ALOGE("[EGL] Could not create render.");
@@ -304,6 +305,7 @@ static EGLBoolean IJK_EGL_display_internal(IJK_EGL* egl, EGLNativeWindowType win
 {
     IJK_EGL_Opaque *opaque = egl->opaque;
 
+    ALOGW(">> IJK_EGL_prepareRenderer");
     if (!IJK_EGL_prepareRenderer(egl, overlay)) {
         ALOGE("[EGL] IJK_EGL_prepareRenderer failed\n");
         return EGL_FALSE;

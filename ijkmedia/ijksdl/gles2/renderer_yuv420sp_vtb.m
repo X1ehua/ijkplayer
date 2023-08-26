@@ -216,7 +216,7 @@ IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_yuv420sp_vtb(SDL_VoutOverlay *over
         return IJK_GLES2_Renderer_create_yuv420sp();
     }
 
-    ALOGI("create render yuv420sp_vtb\n");
+    ALOGI(">> create render yuv420sp_vtb\n");
     IJK_GLES2_Renderer *renderer = IJK_GLES2_Renderer_create_base(IJK_GLES2_getFragmentShader_yuv420sp());
     if (!renderer)
         goto fail;

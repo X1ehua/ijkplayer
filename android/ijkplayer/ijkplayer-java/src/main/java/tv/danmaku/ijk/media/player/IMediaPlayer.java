@@ -212,4 +212,9 @@ public interface IMediaPlayer {
      * AndroidMediaPlayer: M:
      */
     void setDataSource(IMediaDataSource mediaDataSource);
+
+    // for video recording
+    void startRecord();
+
+    void stopRecord();
 }
