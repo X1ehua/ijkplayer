@@ -30,5 +30,6 @@ APP_CFLAGS := -O3 -Wall -pipe \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing \
     -Wno-psabi -Wa,--noexecstack \
+    -Wno-deprecated-declarations \
     -DANDROID
 #   -DANDROID -DNDEBUG

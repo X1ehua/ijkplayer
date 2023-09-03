@@ -549,6 +549,16 @@ inline static void ffp_reset_demux_cache_control(FFDemuxCacheControl *dcc)
     dcc->current_high_water_mark_in_ms  = DEFAULT_FIRST_HIGH_WATER_MARK_IN_MS;
 }
 
+typedef struct CachedPackets
+{
+    AVPacket*   pkts;       // 用于保存的 AVPakcet 缓存
+    int         arr_size;
+    int         cached_num; // [0 ~ arr_size]
+    int         last_idx;   // 最后更新的 packet index
+    int         save_idx;   // 当前待 save 的 packet [0 ~ cached_packet_num-1]
+    int         saved_num;  // [0 ~ cached_num]
+} CachedPackets;
+
 /* ffplayer */
 struct IjkMediaMeta;
 struct IJKFF_Pipeline;
@@ -723,14 +733,16 @@ typedef struct FFPlayer {
 
     // for recording
     AVFormatContext *m_ofmt_ctx;        // 用于输出的 AVFormatContext
-    AVOutputFormat *m_ofmt;
+    AVOutputFormat  *m_ofmt;
     pthread_mutex_t record_mutex;       // 锁
-    int is_record;                      // 是否在录制
-    bool real_record;                   // 判断关键帧再真正保存
-    int record_error;
-    int is_first;                       // 是否第一帧数据
-    int64_t start_pts;                  // 开始录制时的 pts
-    int64_t start_dts;                  // 开始录制时的 dts
+    bool        is_recording;           // 是否在录制
+    bool        real_record;            // 判断关键帧再真正保存
+    int         record_error;
+    bool        is_first_frame;         // 是否第一帧数据
+    int64_t     record_start_pts;       // 开始录制时的 pts
+    int64_t     record_start_dts;       // 开始录制时的 dts
+
+    CachedPackets cached_pkts;
 } FFPlayer;
 
 #define fftime_to_milliseconds(ts) (av_rescale(ts, 1000, AV_TIME_BASE))

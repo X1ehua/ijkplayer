@@ -607,7 +607,8 @@ static int ijkio_cache_open(IjkURLContext *h, const char *url, int flags, IjkAVD
                     c->async_open = 1;
                     cur_exist_file_size = lseek(c->fd, 0, SEEK_END);
                     if (cur_exist_file_size < *c->last_physical_pos) {
-                        av_log(NULL, AV_LOG_WARNING, "ijkio cache exist is error, will delete last_physical_pos = %lld, cur_exist_file_size = %lld\n", *c->last_physical_pos, cur_exist_file_size);
+                        av_log(NULL, AV_LOG_WARNING, "ijkio cache exist is error, will delete last_physical_pos = %lld, cur_exist_file_size = %lld\n",
+                               (long long int)(*c->last_physical_pos), (long long int)cur_exist_file_size);
                         ijk_map_traversal_handle(c->cache_info_map, NULL, tree_destroy);
                         ijk_map_clear(c->cache_info_map);
                         *c->last_physical_pos    = 0;
