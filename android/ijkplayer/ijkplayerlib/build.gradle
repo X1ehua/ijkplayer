@@ -7,11 +7,12 @@ android {
 //  buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.4.2"
 
+        /*
         sourceSets {
             main {
                 jniLibs.srcDir 'jniLibs'
@@ -19,6 +20,7 @@ android {
             debug.setRoot('build-types/debug')
             release.setRoot('build-types/release')
         }
+        */
     }
     buildTypes {
         release {
@@ -26,7 +28,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    //ndkVersion '/Users/eric/Library/android-ndk-r14b'
 }
 
 dependencies {
@@ -58,7 +59,7 @@ dependencies {
 //  api 'tv.danmaku.ijk.media:ijkplayer-java:' + rootProject.ijkplayer // 0.8.8.2
     // 改为 project 本地引用的方式:
 //  implementation project(":ijkplayer:android:ijkplayer:ijkplayer-arm64")
-    implementation project(":ijkplayer:android:ijkplayer:ijkplayer-java")
+    implementation project(":ijkplayer-java")
 
 //  api 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.8'
 

@@ -17,8 +17,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets.main {
-        jniLibs.srcDirs 'src/main/libs'
+    sourceSets.main { // seams not work here, we add to app/build.gradle
+        jniLibs.srcDir 'src/main/libs'
         jni.srcDirs = [] // This prevents the auto generation of Android.mk
     }
 }

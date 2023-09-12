@@ -2,6 +2,8 @@
 
 buildscript {
     repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
         google()
         jcenter()
     }
@@ -17,6 +19,8 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
         google()
         jcenter()
     }
@@ -27,6 +31,8 @@ ext {
     buildToolsVersion = "30.0.3"
 
     targetSdkVersion = 28
+    supportLibraryVersion = "1.1.0"
+    exoplayer = "2.14.1"
 
     versionCode = 800802
     versionName = VERSION_NAME
