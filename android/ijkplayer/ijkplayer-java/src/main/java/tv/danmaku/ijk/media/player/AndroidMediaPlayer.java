@@ -336,6 +336,9 @@ public class AndroidMediaPlayer extends AbstractMediaPlayer {
     @Override
     public void stopRecord() {}
 
+    @Override
+    public void snapshot() {}
+
     /*--------------------
      * Listeners adapter
      */

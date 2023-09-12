@@ -26,6 +26,8 @@
 #include <pthread.h>
 #include <jni.h>
 #include <unistd.h>
+#include <android/bitmap.h>
+
 #include "j4a/class/java/util/ArrayList.h"
 #include "j4a/class/android/os/Bundle.h"
 #include "j4a/class/tv/danmaku/ijk/media/player/IjkMediaPlayer.h"
@@ -1164,15 +1166,37 @@ LABEL_RETURN:
     return retval;
 }
 
+static jboolean
+IjkMediaPlayer_native_snapshot(JNIEnv *env, jobject thiz, jobject bitmap)
+{
+    jboolean retval = JNI_TRUE;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: snapshot: null IjkMediaPlayer", LABEL_RETURN);
+
+    uint8_t *frame_buffer = NULL;
+
+    if (AndroidBitmap_lockPixels(env, bitmap, (void **)&frame_buffer) < 0) {
+        (*env)->ThrowNew(env, "java/io/IOException", "AndroidBitmap_lockPixels() failed");
+        return JNI_FALSE;
+    }
+
+    retval = ijkmp_snapshot(mp, frame_buffer);
+
+    if (AndroidBitmap_unlockPixels(env, bitmap) < 0) {
+        (*env)->ThrowNew(env, "java/io/IOException", "AndroidBitmap_unlockPixels() failed");
+        return JNI_FALSE;
+    }
+
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return retval;
+}
 
 // ----------------------------------------------------------------------------
 
 static JNINativeMethod g_methods[] = {
-    {
-        "_setDataSource",
-        "(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;)V",
-        (void *) IjkMediaPlayer_setDataSourceAndHeaders
-    },
+    { "_setDataSource",         "(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;)V",
+                                            (void *) IjkMediaPlayer_setDataSourceAndHeaders },
     { "_setDataSourceFd",       "(I)V",     (void *) IjkMediaPlayer_setDataSourceFd },
     { "_setDataSource",         "(Ltv/danmaku/ijk/media/player/misc/IMediaDataSource;)V", (void *)IjkMediaPlayer_setDataSourceCallback },
     { "_setAndroidIOCallback",  "(Ltv/danmaku/ijk/media/player/misc/IAndroidIO;)V", (void *)IjkMediaPlayer_setAndroidIOCallback },
@@ -1209,14 +1233,15 @@ static JNINativeMethod g_methods[] = {
     { "_setPropertyLong",       "(IJ)V",                    (void *) ijkMediaPlayer_setPropertyLong },
     { "_setStreamSelected",     "(IZ)V",                    (void *) ijkMediaPlayer_setStreamSelected },
 
-    { "native_profileBegin",    "(Ljava/lang/String;)V",    (void *) IjkMediaPlayer_native_profileBegin },
-    { "native_profileEnd",      "()V",                      (void *) IjkMediaPlayer_native_profileEnd },
+    { "native_profileBegin",    "(Ljava/lang/String;)V",        (void *) IjkMediaPlayer_native_profileBegin },
+    { "native_profileEnd",      "()V",                          (void *) IjkMediaPlayer_native_profileEnd },
 
-    { "native_setLogLevel",     "(I)V",                     (void *) IjkMediaPlayer_native_setLogLevel },
-    { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V", (void *) IjkMediaPlayer_setFrameAtTime },
+    { "native_setLogLevel",     "(I)V",                         (void *) IjkMediaPlayer_native_setLogLevel },
+    { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V",    (void *) IjkMediaPlayer_setFrameAtTime },
 
-    { "native_startRecord",     "(Ljava/lang/String;)I",    (void *) IjkMediaPlayer_native_startRecord},
-    { "native_stopRecord",      "()I",                      (void *) IjkMediaPlayer_native_stopRecord},
+    { "native_startRecord",     "(Ljava/lang/String;)I",        (void *) IjkMediaPlayer_native_startRecord},
+    { "native_stopRecord",      "()I",                          (void *) IjkMediaPlayer_native_stopRecord},
+    { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *) IjkMediaPlayer_native_snapshot},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)

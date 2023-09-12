@@ -112,6 +112,7 @@ static sdl_amedia_status_t SDL_AMediaCodecJava_configure_surface(
     SDL_AMediaCodec_Opaque *opaque = (SDL_AMediaCodec_Opaque *)acodec->opaque;
     jobject android_media_format = SDL_AMediaFormatJava_getObject(env, aformat);
     jobject android_media_codec  = SDL_AMediaCodecJava_getObject(env, acodec);
+    // reached
     ALOGE("configure acodec:%p format:%p: surface:%p", android_media_codec, android_media_format, android_surface);
     J4AC_MediaCodec__configure(env, android_media_codec, android_media_format, android_surface, crypto, flags);
     if (J4A_ExceptionCheck__catchAll(env)) {
@@ -330,7 +331,7 @@ ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMe
 
 sdl_amedia_status_t SDL_AMediaCodecJava_releaseOutputBuffer(SDL_AMediaCodec* acodec, size_t idx, bool render)
 {
-    // ALOGI(">> SDL_AMediaCodecJava_releaseOutputBuffer() #%d", __LINE__);
+    // ALOGI(">>>>> SDL_AMediaCodecJava_releaseOutputBuffer() #%d", __LINE__); // reached
 
     JNIEnv *env = NULL;
     if (JNI_OK != SDL_JNI_SetupThreadEnv(&env)) {
@@ -341,7 +342,10 @@ sdl_amedia_status_t SDL_AMediaCodecJava_releaseOutputBuffer(SDL_AMediaCodec* aco
     SDL_AMediaCodec_Opaque *opaque = (SDL_AMediaCodec_Opaque *)acodec->opaque;
     jobject android_media_codec = opaque->android_media_codec;
 
-    // android.media.MediaCodec.releaseOutputBuffer()
+    /* android.media.MediaCodec.releaseOutputBuffer():
+     * If you configured the codec with an output surface, setting render to true will first send the buffer
+     * to that output surface.
+     */
     J4AC_MediaCodec__releaseOutputBuffer(env, android_media_codec, (jint)idx, (jboolean)render);
 
     if (J4A_ExceptionCheck__catchAll(env)) {
@@ -392,7 +396,7 @@ static SDL_AMediaCodec* SDL_AMediaCodecJava_init(JNIEnv *env, jobject android_me
 
     acodec->func_dequeueOutputBuffer    = SDL_AMediaCodecJava_dequeueOutputBuffer;
     acodec->func_getOutputFormat        = SDL_AMediaCodecJava_getOutputFormat;
-    ALOGW(">> func_releaseOutputBuffer  = SDL_AMediaCodecJava_releaseOutputBuffer");
+    ALOGW(">> func_releaseOutputBuffer  = SDL_AMediaCodecJava_releaseOutputBuffer"); // reached
     acodec->func_releaseOutputBuffer    = SDL_AMediaCodecJava_releaseOutputBuffer;
 
     acodec->func_isInputBuffersValid    = SDL_AMediaCodecJava_isInputBuffersValid;

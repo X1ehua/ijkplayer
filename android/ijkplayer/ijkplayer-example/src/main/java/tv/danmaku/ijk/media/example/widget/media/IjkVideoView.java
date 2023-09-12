@@ -347,6 +347,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mMediaPlayer.setScreenOnWhilePlaying(true);
             mPrepareStartTime = System.currentTimeMillis();
+            Log.w("IJK", ">> mMediaPlayer.prepareAsync() >> native _prepareAsync()");
             mMediaPlayer.prepareAsync();
             if (mHudViewHolder != null)
                 mHudViewHolder.setMediaPlayer(mMediaPlayer);
@@ -1035,7 +1036,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             default: {
                 IjkMediaPlayer ijkMediaPlayer = null;
                 if (mUri != null) {
-                    ijkMediaPlayer = new IjkMediaPlayer();
+                    ijkMediaPlayer = new IjkMediaPlayer(); // native_setup()
                     ijkMediaPlayer.native_setLogLevel(IjkMediaPlayer.IJK_LOG_DEBUG);
 
                     if (mSettings.getUsingMediaCodec()) {

@@ -818,3 +818,61 @@ int ijkmp_stop_record(IjkMediaPlayer *mp)
     MPTRACE("ijkmp_stopRecord()=%d\n", retval);
     return retval;
 }
+
+void ffp_snapshot(FFPlayer *ffp, uint8_t *frame_buf)
+{
+    VideoState* is = ffp->is;
+    int i = 0;
+    while (is->pictq.rindex + i < FRAME_QUEUE_SIZE) {
+        int idx = (is->pictq.rindex + i + is->pictq.rindex_shown) % is->pictq.max_size;
+        Frame* vp  = &is->pictq.queue[idx];
+        if (!vp || !vp->bmp) {
+            ALOGE(">>> vp null or vp->bmp, i %d", i);
+            i++;
+            continue;
+        }
+        av_log(NULL, AV_LOG_ERROR, ">>> vp->bmp %x, pixels[0] %x, pitches[0] %d, rindex_shown %d",
+               vp->bmp, vp->bmp->pixels[0], vp->bmp->pitches[0], is->pictq.rindex_shown);
+        if (!vp->bmp->pixels || !vp->bmp->pitches) {
+            ALOGE(">>> vp->bmp->pixels null or vp->bmp->pitches null, i %d", i);
+            i++;
+            continue;
+        }
+        int width  = vp->bmp->w;
+        int height = vp->bmp->h;
+        int line_size = vp->bmp->pitches[0];
+        ALOGE(">>> ffp_snapshot rindex %d + i %d: %d x %d, pitches[0] %d, format %x/%d", // 0x434D415F/10001
+            is->pictq.rindex, i,
+            width, height, line_size, vp->bmp->format, vp->format);
+        if (line_size <= 0) {
+            // ALOGE(">>> ffp_snapshot failed for invalid line_size");
+            // return;
+        }
+
+        // copy data to java Bitmap.pixels
+        uint8_t* src = vp->bmp->pixels[0];
+        if (!src) {
+            ALOGE(">>> vp->bmp->pixels[0] is null, %d", i);
+            i ++;
+            continue;
+        }
+
+        int pixels = width * 4;
+        // for (i = 0; i < height; i++) {
+        //     memcpy(frame_buf + i * pixels, src + i * line_size, pixels);
+        // }
+        ALOGE(">>> #1 pixel data copied %d, i %d, src %x", pixels * height, i, src);
+        // memcpy(frame_buf, src, pixels * height);
+        ALOGE(">>> #2 pixel data copied %d, i %d", pixels * height, i);
+        return;
+    }
+}
+
+int ijkmp_snapshot(IjkMediaPlayer *mp, uint8_t *frame_buf)
+{
+    assert(mp);
+    pthread_mutex_lock(&mp->mutex);
+    ffp_snapshot(mp->ffplayer, frame_buf);
+    pthread_mutex_unlock(&mp->mutex);
+    return 0;
+}

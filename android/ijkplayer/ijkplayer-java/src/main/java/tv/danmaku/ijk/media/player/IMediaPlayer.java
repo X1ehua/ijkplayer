@@ -217,4 +217,6 @@ public interface IMediaPlayer {
     void startRecord();
 
     void stopRecord();
+
+    void snapshot();
 }

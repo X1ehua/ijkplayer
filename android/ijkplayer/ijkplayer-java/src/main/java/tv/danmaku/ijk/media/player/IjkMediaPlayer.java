@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (C) 2006 Bilibili
  * Copyright (C) 2006 The Android Open Source Project
  * Copyright (C) 2013 Zhang Rui <bbcallen@gmail.com>
@@ -23,6 +23,7 @@ import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.graphics.Rect;
 import android.media.MediaCodecInfo;
@@ -43,6 +44,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -1252,7 +1254,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
                     if (TextUtils.isEmpty(type))
                         continue;
 
-                    Log.d(TAG, String.format(Locale.US, "    mime: %s", type));
+                    //Log.d(TAG, String.format(Locale.US, "    mime: %s", type));
                     if (!type.equalsIgnoreCase(mimeType))
                         continue;
 
@@ -1294,6 +1296,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
 
     public native int native_startRecord(String file);
     public native int native_stopRecord();
+    public native int native_snapshot(Bitmap bitmap);
 
     public void startRecord() {
         String dt = new SimpleDateFormat("MMdd-HHmmss").format(new Date());
@@ -1310,6 +1313,31 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         int ret = native_stopRecord();
         if (ret != 0) {
             Log.e("ijk", ">> native_stopRecord() failed: " + ret);
+        }
+    }
+
+    public void snapshot() {
+        Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
+        int ret = native_snapshot(bitmap);
+        if (ret != 0) {
+            Log.e("IjkMedia", ">> native_snapshot() failed, ret " + ret);
+            return;
+        }
+
+        String path = "/sdcard/Movies/";
+        String filename = "CCLive-" + new SimpleDateFormat("MMdd-HHmmss").format(new Date()) + ".jpg";
+        saveBitmap(path, filename, bitmap);
+    }
+
+    static void saveBitmap(String path, String filename, Bitmap bitmap) {
+        File saveFile = new File(path, filename);
+        try {
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(saveFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            Log.e("IjkMedia", "saveBitmap " + path + filename + " failed: " + e.toString());
         }
     }
 }
