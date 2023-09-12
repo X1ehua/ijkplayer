@@ -11,16 +11,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.4.2"
-
-        /*
-        sourceSets {
-            main {
-                jniLibs.srcDir 'jniLibs'
-            }
-            debug.setRoot('build-types/debug')
-            release.setRoot('build-types/release')
-        }
-        */
     }
     buildTypes {
         release {

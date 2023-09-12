@@ -122,8 +122,5 @@ case "$REQUEST_TARGET" in
     ;;
 esac
 
-echo
-echo >> COPY .so TO jniLibs ...
-cp libs/arm64-v8a/*.so ~/ijkdroid/ijkplayerlib/jniLibs/arm64-v8a/
-ls -l ~/ijkdroid/ijkplayerlib/jniLibs/arm64-v8a/
+ls -lh ijkplayer/ijkplayer-arm64/src/main/libs/arm64-v8a/
 

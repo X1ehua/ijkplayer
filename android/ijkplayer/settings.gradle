@@ -7,3 +7,5 @@ include ':ijkplayer-java'
 //include ':ijkplayer-example'
 include ':ijkplayerlib'
 include ':app'
+
+//include ':ijkplayer-arm64:src:main:jni:ijkmedia'

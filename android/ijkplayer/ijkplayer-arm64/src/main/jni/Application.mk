@@ -26,7 +26,7 @@ APP_PIE := false
 
 APP_STL := stlport_static
 
-APP_CFLAGS := -O3 -Wall -pipe \
+APP_CFLAGS := -O0 -Wall -pipe \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing \
     -Wno-psabi -Wa,--noexecstack \
