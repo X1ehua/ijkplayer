@@ -196,25 +196,13 @@ esac
 mkdir -p $FF_PREFIX
 # mkdir -p $FF_SYSROOT
 
-# TODO!
-FF_ANDROID_API=21
 
-echo IJK_NDK_REL=$IJK_NDK_REL
 FF_TOOLCHAIN_TOUCH="$FF_TOOLCHAIN_PATH/touch"
 if [ ! -f "$FF_TOOLCHAIN_TOUCH" ]; then
-    case $IJK_NDK_REL in
-        23*|24*|25*|26*|27*)
-            echo python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
-            python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
-        ;;
-        *)
-            $ANDROID_NDK/build/tools/make-standalone-toolchain.sh \
-                $FF_MAKE_TOOLCHAIN_FLAGS --platform=$FF_ANDROID_PLATFORM \
-                --toolchain=$FF_TOOLCHAIN_NAME
-        ;;
-    esac
+    $ANDROID_NDK/build/tools/make-standalone-toolchain.sh \
+        $FF_MAKE_TOOLCHAIN_FLAGS \
+        --platform=$FF_ANDROID_PLATFORM \
+        --toolchain=$FF_TOOLCHAIN_NAME
     touch $FF_TOOLCHAIN_TOUCH;
 fi
 
@@ -317,7 +305,6 @@ else
     ./configure $FF_CFG_FLAGS \
         --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
         --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS"
-#       --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS" --enable-shared
     make clean
 fi
 
@@ -326,7 +313,6 @@ echo ""
 echo "--------------------"
 echo "[*] compile ffmpeg"
 echo "--------------------"
-echo pwd: `pwd` ff_prefix: $FF_PREFIX ff_make_flags: $FF_MAKE_FLAGS
 cp config.* $FF_PREFIX
 make $FF_MAKE_FLAGS > /dev/null
 make install
