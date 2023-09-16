@@ -174,29 +174,29 @@ static int64_t get_bit_rate(AVCodecParameters *codecpar)
     return bit_rate;
 }
 
-void ijkmeta_set_avformat_context_l(IjkMediaMeta *meta, AVFormatContext *ic)
+void ijkmeta_set_avformat_context_l(IjkMediaMeta *meta, AVFormatContext *fmt_ctx)
 {
-    if (!meta || !ic)
+    if (!meta || !fmt_ctx)
         return;
 
-    if (ic->iformat && ic->iformat->name)
-        ijkmeta_set_string_l(meta, IJKM_KEY_FORMAT, ic->iformat->name);
+    if (fmt_ctx->iformat && fmt_ctx->iformat->name)
+        ijkmeta_set_string_l(meta, IJKM_KEY_FORMAT, fmt_ctx->iformat->name);
 
-    if (ic->duration != AV_NOPTS_VALUE)
-        ijkmeta_set_int64_l(meta, IJKM_KEY_DURATION_US, ic->duration);
+    if (fmt_ctx->duration != AV_NOPTS_VALUE)
+        ijkmeta_set_int64_l(meta, IJKM_KEY_DURATION_US, fmt_ctx->duration);
 
-    if (ic->start_time != AV_NOPTS_VALUE)
-        ijkmeta_set_int64_l(meta, IJKM_KEY_START_US, ic->start_time);
+    if (fmt_ctx->start_time != AV_NOPTS_VALUE)
+        ijkmeta_set_int64_l(meta, IJKM_KEY_START_US, fmt_ctx->start_time);
 
-    if (ic->bit_rate)
-        ijkmeta_set_int64_l(meta, IJKM_KEY_BITRATE, ic->bit_rate);
+    if (fmt_ctx->bit_rate)
+        ijkmeta_set_int64_l(meta, IJKM_KEY_BITRATE, fmt_ctx->bit_rate);
 
     IjkMediaMeta *stream_meta = NULL;
-    for (int i = 0; i < ic->nb_streams; i++) {
+    for (int i = 0; i < fmt_ctx->nb_streams; i++) {
         if (!stream_meta)
             ijkmeta_destroy_p(&stream_meta);
 
-        AVStream *st = ic->streams[i];
+        AVStream *st = fmt_ctx->streams[i];
         if (!st || !st->codecpar)
             continue;
 

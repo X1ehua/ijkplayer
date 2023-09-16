@@ -1,0 +1,5 @@
+Android.mk@ -> ../../../../ijkplayer-armv7a/src/main/jni/Android.mk
+Application.mk
+ffmpeg@ -> ../../../../ijkplayer-armv7a/src/main/jni/ffmpeg
+ijkmedia@ -> ../../../../../../ijkmedia
+

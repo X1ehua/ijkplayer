@@ -288,7 +288,7 @@ typedef struct VideoState {
 #ifdef FFP_MERGE
     int read_pause_return;
 #endif
-    AVFormatContext *ic;
+    AVFormatContext *fmt_ctx;
     int realtime;
 
     Clock audclk;

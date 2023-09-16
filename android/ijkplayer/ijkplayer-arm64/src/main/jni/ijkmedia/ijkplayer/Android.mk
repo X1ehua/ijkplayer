@@ -28,6 +28,7 @@ LOCAL_CFLAGS += -mfloat-abi=soft
 endif
 LOCAL_CFLAGS += -std=c99
 LOCAL_LDLIBS += -llog -landroid -ljnigraphics -lm -lz
+LOCAL_CPPFLAGS += -std=c++11
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 LOCAL_C_INCLUDES += $(realpath $(LOCAL_PATH)/..)

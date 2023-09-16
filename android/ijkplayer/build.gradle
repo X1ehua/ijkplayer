@@ -38,6 +38,6 @@ ext {
     versionName = VERSION_NAME
 }
 
-wrapper {
-    gradleVersion = '2.14.1'
-}
+//wrapper {
+//  gradleVersion = '2.14.1'
+//}

@@ -39,7 +39,7 @@ if [ -z "$FF_ARCH" ]; then
 fi
 
 
-FF_BUILD_ROOT=`pwd`
+FF_BUILD_ROOT=`pwd` # android/contrib
 FF_ANDROID_PLATFORM=android-9
 
 
