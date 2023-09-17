@@ -865,28 +865,28 @@ int clamp(int x)
 }
 
 /* YUV to RGB: http://en.wikipedia.org/wiki/YUV */
-void YV12_to_RGB32(Uint8* buffRGB, Uint8** dataYUV, int width, int height)
+void YV12_to_RGB32(Uint8 *buffRGB, Uint8 **dataYUV, int width, int height)
 {
-    Uint8* dataY = dataYUV[0];
-    Uint8* dataU = dataYUV[1];
-    Uint8* dataV = dataYUV[2];
+    Uint8 *dataY = dataYUV[0];
+    Uint8 *dataU = dataYUV[1];
+    Uint8 *dataV = dataYUV[2];
 
     int x, y, Y, U, V, posRowX0 = 0;
-    for(y = 0; y < height; y++)
-	{
-        for(x = 0; x < width; x++)
-		{
-			Y = dataY[ posRowX0 + x];
-			U = dataU[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
-			V = dataV[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
+    for (y = 0; y < height; y++)
+    {
+        for (x = 0; x < width; x++)
+        {
+            Y = dataY[posRowX0 + x];
+            U = dataU[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
+            V = dataV[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
 
-            *buffRGB++ = clamp(Y +  2.03211 * U);                   // R
-            *buffRGB++ = clamp(Y - (0.39466 * U) - (0.58060 * V));  // G
-            *buffRGB++ = clamp(Y +  1.13983 * V);                   // B
+            *buffRGB++ = clamp(Y + 2.03211 * U);                   // R
+            *buffRGB++ = clamp(Y - (0.39466 * U) - (0.58060 * V)); // G
+            *buffRGB++ = clamp(Y + 1.13983 * V);                   // B
             buffRGB++;
-		}
+        }
         posRowX0 += width;
-	}
+    }
 }
 
 void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
