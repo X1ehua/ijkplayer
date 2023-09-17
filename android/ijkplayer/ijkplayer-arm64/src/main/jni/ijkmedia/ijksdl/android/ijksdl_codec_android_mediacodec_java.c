@@ -280,8 +280,6 @@ sdl_amedia_status_t SDL_AMediaCodecJava_queueInputBuffer(SDL_AMediaCodec* acodec
     return SDL_AMEDIA_OK;
 }
 
-static int logged3 = 0;
-
 ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMediaCodecBufferInfo *info, int64_t timeoutUs)
 {
     AMCTRACE("%s(%d)", __func__, (int)timeoutUs);
@@ -313,9 +311,6 @@ ssize_t SDL_AMediaCodecJava_dequeueOutputBuffer(SDL_AMediaCodec* acodec, SDL_AMe
         } else if (idx == AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED) {
             ALOGI("%s: INFO_OUTPUT_FORMAT_CHANGED\n", __func__);
         } else if (idx >= 0) {
-            if (logged3++ < 2) {
-                ALOGI("%s: buffer ready (%d) ==================== %d", __func__, idx, logged3);
-            }
             if (info) {
                 info->offset              = J4AC_MediaCodec__BufferInfo__offset__get__catchAll(env, opaque->output_buffer_info);
                 info->size                = J4AC_MediaCodec__BufferInfo__size__get__catchAll(env, opaque->output_buffer_info);

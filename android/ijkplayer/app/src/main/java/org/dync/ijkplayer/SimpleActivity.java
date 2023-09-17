@@ -38,7 +38,7 @@ public class SimpleActivity extends AppCompatActivity {
         videoView.setVideoCoverUrl("https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=2973320425,1464020144&fm=27&gp=0.jpg");
         videoView.setVideoPath(this, "http://videos.jzvd.org/v/饺子主动.mp4");
         if(!Utils.isWifiConnected(this) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
-//            videoView.showWifiDialog();
+            //videoView.showWifiDialog();
             return;
         }else {
             videoView.start();

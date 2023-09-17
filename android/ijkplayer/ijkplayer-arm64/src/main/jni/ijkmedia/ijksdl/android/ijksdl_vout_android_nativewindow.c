@@ -171,31 +171,28 @@ static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
 
     // ALOGW(">> overlay->format %x [SDL_FCC_RV32 %x]", (int)(overlay->format), SDL_FCC_RV32);
     switch(overlay->format) {
-    case SDL_FCC__AMC: {
+    case SDL_FCC__AMC:
         // only ANativeWindow support
         IJK_EGL_terminate(opaque->egl);
         return SDL_VoutOverlayAMediaCodec_releaseFrame_l(overlay, NULL, true);
-    }
     case SDL_FCC_RV24:
     case SDL_FCC_I420:
-    case SDL_FCC_I444P10LE: {
+    case SDL_FCC_I444P10LE:
         // only GLES support
-        ALOGE("overlay->format == SDL_FCC_[RV24 | I420 | I444P10LE] >> IJK_EGL_display()");
+        // ALOGE("overlay->format == SDL_FCC_[RV24 | I420 | I444P10LE] >> IJK_EGL_display()");
         if (opaque->egl)
             return IJK_EGL_display(opaque->egl, native_window, overlay);
         break;
-    }
     case SDL_FCC_YV12:
     case SDL_FCC_RV16:
-    case SDL_FCC_RV32: {
-        ALOGE("overlay->format == SDL_FCC_[YV12 | RV16 | RV32] >> IJK_EGL_display()");
+    case SDL_FCC_RV32:
+        // ALOGE("overlay->format == SDL_FCC_[YV12 | RV16 | RV32] >> IJK_EGL_display()");
         // both GLES & ANativeWindow support
         if (vout->overlay_format == SDL_FCC__GLES2 && opaque->egl) {
-            ALOGW(">> case SDL_FCC_RV32: IJK_EGL_display()");
+            // ALOGW(">> case SDL_FCC_RV32: IJK_EGL_display()");
             return IJK_EGL_display(opaque->egl, native_window, overlay);
         }
         break;
-    }
     }
 
     // fallback to ANativeWindow

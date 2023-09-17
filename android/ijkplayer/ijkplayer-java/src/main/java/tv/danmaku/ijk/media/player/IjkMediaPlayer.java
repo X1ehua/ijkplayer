@@ -1334,7 +1334,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         File saveFile = new File(path, filename);
         try {
             java.io.FileOutputStream fos = new java.io.FileOutputStream(saveFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.flush();
             fos.close();
         } catch (IOException e) {

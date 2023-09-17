@@ -819,7 +819,77 @@ int ijkmp_stop_record(IjkMediaPlayer *mp)
     return retval;
 }
 
-void ffp_snapshot(FFPlayer *ffp, uint8_t *frame_buf)
+#if 0
+void YUV_NV21_to_RGB(Uint8* buffRGB, Uint8** dataYUV, int width, int height, int uv_columns)
+{
+    #define max(a, b) (a > b ? a : b)
+    #define min(a, b) (a < b ? a : b)
+
+    Uint8* rgb = buffRGB;
+
+    int posRowX0 = 0;
+    for (int y = 0; y < height; y++)
+    {
+        //int offset = ((y>>1)<<1) * uv_columns;
+        for (int x = 0; x < width; x++)
+        {
+            int posY  = posRowX0 + x; // y * width + x
+        //  int posUV = offset + ((x>>1)<<1); // ((y/2) * uv_columns + x/2) * 2
+            int posUV = ((y/2) * uv_columns + x/2) * 2;
+            int Y     = dataYUV[0][posY];
+            int U     = dataYUV[1][posUV] - 128; // NV21: vuvuvu...
+            int V     = dataYUV[2][posUV] - 128;
+            int r     = Y + (int)(1.4075 * V);
+            int g     = Y - (int)(0.3455 * U) - (int)(0.7169 * V);
+            int b     = Y + (int)(1.7790 * U);
+            r         = max(0, min(r, 255));
+            g         = max(0, min(g, 255));
+            b         = max(0, min(b, 255));
+
+            *rgb       = (Uint8)r;
+            *(rgb + 1) = (Uint8)g;
+            *(rgb + 2) = (Uint8)b;
+            *(rgb + 3) = 0xff;
+            rgb += 4;
+        }
+        posRowX0 += width;
+    }
+}
+#endif
+
+int clamp(int x)
+{
+	if(x <   0) return   0;
+	if(x > 255) return 255;
+	return x;
+}
+
+/* YUV to RGB: http://en.wikipedia.org/wiki/YUV */
+void YV12_to_RGB32(Uint8* buffRGB, Uint8** dataYUV, int width, int height)
+{
+    Uint8* dataY = dataYUV[0];
+    Uint8* dataU = dataYUV[1];
+    Uint8* dataV = dataYUV[2];
+
+    int x, y, Y, U, V, posRowX0 = 0;
+    for(y = 0; y < height; y++)
+	{
+        for(x = 0; x < width; x++)
+		{
+			Y = dataY[ posRowX0 + x];
+			U = dataU[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
+			V = dataV[(y >> 1) * (width >> 1) + (x >> 1)] - 128;
+
+            *buffRGB++ = clamp(Y +  2.03211 * U);                   // R
+            *buffRGB++ = clamp(Y - (0.39466 * U) - (0.58060 * V));  // G
+            *buffRGB++ = clamp(Y +  1.13983 * V);                   // B
+            buffRGB++;
+		}
+        posRowX0 += width;
+	}
+}
+
+void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
 {
     VideoState* is = ffp->is;
     int i = 0;
@@ -827,33 +897,36 @@ void ffp_snapshot(FFPlayer *ffp, uint8_t *frame_buf)
         int idx = (is->pictq.rindex + i + is->pictq.rindex_shown) % is->pictq.max_size;
         Frame* vp  = &is->pictq.queue[idx];
         if (!vp || !vp->bmp) {
-            ALOGE(">>> vp null or vp->bmp, i %d", i);
+            ALOGW(">>> vp null or vp->bmp null, i %d", i);
             i++;
             continue;
         }
-        av_log(NULL, AV_LOG_ERROR, ">>> vp->bmp %x, pixels[0] %x, pitches[0] %d, rindex_shown %d",
-               vp->bmp, vp->bmp->pixels[0], vp->bmp->pitches[0], is->pictq.rindex_shown);
         if (!vp->bmp->pixels || !vp->bmp->pitches) {
-            ALOGE(">>> vp->bmp->pixels null or vp->bmp->pitches null, i %d", i);
+            ALOGW(">>> vp->bmp->pixels null or vp->bmp->pitches null, i %d", i);
             i++;
             continue;
         }
 
         int width  = vp->bmp->w;
         int height = vp->bmp->h;
-        int line_size = vp->bmp->pitches[0];
 
         // copy data to java Bitmap.pixels
-        uint8_t* src = vp->bmp->pixels[0];
-        int pixels = width * 4;
+        YV12_to_RGB32(frame_buf, vp->bmp->pixels, width, height);
+
+        /*
+        int pixels    = width * 4;
+        int line_size = vp->bmp->pitches[0];
+        Uint8* src    = vp->bmp->pixels[0];
         for (i = 0; i < height; i++) {
             memcpy(frame_buf + i * pixels, src + i * line_size, pixels);
         }
+        */
+
         return;
     }
 }
 
-int ijkmp_snapshot(IjkMediaPlayer *mp, uint8_t *frame_buf)
+int ijkmp_snapshot(IjkMediaPlayer *mp, Uint8 *frame_buf)
 {
     assert(mp);
     pthread_mutex_lock(&mp->mutex);
