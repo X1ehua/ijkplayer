@@ -118,10 +118,10 @@ public interface IMediaPlayer {
     MediaInfo getMediaInfo();
 
     @SuppressWarnings("EmptyMethod")
-    @Deprecated
+    //@Deprecated // TODO: Deprecated ? How to fix it ?
     void setLogEnabled(boolean enable);
 
-    @Deprecated
+    //@Deprecated // TODO: Deprecated ? How to fix it ?
     boolean isPlayable();
 
     void setOnPreparedListener(OnPreparedListener listener);
@@ -184,14 +184,14 @@ public interface IMediaPlayer {
      */
     void setAudioStreamType(int streamtype);
 
-    @Deprecated
+    //@Deprecated // TODO: Deprecated ? How to fix it ?
     void setKeepInBackground(boolean keepInBackground);
 
     int getVideoSarNum();
 
     int getVideoSarDen();
 
-    @Deprecated
+    //@Deprecated // TODO: Deprecated ? How to fix it ?
     void setWakeMode(Context context, int mode);
 
     void setLooping(boolean looping);

@@ -1318,6 +1318,18 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     }
 
     public void snapshot() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long t0 = System.currentTimeMillis();
+                doSnapshot();
+                long dt = System.currentTimeMillis() - t0;
+                Log.w("ijkJava", "doSnapshot() time cost: " + dt);
+            }
+        }).start();
+    }
+
+    public void doSnapshot() {
         Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
         int ret = native_snapshot(bitmap);
         if (ret != 0) {
