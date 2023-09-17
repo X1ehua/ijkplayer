@@ -157,8 +157,6 @@ static int func_unlock(SDL_VoutOverlay *overlay)
     return SDL_UnlockMutex(opaque->mutex);
 }
 
-static int logged6 = 0;
-
 static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
 {
     assert(overlay);
@@ -209,19 +207,14 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
             return -1;
     }
 
-    // debug
-    if (logged6++ < 2) { // reached, use_linked_frame 0
-        ALOGE(">>> func_fill_frame(): use_linked_frame %d, %d", (int)use_linked_frame, logged6);
-    }
-
     // setup frame
-    if (use_linked_frame) {
+    if (use_linked_frame) { // 1
         // linked frame
         av_frame_ref(opaque->linked_frame, frame);
 
         overlay_fill(overlay, opaque->linked_frame, opaque->planes);
 
-        if (need_swap_uv)
+        if (need_swap_uv) // 1
             FFSWAP(Uint8*, overlay->pixels[1], overlay->pixels[2]);
     } else {
         // managed frame
@@ -246,16 +239,10 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
 
     // swscale / direct draw
     /*
-     ALOGE("ijk_image_convert w=%d, h=%d, df=%d, dd=%d, dl=%d, sf=%d, sd=%d, sl=%d",
-     (int)frame->width,
-     (int)frame->height,
-     (int)dst_format,
-     (int)swscale_dst_pic.data[0],
-     (int)swscale_dst_pic.linesize[0],
-     (int)frame->format,
-     (int)(const uint8_t**) frame->data,
-     (int)frame->linesize);
-     */
+    ALOGE("ijk_image_convert w=%d, h=%d, df=%d, dd=%d, dl=%d, sf=%d, sd=%d, sl=%d",
+          (int)frame->width, (int)frame->height, (int)dst_format, (int)swscale_dst_pic.data[0],
+          (int)swscale_dst_pic.linesize[0], (int)frame->format, (int)(const uint8_t**) frame->data, (int)frame->linesize);
+    */
     if (use_linked_frame) {
         // do nothing
     } else if (ijk_image_convert(frame->width, frame->height,

@@ -132,7 +132,7 @@ ssize_t SDL_AMediaCodec_FakeFifo_dequeueOutputBuffer(SDL_AMediaCodec_FakeFifo *f
             *info        = fake->info;
             info->flags |= AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME;
             dequeue_ret  = fake->index;
-
+            
             FAK_TRACE("%s, [%d]%lld", __func__, fifo->begin, info->presentationTimeUs);
 
             fifo->begin = (fifo->begin + 1) % FAKE_BUFFER_QUEUE_SIZE;

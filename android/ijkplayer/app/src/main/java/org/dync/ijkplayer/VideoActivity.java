@@ -152,10 +152,10 @@ public class VideoActivity extends BaseActivity {
     Button btnRatio;
     @BindView(R.id.btn_rotation)
     Button btnRotation;
-    @BindView(R.id.btn_ijk_player)
-    Button btnIjkPlayer;
-    @BindView(R.id.btn_exo_player)
-    Button btnExoPlayer;
+//  @BindView(R.id.btn_ijk_player)
+//  Button btnIjkPlayer;
+//  @BindView(R.id.btn_exo_player)
+//  Button btnExoPlayer;
     @BindView(R.id.sp_speed)
     Spinner spSpeed;
     @BindView(R.id.btn_window_player)
@@ -255,14 +255,16 @@ public class VideoActivity extends BaseActivity {
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
+            /*
             case R.id.btn_ijk_player:
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkMediaPlayer);
                 break;
             case R.id.btn_exo_player:
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkExoMediaPlayer);
                 break;
+            */
             case R.id.btn_rotation:
-                //mPlayerController.toogleVideoRotation();
+                //mPlayerController.toggleVideoRotation();
                 mPlayerController.stopRecord();
                 //mPlayerController.setPlayerRotation(90);
                 break;
@@ -699,6 +701,8 @@ public class VideoActivity extends BaseActivity {
                 initPlayer();
             }
         });
+
+        /*
         Spinner sp_gesture = (Spinner) findViewById(R.id.sp_gesture);
         final String[] gesture = {"视频手势操作", "开启", "关闭"};
         ArrayAdapter<String> gestureAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, gesture);
@@ -730,6 +734,8 @@ public class VideoActivity extends BaseActivity {
                 // Another interface callback
             }
         });
+        */
+
         Spinner sp_speed = (Spinner) findViewById(R.id.sp_speed);
         final String[] speeds = {"倍速播放", "0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, speeds);
@@ -757,6 +763,7 @@ public class VideoActivity extends BaseActivity {
             }
         });
 
+        /*
         Spinner sp_subtitle = (Spinner) findViewById(R.id.sp_subtitle);
         final String[] subtitles = {
                 "字幕",
@@ -836,6 +843,7 @@ public class VideoActivity extends BaseActivity {
                 // Another interface callback
             }
         });
+        */
     }
 
     private void showVideoLoading() {

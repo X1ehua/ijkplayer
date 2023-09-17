@@ -252,7 +252,7 @@ typedef struct Decoder {
     AVPacket pkt;
     AVPacket pkt_temp;
     PacketQueue *queue;
-    AVCodecContext *avctx;
+    AVCodecContext *codec_ctx;
     int pkt_serial;
     int finished;
     int packet_pending;

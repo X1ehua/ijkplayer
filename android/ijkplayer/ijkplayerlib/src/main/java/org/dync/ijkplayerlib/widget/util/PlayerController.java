@@ -400,7 +400,8 @@ public class PlayerController {
     }
 
     public void startRecord() {
-        mVideoView.getMediaPlayer().startRecord();
+        //mVideoView.getMediaPlayer().startRecord();
+        mVideoView.getMediaPlayer().snapshot();
     }
 
     public void stopRecord() {
@@ -444,7 +445,7 @@ public class PlayerController {
     private int mCurrentRotationIndex = 0;
     private int mCurrentRotation = rotations[0];
 
-    public PlayerController toogleVideoRotation() {
+    public PlayerController toggleVideoRotation() {
         mCurrentRotationIndex++;
         mCurrentRotationIndex %= rotations.length;
 

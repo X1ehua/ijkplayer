@@ -104,9 +104,10 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public static final int OPT_CATEGORY_SWS        = 3;
     public static final int OPT_CATEGORY_PLAYER     = 4;
 
-    public static final int SDL_FCC_YV12 = 0x32315659; // YV12
-    public static final int SDL_FCC_RV16 = 0x36315652; // RGB565
-    public static final int SDL_FCC_RV32 = 0x32335652; // RGBX8888
+    public static final int SDL_FCC_YV12   = 0x32315659; // YV12
+    public static final int SDL_FCC_RV16   = 0x36315652; // RGB565
+    public static final int SDL_FCC_RV32   = 0x32335652; // RGBX8888
+    public static final int SDL_FCC__GLES2 = 844318047;  // let Vout choose format
     //----------------------------------------
 
     //----------------------------------------
@@ -1324,8 +1325,8 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
             return;
         }
 
-        String path = "/sdcard/Movies/";
-        String filename = "CCLive-" + new SimpleDateFormat("MMdd-HHmmss").format(new Date()) + ".jpg";
+        String path = "/sdcard/Pictures/Screenshots/";
+        String filename = "Screenshot_" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".jpg";
         saveBitmap(path, filename, bitmap);
     }
 

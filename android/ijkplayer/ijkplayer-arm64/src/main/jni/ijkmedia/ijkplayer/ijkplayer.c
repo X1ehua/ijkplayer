@@ -838,32 +838,17 @@ void ffp_snapshot(FFPlayer *ffp, uint8_t *frame_buf)
             i++;
             continue;
         }
+
         int width  = vp->bmp->w;
         int height = vp->bmp->h;
         int line_size = vp->bmp->pitches[0];
-        ALOGE(">>> ffp_snapshot rindex %d + i %d: %d x %d, pitches[0] %d, format %x/%d", // 0x434D415F/10001
-            is->pictq.rindex, i,
-            width, height, line_size, vp->bmp->format, vp->format);
-        if (line_size <= 0) {
-            // ALOGE(">>> ffp_snapshot failed for invalid line_size");
-            // return;
-        }
 
         // copy data to java Bitmap.pixels
         uint8_t* src = vp->bmp->pixels[0];
-        if (!src) {
-            ALOGE(">>> vp->bmp->pixels[0] is null, %d", i);
-            i ++;
-            continue;
-        }
-
         int pixels = width * 4;
-        // for (i = 0; i < height; i++) {
-        //     memcpy(frame_buf + i * pixels, src + i * line_size, pixels);
-        // }
-        ALOGE(">>> #1 pixel data copied %d, i %d, src %x", pixels * height, i, src);
-        // memcpy(frame_buf, src, pixels * height);
-        ALOGE(">>> #2 pixel data copied %d, i %d", pixels * height, i);
+        for (i = 0; i < height; i++) {
+            memcpy(frame_buf + i * pixels, src + i * line_size, pixels);
+        }
         return;
     }
 }

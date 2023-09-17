@@ -141,8 +141,6 @@ static void func_free_l(SDL_Vout *vout)
     SDL_Vout_FreeInternal(vout);
 }
 
-static int logged4 = 0;
-
 static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
 {
     SDL_Vout_Opaque *opaque = vout->opaque;
@@ -171,24 +169,11 @@ static int func_display_overlay_l(SDL_Vout *vout, SDL_VoutOverlay *overlay)
         return -1;
     }
 
-    /* 为何有时有此 log，有时没有 ??? */
-    if (logged4++ < 2) {
-        ALOGE(">> overlay->format %x, logged %d", (int)(overlay->format), logged4);
-        ALOGE("\tSDL_FCC__AMC: %x", SDL_FCC__AMC); // 434d415f
-        ALOGE("\tSDL_FCC_RV24: %x", SDL_FCC_RV24);
-        ALOGE("\tSDL_FCC_I420: %x", SDL_FCC_I420);
-        ALOGE("\tSDL_FCC_I444P10LE: %x", SDL_FCC_I444P10LE);
-        ALOGE("\tSDL_FCC_YV12: %x", SDL_FCC_YV12);
-        ALOGE("\tSDL_FCC_RV16: %x", SDL_FCC_RV16);
-        ALOGE("\tSDL_FCC_RV32: %x", SDL_FCC_RV32);
-    }
-
     // ALOGW(">> overlay->format %x [SDL_FCC_RV32 %x]", (int)(overlay->format), SDL_FCC_RV32);
     switch(overlay->format) {
     case SDL_FCC__AMC: {
         // only ANativeWindow support
         IJK_EGL_terminate(opaque->egl);
-        if (logged4 < 5) ALOGE("overlay->format == SDL_FCC__AMC >> SDL_VoutOverlayAMediaCodec_releaseFrame_l()");
         return SDL_VoutOverlayAMediaCodec_releaseFrame_l(overlay, NULL, true);
     }
     case SDL_FCC_RV24:
@@ -390,16 +375,16 @@ static int SDL_VoutAndroid_releaseBufferProxy_l(SDL_Vout *vout, SDL_AMediaCodecB
     if (!proxy)
         return 0;
 
-    if (logged4 < 5) {
-        ALOGW("%s: [%d] -------- proxy %d: vout: %d idx: %d render: %s fake: %s",
-            __func__,
-            proxy->buffer_id,
-            proxy->acodec_serial,
-            SDL_AMediaCodec_getSerial(opaque->acodec),
-            proxy->buffer_index,
-            render ? "true" : "false",
-            (proxy->buffer_info.flags & AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME) ? "YES" : "NO");
-    }
+    #if 0
+    ALOGW("%s: [%d] -------- proxy %d: vout: %d idx: %d render: %s fake: %s",
+        __func__,
+        proxy->buffer_id,
+        proxy->acodec_serial, // proxy 1
+        SDL_AMediaCodec_getSerial(opaque->acodec), // vout 1
+        proxy->buffer_index,
+        render ? "true" : "false", // true
+        (proxy->buffer_info.flags & AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME) ? "YES" : "NO"); // NO
+    #endif
 
     ISDL_Array__push_back(&opaque->overlay_pool, proxy);
 
@@ -424,7 +409,6 @@ static int SDL_VoutAndroid_releaseBufferProxy_l(SDL_Vout *vout, SDL_AMediaCodecB
     }
 
     sdl_amedia_status_t amc_ret = SDL_AMediaCodec_releaseOutputBuffer(opaque->acodec, proxy->buffer_index, render);
-    if (logged4 < 5) ALOGW(">>> SDL_AMediaCodec_releaseOutputBuffer() amc_ret %d", amc_ret);
 
     if (amc_ret != SDL_AMEDIA_OK) {
         ALOGW("%s: [%d] !!!!!!!! proxy %d: vout: %d idx: %d render: %s, fake: %s",

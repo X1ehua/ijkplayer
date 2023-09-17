@@ -104,8 +104,6 @@ inline static bool check_object(SDL_VoutOverlay* object, const char *func_name)
     return true;
 }
 
-static int logged5 = 0;
-
 static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
 {
     assert(frame->format == IJK_AV_PIX_FMT__ANDROID_MEDIACODEC);
@@ -130,10 +128,6 @@ static int func_fill_frame(SDL_VoutOverlay *overlay, const AVFrame *frame)
     overlay->pitches[0] = 0;
     overlay->pitches[1] = 0;
     overlay->is_private = 1;
-
-    if (logged5++ < 2) { // reached
-        ALOGE(">>> func_fill_frame() in ijksdk_vout_overlay_android_mediacodec.c invoked! %d", logged5);
-    }
 
     overlay->w = (int)frame->width;
     overlay->h = (int)frame->height;
