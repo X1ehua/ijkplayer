@@ -148,12 +148,12 @@ public class VideoActivity extends BaseActivity {
     ProgressBar bottomProgress;
     @BindView(R.id.rl_video_view_layout)
     RelativeLayout rlVideoViewLayout;
-    @BindView(R.id.btn_ratio)
-    Button btnRatio;
-    @BindView(R.id.btn_rotation)
-    Button btnRotation;
-//  @BindView(R.id.btn_ijk_player)
-//  Button btnIjkPlayer;
+    @BindView(R.id.btn_start_record)
+    Button btnStartRecord;
+//  @BindView(R.id.btn_stop_record)
+//  Button btnStopRecord;
+    @BindView(R.id.btn_snapshot)
+    Button btnSnapshot;
 //  @BindView(R.id.btn_exo_player)
 //  Button btnExoPlayer;
     @BindView(R.id.sp_speed)
@@ -262,41 +262,23 @@ public class VideoActivity extends BaseActivity {
             case R.id.btn_exo_player:
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkExoMediaPlayer);
                 break;
-            */
-            case R.id.btn_rotation:
+            case R.id.btn_stop_record:
                 //mPlayerController.toggleVideoRotation();
                 mPlayerController.stopRecord();
                 //mPlayerController.setPlayerRotation(90);
                 break;
-            case R.id.btn_ratio:
+            */
+            case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
                 mPlayerController.startRecord();
+                break;
+            case R.id.btn_snapshot:
+                mPlayerController.snapshot();
                 break;
             case R.id.btn_window_player:
                 XXPermissions.with(this)
                         .permission(Permission.SYSTEM_ALERT_WINDOW)
-                        .request(new OnPermissionCallback() {
-
-                            @Override
-                            public void onGranted(List<String> permissions, boolean all) {
-                                WindowManagerUtil.createSmallWindow(mContext, videoView.getMediaPlayer());
-                                videoView.setRenderView(null);
-                                WindowManagerUtil.setWindowCallBack(new WindowManagerUtil.WindowCallBack() {
-                                    @Override
-                                    public void removeSmallWindow(IMediaPlayer mediaPlayer) {
-                                        WindowManagerUtil.removeSmallWindow(mContext);
-                                        //videoView.setMediaPlayer(mediaPlayer);
-                                        videoView.resetRenders();
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onDenied(List<String> permissions, boolean never) {
-                                //Toast.makeText(mContext, "需要取得权限以使用悬浮窗", Toast.LENGTH_SHORT).show();
-                                XXPermissions.startPermissionActivity(VideoActivity.this, permissions);
-                            }
-                        });
+                        .request( getOnPermissionCallback() );
                 break;
             case R.id.btn_app_player:
                 WindowManagerUtil.createSmallApp(mActivity, videoView.getMediaPlayer());
@@ -311,6 +293,30 @@ public class VideoActivity extends BaseActivity {
                 });
                 break;
         }
+    }
+
+    private OnPermissionCallback getOnPermissionCallback() {
+        return new OnPermissionCallback() {
+            @Override
+            public void onGranted(List<String> permissions, boolean all) {
+                WindowManagerUtil.createSmallWindow(mContext, videoView.getMediaPlayer());
+                videoView.setRenderView(null);
+                WindowManagerUtil.setWindowCallBack(new WindowManagerUtil.WindowCallBack() {
+                    @Override
+                    public void removeSmallWindow(IMediaPlayer mediaPlayer) {
+                        WindowManagerUtil.removeSmallWindow(mContext);
+                        //videoView.setMediaPlayer(mediaPlayer);
+                        videoView.resetRenders();
+                    }
+                });
+            }
+
+            @Override
+            public void onDenied(List<String> permissions, boolean never) {
+                //Toast.makeText(mContext, "需要取得权限以使用悬浮窗", Toast.LENGTH_SHORT).show();
+                XXPermissions.startPermissionActivity(VideoActivity.this, permissions);
+            }
+        };
     }
 
     private void initVideoListener() {
@@ -737,7 +743,7 @@ public class VideoActivity extends BaseActivity {
         */
 
         Spinner sp_speed = (Spinner) findViewById(R.id.sp_speed);
-        final String[] speeds = {"倍速播放", "0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"};
+        final String[] speeds = {"倍 速", "0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, speeds);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 

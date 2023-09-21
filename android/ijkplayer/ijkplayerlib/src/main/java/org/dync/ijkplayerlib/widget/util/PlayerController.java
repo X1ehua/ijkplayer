@@ -400,12 +400,15 @@ public class PlayerController {
     }
 
     public void startRecord() {
-        //mVideoView.getMediaPlayer().startRecord();
-        mVideoView.getMediaPlayer().snapshot();
+        mVideoView.getMediaPlayer().startRecord();
     }
 
     public void stopRecord() {
         mVideoView.getMediaPlayer().stopRecord();
+    }
+
+    public void snapshot() {
+        mVideoView.getMediaPlayer().snapshot();
     }
 
     /**
@@ -419,11 +422,13 @@ public class PlayerController {
     }
 
     /**
-     * 参考{@link IRenderView#AR_ASPECT_FIT_PARENT}、{@link IRenderView#AR_ASPECT_FILL_PARENT}、{@link IRenderView#AR_ASPECT_WRAP_CONTENT}
-     * {@link IRenderView#AR_16_9_FIT_PARENT}、{@link IRenderView#AR_4_3_FIT_PARENT}
      * 设置播放视频的宽高比
-     *
-     * @param showType 视频显示比例，如果该参数不在s_allAspectRatio数组范围内，则默认使用IRenderView.AR_ASPECT_FILL_PARENTIRenderView.AR_ASPECT_FILL_PARENT值
+     * 参考:
+     * {@link IRenderView#AR_ASPECT_FIT_PARENT}、  {@link IRenderView#AR_ASPECT_FILL_PARENT}、
+     * {@link IRenderView#AR_ASPECT_WRAP_CONTENT}、{@link IRenderView#AR_16_9_FIT_PARENT}、
+     * {@link IRenderView#AR_4_3_FIT_PARENT}
+     * @param showType 视频显示比例，如果该参数不在 s_allAspectRatio 数组范围内，则使用默认值
+     *                 IRenderView.AR_ASPECT_FILL_PARENTIRenderView.AR_ASPECT_FILL_PARENT
      */
     public PlayerController setVideoRatio(int showType) {
         currentShowType = showType;

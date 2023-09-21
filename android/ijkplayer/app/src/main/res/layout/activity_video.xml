@@ -21,7 +21,7 @@
         <org.dync.subtitleconverter.SubtitleView
             android:id="@+id/subtitleView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
 
         <ImageView
             android:id="@+id/video_cover"
@@ -35,9 +35,9 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:orientation="vertical"
             android:layout_gravity="center"
             android:gravity="center"
+            android:orientation="vertical"
             android:visibility="gone">
 
             <TextView
@@ -277,73 +277,83 @@
         android:layout_below="@+id/rl_video_view_layout"
         android:scrollbars="none">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btn_ratio"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="开始录制" />
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/btn_rotation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="结束录制" />
+            <Button
+                android:id="@+id/btn_start_record"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="开始录制" />
 
-        <!--
-        <Spinner
-            android:id="@+id/sp_gesture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            <!--
+            <Button
+                android:id="@+id/btn_stop_record"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="结束录制"
+                android:visibility="invisible" />
+            -->
 
-        <Button
-            android:id="@+id/btn_ijk_player"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="切换ijk播放器" />
+            <Button
+                android:id="@+id/btn_snapshot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="截 图" />
 
-        <Button
-            android:id="@+id/btn_exo_player"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="切换exo播放器" />
-        -->
+            <!--
+            <Spinner
+                android:id="@+id/sp_gesture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <Spinner
-            android:id="@+id/sp_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            <Button
+                android:id="@+id/btn_ijk_player"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="切换ijk播放器" />
 
-        <!--
-        <Spinner
-            android:id="@+id/sp_subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        -->
+            <Button
+                android:id="@+id/btn_exo_player"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="切换exo播放器" />
+            -->
 
-        <Button
-            android:id="@+id/btn_window_player"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="全局小窗口播放" />
+            <Spinner
+                android:id="@+id/sp_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <Button
-            android:id="@+id/btn_app_player"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="当前小窗口播放" />
+            <!--
+            <Spinner
+                android:id="@+id/sp_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            -->
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/btn_window_player"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="系统浮窗" />
+
+            <Button
+                android:id="@+id/btn_app_player"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClick"
+                android:text="内部浮窗" />
+
+        </LinearLayout>
 
     </HorizontalScrollView>
 
