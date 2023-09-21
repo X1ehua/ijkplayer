@@ -1321,25 +1321,28 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                long t0 = System.currentTimeMillis();
                 doSnapshot();
-                long dt = System.currentTimeMillis() - t0;
-                Log.w("ijkJava", "doSnapshot() time cost: " + dt);
             }
         }).start();
     }
 
     public void doSnapshot() {
+        long t0 = System.currentTimeMillis();
+
         Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
         int ret = native_snapshot(bitmap);
         if (ret != 0) {
             Log.e("IjkMedia", ">> native_snapshot() failed, ret " + ret);
             return;
         }
+        long t1 = System.currentTimeMillis();
 
         String path = "/sdcard/Pictures/Screenshots/";
         String filename = "Screenshot_" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".jpg";
         saveBitmap(path, filename, bitmap);
+
+        long t2 = System.currentTimeMillis();
+        Log.w("ijkJava", String.format("doSnapshot() time cost: %d + %d = %d", t1-t0, t2-t1, t2-t0));
     }
 
     static void saveBitmap(String path, String filename, Bitmap bitmap) {

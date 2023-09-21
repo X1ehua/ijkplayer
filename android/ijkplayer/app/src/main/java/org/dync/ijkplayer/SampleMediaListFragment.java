@@ -67,12 +67,30 @@ public class SampleMediaListFragment extends Fragment {
             }
         });
 
-        final String url2 = "rtmp://ns8.indexforce.com/home/mystream";
-        final String url1 = "rtmp://mozicode.com:2023/live/home";
-        //mAdapter.addItem(url1, "CCLive");
-        mAdapter.addItem(url2, "CCLive");
-        //mAdapter.addItem("http://mozicode.com/20230729-133932.mp4", "双打0721-1");
+
+        for (int i=0; i<URL_LIST.length; i++) {
+            mAdapter.addItem(URL_LIST[i][1], URL_LIST[i][0]);
+        }
     }
+
+    public static String getDefaultURL() {
+        return URL_LIST[0][1];
+    }
+
+    final static String URL_LIST[][] = {
+            {"1", "rtmp://192.168.2.8:2023/vod/b01.mp4"},
+            {"2", "rtmp://192.168.2.8:2023/live/home"},
+            {"3", "http://mozicode.com/garfield.mp4"},
+            {"4", "http://mozicode.com:2023/live/home"},
+            {"双打0721-1", "http://mozicode.com/20230729-133932.mp4"},
+    };
+    /*
+    String url0 = "http://mozicode.com/garfield.mp4";
+    String url1 = "rtmp://mozicode.com:2023/live/home";
+    String url2 = "rtmp://192.168.2.8:2023/live/home";
+    String url3 = "rtmp://192.168.2.8:2023/vod/garfield.mp4";
+    String url4 = "rtmp://192.168.2.8:2023/vod/b01.mp4";
+    */
 
     interface OnItemClickListener {
         void OnItemClick(Context context, String videoPath, String videoTitle);
