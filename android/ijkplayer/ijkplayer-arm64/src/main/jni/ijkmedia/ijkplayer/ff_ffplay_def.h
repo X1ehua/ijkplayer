@@ -551,7 +551,7 @@ inline static void ffp_reset_demux_cache_control(FFDemuxCacheControl *dcc)
 
 typedef struct CachedPackets
 {
-    AVPacket*   pkts;       // 用于保存的 AVPakcet 缓存
+    AVPacket*   pkts;       // 用于保存的 AVPacket 缓存
     int         arr_size;
     int         cached_num; // [0 ~ arr_size]
     int         last_idx;   // 最后更新的 packet index
