@@ -3072,6 +3072,7 @@ static int is_realtime(AVFormatContext *s)
 }
 
 #include <time.h>
+#include <inttypes.h>
 
 #define DURATION_DEBUG 0
 #if DURATION_DEBUG
@@ -3105,16 +3106,31 @@ int ffp_record_file(FFPlayer *ffp, const AVPacket *packet)
     uint8_t *data = pkt.data;
     memcpy(data, packet->data, packet->size);
 
+    // int64_t pts[3] = {0};
+    // int64_t dts[3] = {0};
+    // pts[0] = pkt.pts;
+    // dts[0] = pkt.dts;
     pthread_mutex_lock(&ffp->record_mutex);
     if (ffp->is_first_frame) { // 录制的第一帧，时间从 0 开始
+        ffp->record_start_pts = pkt.pts;
+        ffp->record_start_dts = pkt.dts;
+        ALOGE(">> record_start_pts/dts %" PRId64 "/%" PRId64, pkt.pts, pkt.dts);
         pkt.pts = 0;
         pkt.dts = 0;
         ffp->is_first_frame = false;
     }
     else { // 之后的每一帧都要减去开始录制时的值
-        pkt.pts = llabs(pkt.pts - ffp->record_start_pts);
-        pkt.dts = llabs(pkt.dts - ffp->record_start_dts);
+        // pkt.pts = llabs(pkt.pts - ffp->record_start_pts);
+        // pkt.dts = llabs(pkt.dts - ffp->record_start_dts);
+        pkt.pts = pkt.pts - ffp->record_start_pts;
+        pkt.dts = pkt.dts - ffp->record_start_dts;
+        if (pkt.pts < 0)
+            ALOGE(">>> pkt.pts %" PRId64 " < 0 after original - record_start_pts %" PRId64, pkt.pts, ffp->record_start_pts);
+        if (pkt.dts < 0)
+            ALOGE(">>> pkt.dts %" PRId64 " < 0 after original - record_start_dts %" PRId64, pkt.dts, ffp->record_start_dts);
     }
+    // pts[1] = pkt.pts;
+    // dts[1] = pkt.dts;
 
     in_stream = is->fmt_ctx->streams[pkt.stream_index];
     out_stream = ffp->m_ofmt_ctx->streams[pkt.stream_index];
@@ -3124,6 +3140,10 @@ int ffp_record_file(FFPlayer *ffp, const AVPacket *packet)
     pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
     pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
     pkt.pos = -1;
+    // pts[2] = pkt.pts;
+    // dts[2] = pkt.dts;
+    // ALOGE(">>> pts/dts: %" PRId64 "/%" PRId64 ", %" PRId64 "/%" PRId64 ", %" PRId64 "/%" PRId64,
+        // pts[0],dts[0], pts[1],dts[1], pts[2],dts[2]);
 
 #if DURATION_DEBUG
     if (duration_sum == 0) {
@@ -3148,9 +3168,14 @@ int ffp_record_file(FFPlayer *ffp, const AVPacket *packet)
     return ret;
 }
 
+#define RECORD_REALTIME 1
+
+#if RECORD_REALTIME
+void ffp_record_to_file_realtime(FFPlayer* ffp, AVPacket* pkt);
+#else
 void ffp_cache_packets_for_record(FFPlayer* ffp, AVPacket* pkt);
 void ffp_record_cached_packets_to_file(FFPlayer* ffp);
-// void ffp_record_to_file_realtime(FFPlayer* ffp, AVPacket* pkt);
+#endif
 
 /* this thread gets the stream from the disk or the network */
 static int read_thread(void *arg)
@@ -3258,7 +3283,7 @@ static int read_thread(void *arg)
                     break;
                 }
             }
-            err = avformat_find_stream_info(fmt_ctx, opts);
+            err = avformat_find_stream_info(fmt_ctx, opts); // flv 走到这里, nb_streams = 1 here
         } while(0);
         ffp_notify_msg1(ffp, FFP_MSG_FIND_STREAM_INFO);
 
@@ -3697,8 +3722,10 @@ static int read_thread(void *arg)
             av_packet_unref(pkt);
         }
 
+    #if !RECORD_REALTIME
         // 缓存 N 秒的 packets 用于录制时保存
         ffp_cache_packets_for_record(ffp, pkt);
+    #endif
 
         ffp_statistic_l(ffp);
 
@@ -3724,8 +3751,11 @@ static int read_thread(void *arg)
             }
         }
 
-        //ffp_record_to_file_realtime(ffp, pkt); // if (ffp->is_recording) ffp_record_file()
+    #if RECORD_REALTIME
+        ffp_record_to_file_realtime(ffp, pkt); // if (ffp->is_recording) ffp_record_file()
+    #else
         ffp_record_cached_packets_to_file(ffp);
+    #endif
     }
 
     ret = 0;
@@ -3741,6 +3771,7 @@ static int read_thread(void *arg)
     return 0;
 }
 
+#if !RECORD_REALTIME
 void ffp_cache_packets_for_record(FFPlayer* ffp, AVPacket* pkt)
 {
     if (ffp->is_recording || pkt->size <= 0) {
@@ -3785,38 +3816,33 @@ void ffp_cache_packets_for_record(FFPlayer* ffp, AVPacket* pkt)
         // ffp->cached_pkts.last_idx, ffp->cached_pkts.cached_num, res);
 }
 
-// AVPacket*   cached_pkts;         // 用于保存的 AVPakcet 缓存
-// int         cached_packet_num;
-// int         cached_packet_last_idx; // 最后更新的 packet index
-
 void ffp_record_cached_packets_to_file(FFPlayer* ffp)
 {
     if (!ffp->is_recording) { // 可以录制时，写入文件
         return;
     }
 
-    CachedPackets* cc_pkts = &(ffp->cached_pkts);
-    av_log(NULL, AV_LOG_ERROR, ">>>>>> start recording cached pkts to file");
+    CachedPackets* cached_pkts = &(ffp->cached_pkts);
+    av_log(NULL, AV_LOG_ERROR, ">>>>>> start recording CachedPackets to file");
     clock_t begin = clock();
 
     while (true) {
-
-        if (cc_pkts->save_idx == -1) { // init save_idx & saved_num
-            if (cc_pkts->cached_num < cc_pkts->arr_size) { // buff arr pkts 没用完
-                cc_pkts->save_idx = 0;
+        if (cached_pkts->save_idx == -1) { // init save_idx & saved_num
+            if (cached_pkts->cached_num < cached_pkts->arr_size) { // CachedPackets.pkts buff size 没用完
+                cached_pkts->save_idx = 0;
             }
             else { // 循环使用中
-                cc_pkts->save_idx = (cc_pkts->last_idx + 1) % cc_pkts->arr_size;
+                cached_pkts->save_idx = (cached_pkts->last_idx + 1) % cached_pkts->arr_size;
             }
-            cc_pkts->saved_num = 0;
+            cached_pkts->saved_num = 0;
         }
         else {
-            if (++ cc_pkts->save_idx >= cc_pkts->arr_size) {
-                cc_pkts->save_idx = 0;
+            if (++ cached_pkts->save_idx >= cached_pkts->arr_size) {
+                cached_pkts->save_idx = 0;
             }
         }
 
-        AVPacket* pkt = &(cc_pkts->pkts[cc_pkts->save_idx]);
+        AVPacket* pkt = &(cached_pkts->pkts[cached_pkts->save_idx]);
 
         // 开始录制前 dts 等于 pts 最后的值
         if (ffp->is_first_frame && pkt->pts == pkt->dts) {
@@ -3841,9 +3867,9 @@ void ffp_record_cached_packets_to_file(FFPlayer* ffp)
             }
         }
 
-        if (++ cc_pkts->saved_num >= cc_pkts->cached_num) {
+        if (++ cached_pkts->saved_num >= cached_pkts->cached_num) {
             av_log(NULL, AV_LOG_ERROR, ">> saved_num %d >= cached_num %d, stop_record()",
-                cc_pkts->saved_num, cc_pkts->cached_num);
+                cached_pkts->saved_num, cached_pkts->cached_num);
             ffp_stop_record(ffp);
             break;
         }
@@ -3851,38 +3877,38 @@ void ffp_record_cached_packets_to_file(FFPlayer* ffp)
     } // while
 
     double dt = (double)(clock() - begin) / CLOCKS_PER_SEC;
-    av_log(NULL, AV_LOG_ERROR, ">>>>>> cached pkts recorded to file, dt %.3fs", dt);
+    ALOGW(">>>>>> cached pkts recorded to file, dt %.3fs", dt);
 }
 
-#if 0
+#else // RECORD_REALTIME
+
 void ffp_record_to_file_realtime(FFPlayer* ffp, AVPacket* pkt)
 {
     // 开始录制前 dts 等于 pts 最后的值
-    if (ffp->is_first_frame && pkt->pts == pkt->dts) {
-        ffp->record_start_pts = pkt->pts;
-        ffp->record_start_dts = pkt->dts;
-    }
+    // if (ffp->is_first_frame && pkt->pts == pkt->dts) {
+    //     ffp->record_start_pts = pkt->pts;
+    //     ffp->record_start_dts = pkt->dts;
+    // }
 
     if (!ffp->is_recording) { // 可以录制时，写入文件
         return;
     }
 
-    // if (is->video_st && is->video_st->codecpar) {
-    //     AVCodecParameters *in_codecpar = is->video_st->codecpar;
-    //     if (in_codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-    //     }
-    // }
-
     if (!ffp->real_record && (pkt->flags & AV_PKT_FLAG_KEY)) { // 遇到关键帧再开始 record, quicktime 比较严格
-        MPTRACE("===== now III sample_rate =====\n");
+        MPTRACE("===== ffp->real_record = true =====\n");
         ffp->real_record = true;
     }
 
     if (ffp->real_record) {
+        //ALOGW("#101 pkt: size %d, dts %ld, pts %ld, duration %ld, data 0x%x", pkt->size, pkt->dts, pkt->pts, pkt->duration, (uint)pkt->data);
         if (0 != ffp_record_file(ffp, pkt)) {
             ffp->record_error = 1;
             ffp_stop_record(ffp);
         }
+    }
+    else {
+        static int nc = 1;
+        ALOGE(">>> not real_record %d", nc++);
     }
 }
 #endif
@@ -5356,11 +5382,11 @@ int ffp_start_record(FFPlayer *ffp, const char *file_name)
 
     // 打开输出文件
     if (!(ffp->m_ofmt->flags & AVFMT_NOFILE)) {
-        av_log(NULL, AV_LOG_ERROR, ">>> avio_open() #001");
         if (avio_open(&ffp->m_ofmt_ctx->pb, file_name, AVIO_FLAG_WRITE) < 0) {
             av_log(ffp, AV_LOG_ERROR, ">>> Could not open output file '%s'", file_name);
             goto end;
         }
+        av_log(NULL, AV_LOG_DEBUG, ">>> avio_open('%s') done", file_name);
     }
 
     // 写视频文件头
@@ -5371,6 +5397,7 @@ int ffp_start_record(FFPlayer *ffp, const char *file_name)
 
     ffp->is_recording = true;
     ffp->record_error = 0;
+
     // TODO: 录制完成后，对于 cached_pkts 的清理
 
     pthread_mutex_init(&ffp->record_mutex, NULL);
