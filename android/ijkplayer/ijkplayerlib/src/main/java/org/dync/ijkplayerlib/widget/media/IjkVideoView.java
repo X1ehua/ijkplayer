@@ -1134,7 +1134,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek");
 
         // 播放前的探测 size，默认是 1M, 改小一点会出画面更快
-        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "probesize", 1024 * 10);
+        //ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "probesize", 1024 * 10); // 10K not enough for vod stream
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "probesize", 1024 * 200);
 
         // 1 变速变调状态；0 变速不变调状态 [ soundtouch ? ]
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1);
