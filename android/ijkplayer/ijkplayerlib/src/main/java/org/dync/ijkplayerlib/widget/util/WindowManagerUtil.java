@@ -247,7 +247,7 @@ public class WindowManagerUtil {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                int action=event.getAction();
+                int action = event.getAction();
                 Log.i("TAG", "Touch:"+action);
                 switch(action) {
                     case MotionEvent.ACTION_DOWN:
@@ -259,13 +259,13 @@ public class WindowManagerUtil {
                     /**
                      * layout(l,t,r,b)
                      * l  Left position, relative to parent
-                     t  Top position, relative to parent
-                     r  Right position, relative to parent
-                     b  Bottom position, relative to parent
-                     * */
+                     * t  Top position, relative to parent
+                     * r  Right position, relative to parent
+                     * b  Bottom position, relative to parent
+                     */
                     case MotionEvent.ACTION_MOVE:
-                        int dx =(int)event.getRawX() - lastX;
-                        int dy =(int)event.getRawY() - lastY;
+                        int dx = (int)event.getRawX() - lastX;
+                        int dy = (int)event.getRawY() - lastY;
 
                         int left = v.getLeft() + dx;
                         int top = v.getTop() + dy;

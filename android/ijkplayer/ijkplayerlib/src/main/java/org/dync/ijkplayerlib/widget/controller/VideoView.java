@@ -226,15 +226,15 @@ public class VideoView extends RelativeLayout {
                 appVideoReplay.setVisibility(View.GONE);
                 appVideoRetry.setVisibility(View.GONE);
                 hideVideoLoading();
-                if(videoView.getDuration() > 1) {//exoplayer如果是直播流返回1
+                if (videoView.getDuration() > 1) {//exoplayer如果是直播流返回1
                     playerBottom.getSeekBar().setEnabled(true);
-                }else {
+                } else {
                     playerBottom.getSeekBar().setEnabled(false);
                 }
                 playerBottom.getIvPlayPause().setEnabled(false);
-                if(!Utils.isWifiConnected(mActivity) && !mPlayerController.isLocalDataSource(mVideoUri) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
-//                    mPlayerController.showWifiDialog();
-                }else {
+                if (!Utils.isWifiConnected(mActivity) && !mPlayerController.isLocalDataSource(mVideoUri) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
+                    // mPlayerController.showWifiDialog();
+                } else {
                     updatePlayState(false);
                 }
 
@@ -243,7 +243,7 @@ public class VideoView extends RelativeLayout {
                     if (!TextUtils.isEmpty(mVideoCoverUrl)) {
                         Glide.with(mContext).load(mVideoCoverUrl).into(ivCover);
                     }
-                }else {
+                } else {
                     ivCover.setImageDrawable(new ColorDrawable(0));
                 }
 
@@ -317,54 +317,54 @@ public class VideoView extends RelativeLayout {
                     case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING://视频日志跟踪
                         Log.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING:");
                         break;
-//                    case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH://网络带宽
-//                        Log.d(TAG, "MEDIA_INFO_NETWORK_BANDWIDTH: " + extra);
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_BAD_INTERLEAVING://
-//                        Log.d(TAG, "MEDIA_INFO_BAD_INTERLEAVING:");
-//                        break;
+                    // case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH://网络带宽
+                    //     Log.d(TAG, "MEDIA_INFO_NETWORK_BANDWIDTH: " + extra);
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_BAD_INTERLEAVING://
+                    //     Log.d(TAG, "MEDIA_INFO_BAD_INTERLEAVING:");
+                    //     break;
                     case IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE://不可设置播放位置，直播方面
                         Log.d(TAG, "MEDIA_INFO_NOT_SEEKABLE:");
                         break;
-//                    case IMediaPlayer.MEDIA_INFO_METADATA_UPDATE://视频数据更新
-//                        Log.d(TAG, "MEDIA_INFO_METADATA_UPDATE: " + extra);
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_TIMED_TEXT_ERROR://
-//                        Log.d(TAG, "MEDIA_INFO_TIMED_TEXT_ERROR:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_UNSUPPORTED_SUBTITLE://不支持字幕
-//                        Log.d(TAG, "MEDIA_INFO_UNSUPPORTED_SUBTITLE:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_SUBTITLE_TIMED_OUT://字幕超时
-//                        Log.d(TAG, "MEDIA_INFO_SUBTITLE_TIMED_OUT:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED://
-//                        Log.d(TAG, "MEDIA_INFO_VIDEO_ROTATION_CHANGED:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE://
-//                        Log.d(TAG, "MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE:");
-//                        break;
-////                    case IMediaPlayer.MEDIA_ERROR_UNKNOWN://
-////                        Log.d(TAG, "MEDIA_ERROR_UNKNOWN:");
-////                        break;
-//                    case IMediaPlayer.MEDIA_INFO_UNKNOWN://未知信息
-//                        Log.d(TAG, "MEDIA_INFO_UNKNOWN or MEDIA_ERROR_UNKNOWN:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_ERROR_SERVER_DIED://服务挂掉
-//                        Log.d(TAG, "MEDIA_ERROR_SERVER_DIED:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK://数据错误没有有效的回收
-//                        Log.d(TAG, "MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:");
-//                        break;
-//                    case IMediaPlayer.MEDIA_ERROR_IO://IO 错误
-//                        Log.d(TAG, "MEDIA_ERROR_IO :");
-//                        break;
-//                    case IMediaPlayer.MEDIA_ERROR_UNSUPPORTED://数据不支持
-//                        Log.d(TAG, "MEDIA_ERROR_UNSUPPORTED :");
-//                        break;
-//                    case IMediaPlayer.MEDIA_ERROR_TIMED_OUT://数据超时
-//                        Log.d(TAG, "MEDIA_ERROR_TIMED_OUT :");
-//                        break;
+                    // case IMediaPlayer.MEDIA_INFO_METADATA_UPDATE://视频数据更新
+                    //     Log.d(TAG, "MEDIA_INFO_METADATA_UPDATE: " + extra);
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_TIMED_TEXT_ERROR://
+                    //     Log.d(TAG, "MEDIA_INFO_TIMED_TEXT_ERROR:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_UNSUPPORTED_SUBTITLE://不支持字幕
+                    //     Log.d(TAG, "MEDIA_INFO_UNSUPPORTED_SUBTITLE:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_SUBTITLE_TIMED_OUT://字幕超时
+                    //     Log.d(TAG, "MEDIA_INFO_SUBTITLE_TIMED_OUT:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED://
+                    //     Log.d(TAG, "MEDIA_INFO_VIDEO_ROTATION_CHANGED:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE://
+                    //     Log.d(TAG, "MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_UNKNOWN://
+                    //     Log.d(TAG, "MEDIA_ERROR_UNKNOWN:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_INFO_UNKNOWN://未知信息
+                    //     Log.d(TAG, "MEDIA_INFO_UNKNOWN or MEDIA_ERROR_UNKNOWN:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_SERVER_DIED://服务挂掉
+                    //     Log.d(TAG, "MEDIA_ERROR_SERVER_DIED:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK://数据错误没有有效的回收
+                    //     Log.d(TAG, "MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_IO://IO 错误
+                    //     Log.d(TAG, "MEDIA_ERROR_IO :");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_UNSUPPORTED://数据不支持
+                    //     Log.d(TAG, "MEDIA_ERROR_UNSUPPORTED :");
+                    //     break;
+                    // case IMediaPlayer.MEDIA_ERROR_TIMED_OUT://数据超时
+                    //     Log.d(TAG, "MEDIA_ERROR_TIMED_OUT :");
+                    //     break;
                 }
                 return true;
             }
@@ -382,21 +382,21 @@ public class VideoView extends RelativeLayout {
                 .setBrightnessController()
                 .setVideoParentRatio(IRenderView.AR_16_9_FIT_PARENT)
                 .setVideoRatio(IRenderView.AR_16_9_FIT_PARENT)
-//                .setPortrait(true)
-//                .setOnlyFullScreen(true)
+                // .setPortrait(true)
+                // .setOnlyFullScreen(true)
                 .setKeepScreenOn(true)
                 .setNetWorkTypeTie(true)
                 .setNetWorkListener(new PlayerController.OnNetWorkListener() {
                     @Override
                     public void onChanged() {
-                        if(videoView.getCurrentState() == IjkVideoView.STATE_IDLE) {
+                        if (videoView.getCurrentState() == IjkVideoView.STATE_IDLE) {
                             appVideoReplay.setVisibility(View.VISIBLE);
                             appVideoRetry.setVisibility(View.GONE);
                             playerBottom.getIvPlayPause().setEnabled(false);
                             playerBottom.updatePlayState(false);
-                        }else if(videoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
+                        } else if (videoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
                             updatePlayState(false);
-                        }else {
+                        } else {
                             updatePlayState(false);
                         }
                     }
@@ -405,10 +405,14 @@ public class VideoView extends RelativeLayout {
                 .setOnConfigurationChangedListener(new PlayerController.OnConfigurationChangedListener() {
                     @Override
                     public void onChanged(int requestedOrientation) {
-                        if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                        if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT ||
+                            requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                        {
                             Utils.showSystemUI(getContext());
                             Utils.showStatusBar(getContext());
-                        }else if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+                        } else if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE ||
+                                   requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+                        {
                             Utils.hideSystemUI(getContext());
                             Utils.hideStatusBar(getContext());
                         }
@@ -417,11 +421,7 @@ public class VideoView extends RelativeLayout {
                 .setPanelControl(new PlayerController.PanelControlListener() {
                     @Override
                     public void operatorPanel(boolean isShowControlPanel) {
-                        if (isShowControlPanel) {
-                            showOrHideBars(true, true);
-                        } else {
-                            showOrHideBars(false, true);
-                        }
+                        showOrHideBars(isShowControlPanel, true);
                     }
                 })
                 .setPlayStateListener(new PlayerController.PlayStateListener() {
@@ -440,8 +440,8 @@ public class VideoView extends RelativeLayout {
                 .setSyncProgressListener(new PlayerController.SyncProgressListener() {
                     @Override
                     public void syncTime(long position, long duration) {
-                        playerBottom.getTvCurrentTime().setText(mPlayerController.generateTime(position));
-                        playerBottom.getTvTotalTime().setText(mPlayerController.generateTime(duration));
+                        playerBottom.getTvCurrentTime().setText(PlayerController.generateTime(position));
+                        playerBottom.getTvTotalTime().setText(PlayerController.generateTime(duration));
                     }
 
                     @Override
@@ -459,8 +459,8 @@ public class VideoView extends RelativeLayout {
                             playerVolumeBright.getLlVideoVolume().setVisibility(View.GONE);
                             playerVolumeBright.getTvVideoFastForwardTarget().setVisibility(View.VISIBLE);
                             playerVolumeBright.getTvVideoFastForwardAll().setVisibility(View.VISIBLE);
-                            playerVolumeBright.getTvVideoFastForwardTarget().setText(mPlayerController.generateTime(newPosition) + "/");
-                            playerVolumeBright.getTvVideoFastForwardAll().setText(mPlayerController.generateTime(duration));
+                            playerVolumeBright.getTvVideoFastForwardTarget().setText(PlayerController.generateTime(newPosition) + "/");
+                            playerVolumeBright.getTvVideoFastForwardAll().setText(PlayerController.generateTime(duration));
 
                             String text = showDelta > 0 ? ("+" + showDelta) : "" + showDelta;
                             playerVolumeBright.getTvVideoFastForward().setVisibility(View.VISIBLE);
@@ -498,9 +498,9 @@ public class VideoView extends RelativeLayout {
         if (mVideoUri != null) {
             showVideoLoading();
             videoView.setVideoURI(mVideoUri);
-            if(!Utils.isWifiConnected(mActivity) && !mPlayerController.isLocalDataSource(mVideoUri) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
+            if (!Utils.isWifiConnected(mActivity) && !mPlayerController.isLocalDataSource(mVideoUri) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
                 mPlayerController.showWifiDialog();
-            }else {
+            } else {
                 updatePlayState(false);
             }
         }
@@ -650,7 +650,7 @@ public class VideoView extends RelativeLayout {
     }
 
     private void showVideoInfo(IMediaPlayer mMediaPlayer) {
-        if (mMediaPlayer != null && mMediaPlayer instanceof IjkMediaPlayer) {
+        if (mMediaPlayer instanceof IjkMediaPlayer) {
             IjkMediaPlayer mp = (IjkMediaPlayer) mMediaPlayer;
 
             float fpsOutput = mp.getVideoOutputFramesPerSecond();
@@ -702,9 +702,7 @@ public class VideoView extends RelativeLayout {
     }
 
     /**
-     * 更新SeekBar的进度
-     *
-     * @param position
+     * 更新 SeekBar 的进度
      */
     public void updateProgress(int position) {
         mPlayerController.updateProgress(position, videoView.getDuration());
