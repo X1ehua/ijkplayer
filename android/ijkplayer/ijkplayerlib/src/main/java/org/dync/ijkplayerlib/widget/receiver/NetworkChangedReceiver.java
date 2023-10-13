@@ -26,12 +26,12 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-//        networkListener(context, intent);
+        // networkListener(context, intent);
         onlyWifiNetworkListener(intent);
     }
 
     private void networkListener(Context context, Intent intent) {
-        boolean isWifiConnected = false, isMobileConnected = false, isWifiAvailable = false, isMobileAvailable = false;
+        boolean isWifiConnected = false, isCellularConnected = false, isWifiAvailable = false, isMobileAvailable = false;
         // 这个监听网络连接的设置，包括wifi和移动数据的打开和关闭。.
         // 最好用的还是这个监听。wifi如果打开，关闭，以及连接上可用的连接都会接到监听。见log
         // 这个广播的最大弊端是比上边两个广播的反应要慢，如果只是要监听wifi，我觉得还是用上边两个配合比较合适
@@ -54,7 +54,7 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
                         }
                     } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
                         // connected to the mobile provider's data plan
-                        isMobileConnected = true;
+                        isCellularConnected = true;
                         if (info.isAvailable()) {
                             Log.d(TAG, "当前移动网络连接可用 ");
                             isMobileAvailable = true;
@@ -63,31 +63,30 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
                             isMobileAvailable = false;
                         }
                     }
-                } else {//
+                } else {
                     Log.d(TAG, "当前没有网络连接，请确保你已经打开网络!! ");
                     isWifiConnected = false;
                     isWifiAvailable = false;
-                    isMobileConnected = false;
+                    isCellularConnected = false;
                     isMobileAvailable = false;
                 }
 
                 Log.d(TAG, "info.getTypeName()" + info.getTypeName());
-                Log.d(TAG, "getSubtypeName()" + info.getSubtypeName());
-                Log.d(TAG, "getState()" + info.getState());
-                Log.d(TAG, "getDetailedState()"
-                        + info.getDetailedState().name());
+                Log.d(TAG, "getSubtypeName()"   + info.getSubtypeName());
+                Log.d(TAG, "getState()"         + info.getState());
+                Log.d(TAG, "getDetailedState()" + info.getDetailedState().name());
                 Log.d(TAG, "getDetailedState()" + info.getExtraInfo());
-                Log.d(TAG, "getType()" + info.getType());
+                Log.d(TAG, "getType()"          + info.getType());
             } else {   // not connected to the internet
                 Log.d(TAG, "当前没有网络连接，请确保你已经打开网络 ");
                 isWifiConnected = false;
                 isWifiAvailable = false;
-                isMobileConnected = false;
+                isCellularConnected = false;
                 isMobileAvailable = false;
             }
 
             if (netWorkChangeListener != null) {
-                netWorkChangeListener.isConnected(isWifiConnected, isWifiAvailable, isMobileConnected, isMobileAvailable);
+                netWorkChangeListener.isConnected(isWifiConnected, isWifiAvailable, isCellularConnected, isMobileAvailable);
             }
         }
     }
@@ -98,32 +97,32 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
      * @param intent
      */
     private void onlyWifiNetworkListener(Intent intent) {
-        boolean isWifiConnected = false, isMobileConnected = false, isWifiAvailable = false, isMobileAvailable = false;
+        boolean isWifiConnected = false, isCellularConnected = false, isWifiAvailable = false, isMobileAvailable = false;
         if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
-            //获取联网状态的NetworkInfo对象
+            //获取联网状态的 NetworkInfo 对象
             NetworkInfo info = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
-//            ConnectivityManager manager = (ConnectivityManager) context
-//                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-//            NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
+            // ConnectivityManager manager = (ConnectivityManager) context
+            //         .getSystemService(Context.CONNECTIVITY_SERVICE);
+            // NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
             if (info != null) {
                 //如果当前的网络连接成功并且网络连接可用
                 if (NetworkInfo.State.CONNECTED == info.getState()) {
                     if (info.getType() == ConnectivityManager.TYPE_WIFI) {
                         isWifiConnected = true;
-                        if(info.isAvailable()){
-                            Log.i(TAG, "WIFI网络连上");
+                        if(info.isAvailable()) {
+                            Log.i(TAG, "WIFI 网络已连接");
                             isWifiAvailable = true;
-                        }else {
-                            Log.i(TAG, "WIFI网络连上，但不可用");
+                        } else {
+                            Log.i(TAG, "WIFI 网络已连接，但并不可用");
                             isWifiAvailable = false;
                         }
-                    }else if(info.getType() == ConnectivityManager.TYPE_MOBILE){
-                        isMobileConnected = true;
-                        if(info.isAvailable()){
-                            Log.i(TAG, "手机网络数据连上");
+                    } else if(info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                        isCellularConnected = true;
+                        if (info.isAvailable()) {
+                            Log.i(TAG, "蜂窝网络已连接");
                             isMobileAvailable = true;
-                        }else {
-                            Log.i(TAG, "手机网络数据连上，但不可用");
+                        } else {
+                            Log.i(TAG, "蜂窝网络已连接，但并不可用");
                             isMobileAvailable = false;
                         }
                     }
@@ -136,58 +135,55 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
                             Log.i(TAG, "手机网络数据断开");
                             break;
                     }
-                    if(info.isConnected()) {
-
-                    }else {
-
-                    }
+                    // if(info.isConnected()) {
+                    // } else {
+                    // }
                 }
             }
             Log.i(TAG, "NetworkInfo: " + info.toString());
-//            if (info != null) { // connected to the internet
-//                if (NetworkInfo.State.CONNECTED == info.getState()) {
-//                    if (info.getType() == ConnectivityManager.TYPE_WIFI) {
-//                        // connected to wifi
-//                        isWifiConnected = true;
-//                        if (info.isAvailable()) {
-//                            Log.d(TAG, "当前WiFi连接可用 ");
-//                            isWifiAvailable = true;
-//                        } else {
-//                            Log.d(TAG, "当前WiFi连接不可用 ");
-//                            isWifiAvailable = false;
-//                        }
-//                    } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
-//                        // connected to the mobile provider's data plan
-//                        isMobileConnected = true;
-//                        if (info.isAvailable()) {
-//                            Log.d(TAG, "当前移动网络连接可用 ");
-//                            isMobileAvailable = true;
-//                        } else {
-//                            Log.d(TAG, "当前移动网络连接不可用 ");
-//                            isMobileAvailable = false;
-//                        }
-//                    }
-//                } else {//
-//                    Log.d(TAG, "当前没有网络连接，请确保你已经打开网络!! ");
-//                    isWifiConnected = false;
-//                    isWifiAvailable = false;
-//                    isMobileConnected = false;
-//                    isMobileAvailable = false;
-//                }
-//            }
+            // if (info != null) { // connected to the internet
+            //     if (NetworkInfo.State.CONNECTED == info.getState()) {
+            //         if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+            //             // connected to wifi
+            //             isWifiConnected = true;
+            //             if (info.isAvailable()) {
+            //                 Log.d(TAG, "当前WiFi连接可用 ");
+            //                 isWifiAvailable = true;
+            //             } else {
+            //                 Log.d(TAG, "当前WiFi连接不可用 ");
+            //                 isWifiAvailable = false;
+            //             }
+            //         } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+            //             // connected to the mobile provider's data plan
+            //             isCellularConnected = true;
+            //             if (info.isAvailable()) {
+            //                 Log.d(TAG, "当前移动网络连接可用 ");
+            //                 isMobileAvailable = true;
+            //             } else {
+            //                 Log.d(TAG, "当前移动网络连接不可用 ");
+            //                 isMobileAvailable = false;
+            //             }
+            //         }
+            //     } else {//
+            //         Log.d(TAG, "当前没有网络连接，请确保你已经打开网络!! ");
+            //         isWifiConnected = false;
+            //         isWifiAvailable = false;
+            //         isCellularConnected = false;
+            //         isMobileAvailable = false;
+            //     }
+            // }
         }
         if (netWorkChangeListener != null) {
-            netWorkChangeListener.isConnected(isWifiConnected, isWifiAvailable, isMobileConnected, isMobileAvailable);
+            netWorkChangeListener.isConnected(isWifiConnected, isWifiAvailable, isCellularConnected, isMobileAvailable);
         }
     }
 
     private String getConnectionType(int type) {
-        String connType = "";
         if (type == ConnectivityManager.TYPE_MOBILE) {
-            connType = "手机网络数据";
+            return "手机蜂窝网络";
         } else if (type == ConnectivityManager.TYPE_WIFI) {
-            connType = "WIFI网络";
+            return "WiFi 网络";
         }
-        return connType;
+        return "未知网络类型";
     }
 }

@@ -263,9 +263,8 @@ public class VideoActivity extends BaseActivity {
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkExoMediaPlayer);
                 break;
             case R.id.btn_stop_record:
-                //mPlayerController.toggleVideoRotation();
-                mPlayerController.stopRecord();
                 //mPlayerController.setPlayerRotation(90);
+                mPlayerController.stopRecord();
                 break;
             */
             case R.id.btn_start_record:

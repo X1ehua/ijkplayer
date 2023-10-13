@@ -95,7 +95,7 @@ public class NetworkManager {
      * @param context
      * @return
      */
-    public static boolean isMobileConnected(Context context) {
+    public static boolean isCellularConnected(Context context) {
         if (context != null) {
             //获取手机所有连接管理对象(包括对wi-fi,net等连接的管理)
             ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context

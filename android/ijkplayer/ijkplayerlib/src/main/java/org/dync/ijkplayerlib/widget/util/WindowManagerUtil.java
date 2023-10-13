@@ -54,6 +54,7 @@ public class WindowManagerUtil {
      * @param context
      * @param mediaPlayer
      */
+    @SuppressWarnings("deprecation")
     public static void createSmallWindow(final Context context, final IMediaPlayer mediaPlayer) {
         if (smallWindow != null) {
             return;
@@ -65,7 +66,7 @@ public class WindowManagerUtil {
             smallWindowParams = new LayoutParams();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 smallWindowParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            }else {
+            } else {
                 smallWindowParams.type = WindowManager.LayoutParams.TYPE_PHONE;
             }
             smallWindowParams.format = PixelFormat.RGBA_8888;
@@ -74,10 +75,10 @@ public class WindowManagerUtil {
             smallWindowParams.gravity = Gravity.LEFT | Gravity.TOP;
             int width;
             int height;
-            if(screenWidth > screenHeight) {
+            if (screenWidth > screenHeight) {
                 width = screenHeight / 2;
                 height = width * 9 / 16;
-            }else {
+            } else {
                 width = screenWidth / 2;
                 height = width * 9 / 16;
             }
@@ -88,7 +89,7 @@ public class WindowManagerUtil {
             smallWindowParams.height = height;
         }
         smallWindow = new IjkVideoView(context);
-        if(mediaPlayer != null) {
+        if (mediaPlayer != null) {
             smallWindow.setMediaPlayer(mediaPlayer);
             smallWindow.setAspectRatio(IRenderView.AR_ASPECT_FIT_PARENT);
             smallWindow.resetRenders();
@@ -151,7 +152,7 @@ public class WindowManagerUtil {
                         xInScreen = event.getRawX();
                         yInScreen = event.getRawY() - getStatusBarHeight(context);
                         // 手指移动的时候更新小悬浮窗的位置
-                        if(smallWindowParams != null) {
+                        if (smallWindowParams != null) {
                             smallWindowParams.x = (int) (xInScreen - xInView);
                             smallWindowParams.y = (int) (yInScreen - yInView);
                             mWindowManager.updateViewLayout(relativeLayout, smallWindowParams);
@@ -163,7 +164,7 @@ public class WindowManagerUtil {
                             long end = System.currentTimeMillis() - startTime;
                             // 双击的间隔在 300ms以下
                             if (end < 300) {
-                                if(mWindowCallBack != null) {
+                                if (mWindowCallBack != null) {
                                     mWindowCallBack.removeSmallWindow(mediaPlayer);
                                 }
                             }
@@ -209,7 +210,7 @@ public class WindowManagerUtil {
         screenHeight = dm.heightPixels;
         smallApp = new IjkVideoView(context);
         smallApp.setFocusableInTouchMode(false);
-        if(mediaPlayer != null) {
+        if (mediaPlayer != null) {
             smallApp.setMediaPlayer(mediaPlayer);
             smallApp.setAspectRatio(IRenderView.AR_ASPECT_FIT_PARENT);
             smallApp.resetRenders();
@@ -220,7 +221,7 @@ public class WindowManagerUtil {
         );
         int width;
         int height;
-        if(screenWidth > screenHeight) {
+        if (screenWidth > screenHeight) {
             width = screenHeight / 2;
             height = width * 9 / 16;
         }else {
@@ -248,7 +249,7 @@ public class WindowManagerUtil {
             public boolean onTouch(View v, MotionEvent event) {
                 int action=event.getAction();
                 Log.i("TAG", "Touch:"+action);
-                switch(action){
+                switch(action) {
                     case MotionEvent.ACTION_DOWN:
                         lastX = (int) event.getRawX();
                         lastY = (int) event.getRawY();
@@ -270,19 +271,19 @@ public class WindowManagerUtil {
                         int top = v.getTop() + dy;
                         int right = v.getRight() + dx;
                         int bottom = v.getBottom() + dy;
-                        if(left < 0){
+                        if (left < 0) {
                             left = 0;
                             right = left + v.getWidth();
                         }
-                        if(right > screenWidth){
+                        if (right > screenWidth) {
                             right = screenWidth;
                             left = right - v.getWidth();
                         }
-                        if(top < 0){
+                        if (top < 0) {
                             top = 0;
                             bottom = top + v.getHeight();
                         }
-                        if(bottom > screenHeight){
+                        if (bottom > screenHeight) {
                             bottom = screenHeight;
                             top = bottom - v.getHeight();
                         }
@@ -298,7 +299,7 @@ public class WindowManagerUtil {
                             // 双击的间隔在 300ms以下
                             if (end < 300) {
                                 removeSmallApp(activity);
-                                if(appCallBack != null) {
+                                if (appCallBack != null) {
                                     appCallBack.removeSmallApp(smallApp.getMediaPlayer());
                                 }
                             }

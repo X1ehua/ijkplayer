@@ -74,17 +74,17 @@ public class SampleMediaListFragment extends Fragment {
     }
 
     public static String getDefaultURL() {
-        return URL_LIST[0][1];
+        return URL_LIST[6][1];
     }
 
     final static String URL_LIST[][] = {
-            {"0", "rtmp://192.168.2.8:2023/vod/b01.mp4"},
-            {"1", "rtmp://192.168.2.8:2023/vod/garfield.mp4"},
-            {"2", "rtmp://192.168.2.8:2023/live/home"},
-            {"3", "http://mozicode.com/garfield.mp4"},
+            {"0", "http://192.168.2.6/vod/3s.mp4"},
+            {"1", "http://192.168.2.6/vod/10s.mp4"},
+            {"2", "rtmp://192.168.2.6:2023/vod/10s.mp4"},
+            {"3", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
             {"4", "rtmp://mozicode.com:2023/live/home"},
-            {"5", "http://192.168.2.8/vod/b01.mp4"},
-            {"6", "http://mozicode.com/b01.mp4"},
+            {"5", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
+            {"6", "rtmp://mozicode.com:2023/vod/b01.mp4"},
             {"7", "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8"},
             {"双打0721-1", "http://mozicode.com/20230729-133932.mp4"},
     };
