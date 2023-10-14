@@ -5,7 +5,7 @@ android {
 //  buildToolsVersion rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId "org.dync.ijkplayer"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
@@ -38,7 +38,7 @@ android {
     dexOptions {
         dexInProcess true
         preDexLibraries true
-        javaMaxHeapSize "4g"//越大越好
+        javaMaxHeapSize "4G" // 越大越好
         //incremental true
     }
 }
