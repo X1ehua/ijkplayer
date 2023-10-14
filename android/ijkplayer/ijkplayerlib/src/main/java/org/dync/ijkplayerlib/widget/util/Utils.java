@@ -23,6 +23,7 @@ public class Utils {
      * @param context context
      * @return if wifi is connected,return true
      */
+    @SuppressWarnings("deprecation")
     public static boolean isWifiConnected(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();

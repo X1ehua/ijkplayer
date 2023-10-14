@@ -75,7 +75,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
         initView(context);
     }
 
-    private void initView(Context context){
+    private void initView(Context context) {
         mContext = context;
         inflate(context, R.layout.video_bottom, this);
 
@@ -141,7 +141,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
      * 设置隐藏显示切换横竖屏的按钮
      * @param isShow
      */
-    public void toggleExpandable(boolean isShow){
+    public void toggleExpandable(boolean isShow) {
         mIvToggleExpandable.setVisibility(isShow ? View.VISIBLE : View.GONE);
     }
 
@@ -154,9 +154,9 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
      * @param curPlayState  true：播放中；false：暂停或者未播放
      */
     public void updatePlayState(boolean curPlayState) {
-        if(curPlayState) {
+        if (curPlayState) {
             mIvPlayPause.setImageResource(iconPause);
-        }else {
+        } else {
             mIvPlayPause.setImageResource(iconPlay);
         }
     }
@@ -205,6 +205,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
      *              若对应的数组元素值 <=0,表示该层素材保持不变;
      *              注意:progress和secondaryProgress的shape资源需要做成clip的,否则会直接完全显示
      */
+    @SuppressWarnings("deprecation")
     public void setProgressLayerDrawables(@DrawableRes int resId) {
         if (mSeekBar != null) {
             Drawable drawable = getResources().getDrawable(resId);
@@ -215,6 +216,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
     /**
      * 设置进度条按钮图片
      */
+    @SuppressWarnings("deprecation")
     public void setProgressThumbDrawable(@DrawableRes int thumbId) {
         if (thumbId > 0) {
             Drawable drawable = getResources().getDrawable(thumbId);
@@ -242,7 +244,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
 
     @Override
     public void onClick(View v) {
-        if(mIPlayerBottom == null) {
+        if (mIPlayerBottom == null) {
             return;
         }
         int id = v.getId();

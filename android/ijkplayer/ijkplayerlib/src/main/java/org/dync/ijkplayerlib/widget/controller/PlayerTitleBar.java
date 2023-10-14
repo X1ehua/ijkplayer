@@ -46,7 +46,7 @@ public class PlayerTitleBar extends LinearLayout {
         initView(context);
     }
 
-    private void initView(Context context){
+    private void initView(Context context) {
         mContext = context;
         inflate(context, R.layout.video_title_bar, this);
 

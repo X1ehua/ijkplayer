@@ -184,7 +184,6 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
                                              FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
         addView(subtitleDisplay, layoutParams_txt);
-        setVideoRadius(0.0f); // no impact
         Log.w(TAG, "initVideoView() in IjkVideView");
     }
 
@@ -292,6 +291,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     // REMOVED: addSubtitleSource
     // REMOVED: mPendingSubtitleTracks
 
+    @SuppressWarnings("deprecation")
     public void stopPlayback() {
         if (mMediaPlayer != null) {
             mMediaPlayer.stop();
@@ -304,6 +304,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         }
     }
 
+    @SuppressWarnings("deprecation")
     @TargetApi(Build.VERSION_CODES.M)
     private void openVideo() {
         if (mUri == null || mSurfaceHolder == null) {
@@ -718,6 +719,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     /*
      * release the media player in any state
      */
+    @SuppressWarnings("deprecation")
     public void release(boolean cleartargetstate) {
         if (mMediaPlayer != null) {
             mMediaPlayer.stop();

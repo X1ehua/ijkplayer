@@ -14,6 +14,7 @@ import android.util.Log;
  * <p>
  * <p>
  */
+@SuppressWarnings("deprecation")
 public class NetworkChangedReceiver extends BroadcastReceiver {
 
     private static final String TAG = "NetworkChangedReceiver";
@@ -109,14 +110,14 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
                 if (NetworkInfo.State.CONNECTED == info.getState()) {
                     if (info.getType() == ConnectivityManager.TYPE_WIFI) {
                         isWifiConnected = true;
-                        if(info.isAvailable()) {
+                        if (info.isAvailable()) {
                             Log.i(TAG, "WIFI 网络已连接");
                             isWifiAvailable = true;
                         } else {
                             Log.i(TAG, "WIFI 网络已连接，但并不可用");
                             isWifiAvailable = false;
                         }
-                    } else if(info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                    } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
                         isCellularConnected = true;
                         if (info.isAvailable()) {
                             Log.i(TAG, "蜂窝网络已连接");
@@ -135,7 +136,7 @@ public class NetworkChangedReceiver extends BroadcastReceiver {
                             Log.i(TAG, "手机网络数据断开");
                             break;
                     }
-                    // if(info.isConnected()) {
+                    // if (info.isConnected()) {
                     // } else {
                     // }
                 }

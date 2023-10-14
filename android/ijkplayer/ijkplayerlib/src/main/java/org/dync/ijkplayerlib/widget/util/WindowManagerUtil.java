@@ -224,7 +224,7 @@ public class WindowManagerUtil {
         if (screenWidth > screenHeight) {
             width = screenHeight / 2;
             height = width * 9 / 16;
-        }else {
+        } else {
             width = screenWidth / 2;
             height = width * 9 / 16;
         }

@@ -146,7 +146,7 @@ public class VideoView extends RelativeLayout {
         playerTitleBar = (PlayerTitleBar) findViewById(R.id.player_title_bar);
         playerBottom = (PlayerBottom) findViewById(R.id.player_bottom);
         bottomProgress = (ProgressBar) findViewById(R.id.bottom_progress);
-        appVideoReplay = (LinearLayout) findViewById(R.id.app_video_replay);
+        appVideoReplay = (LinearLayout) findViewById(R.id.app_video_replay_btn);
         appVideoReplayText = (TextView) findViewById(R.id.app_video_replay_text);
         appVideoReplayIcon = (ImageView) findViewById(R.id.app_video_replay_icon);
         appVideoRetry = (LinearLayout) findViewById(R.id.app_video_retry);
@@ -764,8 +764,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置封面
-     *
-     * @param coverUrl
      */
     public void setVideoCoverUrl(String coverUrl) {
         mVideoCoverUrl = coverUrl;
@@ -785,8 +783,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置进度条按钮图片
-     *
-     * @param thumbId
      */
     public void setProgressThumbDrawable(@DrawableRes int thumbId) {
         playerBottom.setProgressThumbDrawable(thumbId);
@@ -794,8 +790,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置暂停按钮图标
-     *
-     * @param iconPause
      */
     public void setIconPause(@DrawableRes int iconPause) {
         playerBottom.setIconPause(iconPause);
@@ -803,8 +797,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置播放按钮图标
-     *
-     * @param iconPlay
      */
     public void setIconPlay(@DrawableRes int iconPlay) {
         playerBottom.setIconPlay(iconPlay);
@@ -812,8 +804,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置退出全屏按钮
-     *
-     * @param iconShrink
      */
     public void setIconShrink(@DrawableRes int iconShrink) {
         playerBottom.setIconShrink(iconShrink);
@@ -821,8 +811,6 @@ public class VideoView extends RelativeLayout {
 
     /**
      * 设置退出全屏按钮
-     *
-     * @param iconExpand
      */
     public void setIconExpand(@DrawableRes int iconExpand) {
         playerBottom.setIconExpand(iconExpand);
@@ -832,11 +820,6 @@ public class VideoView extends RelativeLayout {
      * 设置加载提示框图标资源
      */
     public void setIconLoading(@DrawableRes int iconLoading) {
-        if (Build.VERSION.SDK_INT >= 21) {
-            progressBar.setIndeterminateDrawable(getResources().getDrawable(iconLoading, null));
-        } else {
-            progressBar.setIndeterminateDrawable(getResources().getDrawable(iconLoading));
-        }
-
+        progressBar.setIndeterminateDrawable(getResources().getDrawable(iconLoading, null));
     }
 }

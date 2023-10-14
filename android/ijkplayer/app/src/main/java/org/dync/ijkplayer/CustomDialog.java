@@ -57,7 +57,7 @@ public class CustomDialog extends Dialog {
         setContentView(layoutId);
         Window window = getWindow();
         window.setGravity(gravity);
-        if(animId != 0) {
+        if (animId != 0) {
             window.setWindowAnimations(animId);
         }
         window.getDecorView().setPadding(0, 0, 0, 0);
@@ -76,14 +76,14 @@ public class CustomDialog extends Dialog {
         }
         if (dimAmount < 0f || dimAmount > 1f) {
             throw new RuntimeException("透明度必须在0~1之间");
-        }else {
+        } else {
             lp.dimAmount = dimAmount;
         }
         window.setAttributes(lp);
         setCancelable(cancelable);
         if (cancelable) {
             setCanceledOnTouchOutside(true);
-        }else {
+        } else {
             setCanceledOnTouchOutside(false);
         }
     }

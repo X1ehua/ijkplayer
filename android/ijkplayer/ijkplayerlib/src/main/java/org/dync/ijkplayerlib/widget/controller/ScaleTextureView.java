@@ -144,14 +144,14 @@ public class ScaleTextureView extends TextureRenderView {
 
     /**
      * 整体手势开关设置
-     * 设置是否启用 Touch true:启用（默认）；false:禁用
+     * 设置是否启用 Touch true: 启用（默认）；false: 禁用
      */
     public void setEnabledTouch(boolean enabled) {
         this.enabledTouch = enabled;
     }
 
     /**
-     * 设置是否启用缩放功能 true:启用（默认）；false:禁用
+     * 设置是否启用缩放功能 true: 启用（默认）；false: 禁用
      */
     public void setEnabledScale(boolean enabled) {
         this.enabledScale = enabled;
@@ -159,7 +159,7 @@ public class ScaleTextureView extends TextureRenderView {
     }
 
     /**
-     * 设置是否启用旋转功能 true:启用（默认）；false:禁用
+     * 设置是否启用旋转功能 true: 启用（默认）；false: 禁用
      */
     public void setEnabledRotation(boolean enabled) {
         this.enabledRotation = enabled;
@@ -167,7 +167,7 @@ public class ScaleTextureView extends TextureRenderView {
     }
 
     /**
-     * 设置是否启用移动功能 true:启用（默认）；false:禁用
+     * 设置是否启用移动功能 true: 启用（默认）；false: 禁用
      */
     public void setEnabledTranslation(boolean enabled) {
         this.enabledTranslation = enabled;
@@ -178,7 +178,7 @@ public class ScaleTextureView extends TextureRenderView {
      * 重置为最原始默认状态
      *
      * @param saveEnabled 是否保留已经开启或禁用的 移动 旋转 缩放动作
-     *                    true：保留；false:不保留
+     *                    true：保留；false: 不保留
      */
     public void reset(boolean saveEnabled) {
         translationX = 0;
@@ -193,8 +193,7 @@ public class ScaleTextureView extends TextureRenderView {
         degree = 0;
         moveType = 0;
 
-        if (!saveEnabled) {
-            //enabled 开关
+        if (!saveEnabled) { //enabled 开关
             enabledTouch = true;
             enabledScale = true;
             enabledRotation = true;
@@ -209,22 +208,14 @@ public class ScaleTextureView extends TextureRenderView {
     }
 
     private void isCheck() {
-        if(!enabledScale && !enabledRotation && !enabledTranslation) {
-            this.enabledTouch = false;
-        }else {
-            this.enabledTouch = true;
-        }
+        this.enabledTouch = enabledScale || enabledRotation || enabledTranslation;
     }
 
     /**
-     * 给任何View增加圆角处理
-     * @param radius
+     * 给任意 View 增加圆角处理
      */
     public void setVideoRadius(float radius) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setOutlineProvider(new TextureVideoViewOutlineProvider(radius));
-            setClipToOutline(true);
-        }
+        setOutlineProvider(new TextureVideoViewOutlineProvider(radius));
+        setClipToOutline(true);
     }
-
 }

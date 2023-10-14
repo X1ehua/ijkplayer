@@ -44,6 +44,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 /**
  * Created by KathLine on 2017/8/22.
  */
+@SuppressWarnings("deprecation")
 public class PlayerController {
 
     /**

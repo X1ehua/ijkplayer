@@ -59,7 +59,7 @@ public class PlayerVolumeBright extends FrameLayout {
         initView(context);
     }
 
-    private void initView(Context context){
+    private void initView(Context context) {
         mContext = context;
         view = inflate(context, R.layout.video_volume_bright, this);
 

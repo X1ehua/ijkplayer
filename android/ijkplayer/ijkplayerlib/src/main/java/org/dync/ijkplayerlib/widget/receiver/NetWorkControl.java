@@ -17,6 +17,7 @@ public class NetWorkControl {
         boolean isConnected(boolean wifiConnected, boolean wifiAvailable, boolean mobileConnected, boolean mobileAvailable);
     }
 
+    @SuppressWarnings("deprecation")
     public static NetworkChangedReceiver register(String tag, Activity activity) {
         NetworkChangedReceiver netWorkStateReceiver = new NetworkChangedReceiver();
         receiverArrayMap.put(tag, netWorkStateReceiver);
