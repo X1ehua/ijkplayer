@@ -277,7 +277,7 @@ public class VideoActivity extends BaseActivity {
                 break;
             case R.id.btn_window_player:
                 XXPermissions.with(this).permission(Permission.SYSTEM_ALERT_WINDOW)
-                                                .request( getOnPermissionCallback() );
+                                        .request( getOnPermissionCallback() );
                 break;
             case R.id.btn_app_player:
                 WindowManagerUtil.createSmallApp(mActivity, videoView.getMediaPlayer());
@@ -297,7 +297,7 @@ public class VideoActivity extends BaseActivity {
     private OnPermissionCallback getOnPermissionCallback() {
         return new OnPermissionCallback() {
             @Override
-            public void onGranted(List<String> permissions, boolean all) {
+            public void onGranted(@NonNull List<String> permissions, boolean all) {
                 WindowManagerUtil.createSmallWindow(mContext, videoView.getMediaPlayer());
                 videoView.setRenderView(null);
                 WindowManagerUtil.setWindowCallBack(new WindowManagerUtil.WindowCallBack() {
@@ -311,7 +311,7 @@ public class VideoActivity extends BaseActivity {
             }
 
             @Override
-            public void onDenied(List<String> permissions, boolean never) {
+            public void onDenied(@NonNull List<String> permissions, boolean never) {
                 //Toast.makeText(mContext, "需要取得权限以使用悬浮窗", Toast.LENGTH_SHORT).show();
                 XXPermissions.startPermissionActivity(VideoActivity.this, permissions);
             }
@@ -325,29 +325,29 @@ public class VideoActivity extends BaseActivity {
                 appVideoReplay.setVisibility(View.GONE);
                 appVideoRetry.setVisibility(View.GONE);
                 hideVideoLoading();
-                if (videoView.getDuration() > 1) { // exoPlayer 如果是直播流返回1
-                    seekbar.setEnabled(true);
-                } else {
-                    seekbar.setEnabled(false);
-                }
+                // exoPlayer 如果是直播流返回1
+                seekbar.setEnabled(videoView.getDuration() > 1);
                 playIcon.setEnabled(true);
-                if (!Utils.isWifiConnected(mActivity)
-                        && !mPlayerController.isLocalDataSource(mVideoUri)
-                        && !PlayerController.WIFI_TIP_DIALOG_SHOWED)
+
+                if (Utils.isWifiConnected(mActivity)
+                        || mPlayerController.isLocalDataSource(mVideoUri)
+                        || PlayerController.WIFI_TIP_DIALOG_SHOWED)
                 {
-                    //mPlayerController.showWifiDialog();
-                } else {
                     updatePlayBtnBg(false);
                 }
+                // else {
+                //     mPlayerController.showWifiDialog();
+                // }
 
                 videoView.startVideoInfo();
-                if (!videoView.hasVideoTrackInfo()) {
-                    if (!TextUtils.isEmpty(mVideoCoverUrl)) {
-                        //GlideUtil.showImg(mContext, mVideoCoverUrl, videoCover);
-                    }
-                } else {
+                if (videoView.hasVideoTrackInfo()) {
                     videoCover.setImageDrawable(new ColorDrawable(0));
                 }
+                // else {
+                //     if (!TextUtils.isEmpty(mVideoCoverUrl)) {
+                //         GlideUtil.showImg(mContext, mVideoCoverUrl, videoCover);
+                //     }
+                // }
 
                 mPlayerController
                         .setGestureEnabled(true)
@@ -381,9 +381,7 @@ public class VideoActivity extends BaseActivity {
                 hideVideoLoading();
 
                 if (mPlayerController != null) {
-                    mPlayerController
-                            .setGestureEnabled(false)
-                            .setAutoControlPanel(false);
+                    mPlayerController.setGestureEnabled(false).setAutoControlPanel(false);
                 }
                 videoView.stopVideoInfo();
                 appVideoReplay.setVisibility(View.GONE);
@@ -401,72 +399,72 @@ public class VideoActivity extends BaseActivity {
             public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
                 Log.d(TAG, "onInfo: what= " + what + ", extra= " + extra);
                 switch (what) {
-                    case IMediaPlayer.MEDIA_INFO_STARTED_AS_NEXT://播放下一条
+                    case IMediaPlayer.MEDIA_INFO_STARTED_AS_NEXT: // 播放下一条
                         Log.d(TAG, "MEDIA_INFO_STARTED_AS_NEXT:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START://视频开始整备中
+                    case IMediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START: // 视频开始整备中
                         Log.d(TAG, "MEDIA_INFO_VIDEO_RENDERING_START:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_AUDIO_RENDERING_START://音频开始整备中
+                    case IMediaPlayer.MEDIA_INFO_AUDIO_RENDERING_START: // 音频开始整备中
                         Log.d(TAG, "MEDIA_INFO_AUDIO_RENDERING_START:");
                         break;
                     case IMediaPlayer.MEDIA_INFO_COMPONENT_OPEN:
                         break;
-                    case IMediaPlayer.MEDIA_INFO_BUFFERING_START://视频缓冲开始
+                    case IMediaPlayer.MEDIA_INFO_BUFFERING_START: // 视频缓冲开始
                         Log.d(TAG, "MEDIA_INFO_BUFFERING_START:");
                         showVideoLoading();
                         break;
-                    case IMediaPlayer.MEDIA_INFO_BUFFERING_END://视频缓冲结束
+                    case IMediaPlayer.MEDIA_INFO_BUFFERING_END: // 视频缓冲结束
                         Log.d(TAG, "MEDIA_INFO_BUFFERING_END:");
                         hideVideoLoading();
                         break;
-                    case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING://视频日志跟踪
+                    case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING: // 视频日志跟踪
                         Log.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE://不可设置播放位置，直播方面
+                    case IMediaPlayer.MEDIA_INFO_NOT_SEEKABLE: // 不可设置播放位置，直播方面
                         Log.d(TAG, "MEDIA_INFO_NOT_SEEKABLE:");
                         break;
                     /*
-                    case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH://网络带宽
+                    case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH: // 网络带宽
                         Log.d(TAG, "MEDIA_INFO_NETWORK_BANDWIDTH: " + extra);
                         break;
-                    case IMediaPlayer.MEDIA_INFO_BAD_INTERLEAVING://
+                    case IMediaPlayer.MEDIA_INFO_BAD_INTERLEAVING:
                         Log.d(TAG, "MEDIA_INFO_BAD_INTERLEAVING:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_METADATA_UPDATE://视频数据更新
+                    case IMediaPlayer.MEDIA_INFO_METADATA_UPDATE: // 视频数据更新
                         Log.d(TAG, "MEDIA_INFO_METADATA_UPDATE: " + extra);
                         break;
-                    case IMediaPlayer.MEDIA_INFO_TIMED_TEXT_ERROR://
+                    case IMediaPlayer.MEDIA_INFO_TIMED_TEXT_ERROR:
                         Log.d(TAG, "MEDIA_INFO_TIMED_TEXT_ERROR:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_UNSUPPORTED_SUBTITLE://不支持字幕
+                    case IMediaPlayer.MEDIA_INFO_UNSUPPORTED_SUBTITLE: // 不支持字幕
                         Log.d(TAG, "MEDIA_INFO_UNSUPPORTED_SUBTITLE:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_SUBTITLE_TIMED_OUT://字幕超时
+                    case IMediaPlayer.MEDIA_INFO_SUBTITLE_TIMED_OUT: // 字幕超时
                         Log.d(TAG, "MEDIA_INFO_SUBTITLE_TIMED_OUT:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED://
+                    case IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED:
                         Log.d(TAG, "MEDIA_INFO_VIDEO_ROTATION_CHANGED:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE://
+                    case IMediaPlayer.MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE:
                         Log.d(TAG, "MEDIA_INFO_MEDIA_ACCURATE_SEEK_COMPLETE:");
                         break;
-                    case IMediaPlayer.MEDIA_INFO_UNKNOWN://未知信息
+                    case IMediaPlayer.MEDIA_INFO_UNKNOWN: // 未知信息
                         Log.d(TAG, "MEDIA_INFO_UNKNOWN or MEDIA_ERROR_UNKNOWN:");
                         break;
-                    case IMediaPlayer.MEDIA_ERROR_SERVER_DIED://服务挂掉
+                    case IMediaPlayer.MEDIA_ERROR_SERVER_DIED: // 服务挂掉
                         Log.d(TAG, "MEDIA_ERROR_SERVER_DIED:");
                         break;
-                    case IMediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK://数据错误没有有效的回收
+                    case IMediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK: // 数据错误没有有效的回收
                         Log.d(TAG, "MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:");
                         break;
-                    case IMediaPlayer.MEDIA_ERROR_IO://IO 错误
+                    case IMediaPlayer.MEDIA_ERROR_IO: // IO 错误
                         Log.d(TAG, "MEDIA_ERROR_IO :");
                         break;
-                    case IMediaPlayer.MEDIA_ERROR_UNSUPPORTED://数据不支持
+                    case IMediaPlayer.MEDIA_ERROR_UNSUPPORTED: // 数据不支持
                         Log.d(TAG, "MEDIA_ERROR_UNSUPPORTED :");
                         break;
-                    case IMediaPlayer.MEDIA_ERROR_TIMED_OUT://数据超时
+                    case IMediaPlayer.MEDIA_ERROR_TIMED_OUT: // 数据超时
                         Log.d(TAG, "MEDIA_ERROR_TIMED_OUT :");
                         break;
                     */
