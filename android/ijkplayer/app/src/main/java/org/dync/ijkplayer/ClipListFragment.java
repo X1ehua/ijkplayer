@@ -29,17 +29,17 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class SampleMediaListFragment extends Fragment {
+public class ClipListFragment extends Fragment {
     private RecyclerView mRecyclerView;
 
-    public static SampleMediaListFragment newInstance() {
-        return new SampleMediaListFragment();
+    public static ClipListFragment newInstance() {
+        return new ClipListFragment();
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_video_url, container, false);
+        ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_clip, container, false);
         mRecyclerView = (RecyclerView) viewGroup.findViewById(R.id.recyclerView);
         return viewGroup;
     }
@@ -50,13 +50,13 @@ public class SampleMediaListFragment extends Fragment {
 
         final Activity activity = getActivity();
 
-        SampleMediaAdapter sma = new SampleMediaAdapter(activity);
+        ClipAdapter sma = new ClipAdapter(activity);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(sma);
 
-        sma.setOnItemClickListener(new SampleMediaAdapter.OnItemClickListener() {
+        sma.setOnItemClickListener(new ClipAdapter.OnItemClickListener() {
             @Override
-            public void OnItemClick(View view, SampleMediaAdapter.SampleMediaItem item, int position) {
+            public void OnItemClick(View view, ClipAdapter.ClipItem item, int position) {
                 String name = item.mName;
                 String url = item.mUrl;
                 if (onItemClickListener != null) {

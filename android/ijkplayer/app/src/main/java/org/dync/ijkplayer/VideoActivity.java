@@ -90,7 +90,7 @@ public class VideoActivity extends BaseActivity {
     TextView appVideoReplayText;
     @BindView(R.id.app_video_replay_icon)
     ImageView appVideoReplayIcon;
-    @BindView(R.id.app_video_replay)
+    @BindView(R.id.app_video_replay_btn)
     LinearLayout appVideoReplay;
     @BindView(R.id.app_video_status_text)
     TextView appVideoStatusText;
@@ -180,8 +180,8 @@ public class VideoActivity extends BaseActivity {
     ImageView ivPreview;
     @BindView(R.id.ll_video_info)
     LinearLayout llVideoInfo;
-    @BindView(R.id.fl_video_url)
-    FrameLayout flVideoUrl;
+    @BindView(R.id.fl_clip_list)
+    FrameLayout flClipList;
     @BindView(R.id.app_video_box)
     RelativeLayout appVideoBox;
 
@@ -196,6 +196,7 @@ public class VideoActivity extends BaseActivity {
         context.startActivity(newIntent(context, videoPath, videoTitle));
     }
 
+    @SuppressWarnings("deprecation")
     @SuppressLint({"ObsoleteSdkInt", "SourceLockedOrientationActivity"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -205,9 +206,8 @@ public class VideoActivity extends BaseActivity {
 
         mContext = this;
 
-        // handle arguments
-        mVideoPath = getIntent().getStringExtra("videoPath");
-        //mVideoCoverUrl = "https://s.c.com/70c0.jpg";
+        //mVideoPath = getIntent().getStringExtra("videoPath");
+        mVideoPath = SampleMediaListFragment.getDefaultURL();
 
         Intent intent = getIntent();
         String intentAction = intent.getAction();
@@ -243,7 +243,7 @@ public class VideoActivity extends BaseActivity {
         initVideoControl();
         initPlayer();
         initVideoListener();
-        initFragment();
+        initClipListFragment(); // Clip list
         initListener();
         StatusBarUtil.setColor(this, getResources().getColor(R.color.colorPrimary));
 
@@ -269,15 +269,15 @@ public class VideoActivity extends BaseActivity {
             */
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
-                mPlayerController.startRecord();
+                mPlayerController.startRecord(); // TODO: replay the recorded clips
+                mPlayerController.snapshot();
                 break;
             case R.id.btn_snapshot:
                 mPlayerController.snapshot();
                 break;
             case R.id.btn_window_player:
-                XXPermissions.with(this)
-                        .permission(Permission.SYSTEM_ALERT_WINDOW)
-                        .request( getOnPermissionCallback() );
+                XXPermissions.with(this).permission(Permission.SYSTEM_ALERT_WINDOW)
+                                                .request( getOnPermissionCallback() );
                 break;
             case R.id.btn_app_player:
                 WindowManagerUtil.createSmallApp(mActivity, videoView.getMediaPlayer());
@@ -634,8 +634,8 @@ public class VideoActivity extends BaseActivity {
         if (mVideoPath != null) {
             showVideoLoading();
             videoView.setVideoPath(mVideoPath);
-            //需要在videoView.setRender()方法之后调用
-            videoView.setVideoRadius(50);
+            // 需要在 videoView.setRender() 方法之后调用
+            //videoView.setVideoRadius(50);
             if (!Utils.isWifiConnected(mActivity)
                     && !mPlayerController.isLocalDataSource(mVideoUri)
                     && !PlayerController.WIFI_TIP_DIALOG_SHOWED)
@@ -647,6 +647,28 @@ public class VideoActivity extends BaseActivity {
         }
     }
 
+    private void initClipListFragment() {
+        ClipListFragment clf = ClipListFragment.newInstance();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.fl_clip_list, clf);
+        fragmentTransaction.commit();
+
+        clf.setOnItemClickListener(new ClipListFragment.OnItemClickListener() {
+            @Override
+            public void OnItemClick(Context context, String videoPath, String videoTitle) {
+                onDestroyVideo();
+                mVideoPath = videoPath;
+                Log.d(TAG, "OnItemClick: mVideoPath: " + mVideoPath);
+                if (mVideoPath != null) {
+                    showVideoLoading();
+                    videoView.setVideoPath(mVideoPath);
+                    videoView.start();
+                }
+            }
+        });
+    }
+
+    /*
     private void initFragment() {
         SampleMediaListFragment videoUrlFragment = SampleMediaListFragment.newInstance();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -667,6 +689,7 @@ public class VideoActivity extends BaseActivity {
             }
         });
     }
+    */
 
     private void initListener() {
         playIcon.setOnClickListener(new View.OnClickListener() {
@@ -888,12 +911,12 @@ public class VideoActivity extends BaseActivity {
             long bitRates = mp.getBitRate();
             long seekLoadDuration = mp.getSeekLoadDuration();
 
-            mPlayerController.setVideoInfo(fps, String.format(Locale.US, "%.2f / %.2f", fpsDecode, fpsOutput));
-            mPlayerController.setVideoInfo(vCache, String.format(Locale.US, "%s, %s", formatedDurationMilli(videoCachedDuration), formatedSize(videoCachedBytes)));
-            mPlayerController.setVideoInfo(aCache, String.format(Locale.US, "%s, %s", formatedDurationMilli(audioCachedDuration), formatedSize(audioCachedBytes)));
-            mPlayerController.setVideoInfo(seekLoadCost, String.format(Locale.US, "%d ms", seekLoadDuration));
-            mPlayerController.setVideoInfo(tcpSpeed, String.format(Locale.US, "%s", formatedSpeed(tcpSpeeds)));
-            mPlayerController.setVideoInfo(bitRate, String.format(Locale.US, "%.2f kbs", bitRates / 1000f));
+            mPlayerController.setVideoInfo(fps, String.format(Locale.US, " %.2f / %.2f", fpsDecode, fpsOutput));
+            mPlayerController.setVideoInfo(vCache, String.format(Locale.US, " %s, %s", formatedDurationMilli(videoCachedDuration), formatedSize(videoCachedBytes)));
+            mPlayerController.setVideoInfo(aCache, String.format(Locale.US, " %s, %s", formatedDurationMilli(audioCachedDuration), formatedSize(audioCachedBytes)));
+            mPlayerController.setVideoInfo(seekLoadCost, String.format(Locale.US, " %d ms", seekLoadDuration));
+            mPlayerController.setVideoInfo(tcpSpeed, String.format(Locale.US, " %s", formatedSpeed(tcpSpeeds)));
+            mPlayerController.setVideoInfo(bitRate, String.format(Locale.US, " %.2f kbs", bitRates / 1000f));
 
             if (tcpSpeeds == -1) {
                 return;

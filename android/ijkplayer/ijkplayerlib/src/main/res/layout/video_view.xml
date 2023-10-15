@@ -37,9 +37,9 @@
         android:progressDrawable="@drawable/player_bottom_progress"
         android:visibility="gone"/>
 
-    <!--重新播放-->
+    <!-- 重新播放 -->
     <LinearLayout
-        android:id="@+id/app_video_replay"
+        android:id="@+id/app_video_replay_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

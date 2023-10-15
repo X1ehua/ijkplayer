@@ -16,39 +16,39 @@ import java.util.ArrayList;
  * Created by KathLine on 2017/10/13.
  */
 
-public class SampleMediaAdapter extends RecyclerView.Adapter<SampleMediaAdapter.ViewHolder> {
+public class ClipAdapter extends RecyclerView.Adapter<ClipAdapter.ViewHolder> {
     private final Context mContext;
-    private final ArrayList<SampleMediaItem> mItemList;
+    private final ArrayList<ClipItem> mItemList;
 
-    static final class SampleMediaItem {
+    static final class ClipItem {
         String mUrl;
         String mName;
 
-        public SampleMediaItem(String url, String name) {
+        public ClipItem(String url, String name) {
             mUrl = url;
             mName = name;
         }
     }
 
-    public SampleMediaAdapter(Context mContext) {
+    public ClipAdapter(Context mContext) {
         this.mContext = mContext;
         mItemList = new ArrayList<>();
     }
 
     public void addItem(String url, String name) {
-        mItemList.add(new SampleMediaItem(url, name));
+        mItemList.add(new ClipItem(url, name));
     }
 
     @NonNull
-    @Override
+    @Override // 创建每个 video clip 的视图
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext).inflate(android.R.layout.simple_list_item_2, parent, false);
         return new ViewHolder(view);
     }
 
-    @Override
+    @Override // 将数据绑定到每个 ViewHolder 的视图
     public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") final int position) {
-        final SampleMediaItem item = mItemList.get(position);
+        final ClipItem item = mItemList.get(position);
         holder.mNameTextView.setText(item.mName);
         holder.mUrlTextView.setText(item.mUrl);
 
@@ -84,7 +84,7 @@ public class SampleMediaAdapter extends RecyclerView.Adapter<SampleMediaAdapter.
     }
 
     interface OnItemClickListener {
-        void OnItemClick(View view, SampleMediaItem item, int position);
+        void OnItemClick(View view, ClipItem item, int position);
     }
 
     OnItemClickListener onItemClickListener;

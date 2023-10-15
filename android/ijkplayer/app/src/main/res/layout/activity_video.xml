@@ -28,9 +28,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!--重新播放-->
+        <!-- 重新播放 -->
         <LinearLayout
-            android:id="@+id/app_video_replay"
+            android:id="@+id/app_video_replay_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -57,7 +57,7 @@
 
         </LinearLayout>
 
-        <!--播放出错-->
+        <!-- 播放出错 -->
         <LinearLayout
             android:id="@+id/app_video_retry"
             android:layout_width="match_parent"
@@ -66,7 +66,7 @@
             android:gravity="center"
             android:orientation="vertical"
             android:visibility="gone">
-            <!-- 播放状态-->
+            <!-- 播放状态 -->
             <TextView
                 android:id="@+id/app_video_status_text"
                 android:layout_width="wrap_content"
@@ -83,7 +83,7 @@
                 android:src="@drawable/player_click_replay_selector" />
         </LinearLayout>
 
-        <!-- 网络提示-->
+        <!-- 网络提示 -->
         <LinearLayout
             android:id="@+id/app_video_netTie"
             android:layout_width="match_parent"
@@ -115,7 +115,7 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!-- 最大试看时长提示-->
+        <!-- 最大试看时长提示 -->
         <LinearLayout
             android:id="@+id/app_video_freeTie"
             android:layout_width="match_parent"
@@ -146,7 +146,7 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!--加载中-->
+        <!-- 加载中 -->
         <LinearLayout
             android:id="@+id/app_video_loading"
             android:layout_width="match_parent"
@@ -172,7 +172,7 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- 中间触摸提示-->
+        <!-- 中间触摸提示 -->
         <include
             layout="@layout/player_touch_gestures"
             android:layout_width="wrap_content"
@@ -180,7 +180,7 @@
             android:layout_centerInParent="true"
             android:layout_gravity="center" />
 
-        <!--预览图-->
+        <!-- 预览图 -->
         <RelativeLayout
             android:id="@+id/preview_layout"
             android:layout_width="@dimen/seek_bar_image_w"
@@ -196,7 +196,7 @@
 
         </RelativeLayout>
 
-        <!--底部栏-->
+        <!-- 画面底部的工具栏：暂停/播放、进度条、全屏 -->
         <LinearLayout
             android:id="@+id/ll_bottom"
             android:layout_width="match_parent"
@@ -270,6 +270,7 @@
 
     </RelativeLayout>
 
+    <!-- 画面下方的按钮：开始录制、截图、倍速、浮窗 -->
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView"
         android:layout_width="match_parent"
@@ -354,9 +355,9 @@
                 android:text="内部浮窗" />
 
         </LinearLayout>
-
     </HorizontalScrollView>
 
+    <!-- 画面下方按钮再下方的视频状态信息区：FPS、TCP Speed 等 -->
     <LinearLayout
         android:id="@+id/ll_video_info"
         android:layout_width="match_parent"
@@ -369,11 +370,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
+            <!-- label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="fps" />
+                android:layout_margin="1pt"
+                android:text="@string/fps" />
 
+            <!-- value -->
             <TextView
                 android:id="@+id/fps"
                 android:layout_width="wrap_content"
@@ -389,7 +393,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="v_cache" />
+                android:layout_margin="1pt"
+                android:text="@string/v_cache" />
 
             <TextView
                 android:id="@+id/v_cache"
@@ -406,7 +411,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="a_cache" />
+                android:layout_margin="1pt"
+                android:text="@string/a_cache" />
 
             <TextView
                 android:id="@+id/a_cache"
@@ -423,7 +429,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="seek_load_cost" />
+                android:layout_margin="1pt"
+                android:text="@string/seek_load_cost" />
 
             <TextView
                 android:id="@+id/seek_load_cost"
@@ -440,7 +447,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="tcp_speed" />
+                android:layout_margin="1pt"
+                android:text="@string/tcp_speed" />
 
             <TextView
                 android:id="@+id/tcp_speed"
@@ -457,7 +465,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="bit_rate" />
+                android:layout_margin="1pt"
+                android:text="@string/bit_rate" />
 
             <TextView
                 android:id="@+id/bit_rate"
@@ -473,8 +482,9 @@
 
     </LinearLayout>
 
+    <!-- 视频列表 -->
     <FrameLayout
-        android:id="@+id/fl_video_url"
+        android:id="@+id/fl_clip_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/ll_video_info" />
