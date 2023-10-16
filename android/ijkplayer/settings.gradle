@@ -5,7 +5,9 @@ include ':ijkplayer-java'
 //include ':ijkplayer-exo'
 
 //include ':ijkplayer-example'
-include ':ijkplayerlib'
+include ':lib-ijkplayer'
 include ':app'
+
+include ':lib-cliploader'
 
 //include ':ijkplayer-arm64:src:main:jni:ijkmedia'

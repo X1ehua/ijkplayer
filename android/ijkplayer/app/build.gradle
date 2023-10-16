@@ -45,7 +45,8 @@ android {
 
 dependencies {
     implementation project(':ijkplayer-java')
-    implementation project(':ijkplayerlib')
+    implementation project(':lib-ijkplayer')
+    implementation project(':lib-cliploader')
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

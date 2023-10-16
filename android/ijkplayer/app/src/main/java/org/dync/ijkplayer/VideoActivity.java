@@ -646,6 +646,7 @@ public class VideoActivity extends BaseActivity {
     }
 
     private void initClipListFragment() {
+        /*
         ClipListFragment clf = ClipListFragment.newInstance();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.fl_clip_list, clf);
@@ -664,6 +665,7 @@ public class VideoActivity extends BaseActivity {
                 }
             }
         });
+        */
     }
 
     /*
