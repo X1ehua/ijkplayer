@@ -25,7 +25,6 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
@@ -33,10 +32,12 @@ import androidx.fragment.app.FragmentTransaction;
 import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 
-import org.dync.ijkplayer.utils.GlideUtil;
 import org.dync.ijkplayer.utils.StatusBarUtil;
-import org.dync.ijkplayer.utils.ThreadUtil;
 import org.dync.ijkplayerlib.widget.media.AndroidMediaController;
 import org.dync.ijkplayerlib.widget.media.IRenderView;
 import org.dync.ijkplayerlib.widget.media.IjkVideoView;
@@ -45,22 +46,12 @@ import org.dync.ijkplayerlib.widget.util.Settings;
 import org.dync.ijkplayerlib.widget.util.Utils;
 import org.dync.ijkplayerlib.widget.util.WindowManagerUtil;
 import org.dync.subtitleconverter.SubtitleView;
-import org.dync.subtitleconverter.subtitleFile.FatalParsingException;
-import org.dync.subtitleconverter.subtitleFile.FormatASS;
-import org.dync.subtitleconverter.subtitleFile.FormatSRT;
-import org.dync.subtitleconverter.subtitleFile.FormatSTL;
-import org.dync.subtitleconverter.subtitleFile.FormatTTML;
-import org.dync.subtitleconverter.subtitleFile.TimedTextFileFormat;
-import org.dync.subtitleconverter.subtitleFile.TimedTextObject;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-//import tv.danmaku.ijk.media.exo.IjkExoMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
@@ -81,7 +72,7 @@ public class VideoActivity extends BaseActivity {
 
 
     @BindView(R.id.video_view)
-    IjkVideoView videoView;
+    IjkVideoView mVideoView;
     @BindView(R.id.subtitleView)
     SubtitleView subtitleView;
     @BindView(R.id.video_cover)
@@ -207,7 +198,7 @@ public class VideoActivity extends BaseActivity {
         mContext = this;
 
         //mVideoPath = getIntent().getStringExtra("videoPath");
-        mVideoPath = SampleMediaListFragment.getDefaultURL();
+        mVideoPath = getDefaultUri();
 
         Intent intent = getIntent();
         String intentAction = intent.getAction();
@@ -243,13 +234,31 @@ public class VideoActivity extends BaseActivity {
         initVideoControl();
         initPlayer();
         initVideoListener();
-        initClipListFragment(); // Clip list
+        //initFragment();
+        initClipGridFragment();
         initListener();
         StatusBarUtil.setColor(this, getResources().getColor(R.color.colorPrimary));
 
         if (getResources().getConfiguration().orientation != Configuration.ORIENTATION_PORTRAIT) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
+
+        initImageLoader(this); // getApplicationContext());
+    }
+
+    public static void initImageLoader(Context context) {
+        // This configuration tuning is custom. You can tune every option, you may tune some of them,
+        // or you can create default configuration via ImageLoaderConfiguration.createDefault(this)
+        ImageLoaderConfiguration.Builder config = new ImageLoaderConfiguration.Builder(context);
+        config.threadPriority(Thread.NORM_PRIORITY - 2);
+        config.denyCacheImageMultipleSizesInMemory();
+        config.diskCacheFileNameGenerator(new Md5FileNameGenerator());
+        config.diskCacheSize(50 * 1024 * 1024); // 50 MB
+        config.tasksProcessingOrder(QueueProcessingType.LIFO);
+        config.writeDebugLogs(); // Remove for release app
+
+        // Initialize ImageLoader with configuration.
+        ImageLoader.getInstance().init(config.build());
     }
 
     @SuppressLint("NonConstantResourceId")
@@ -280,14 +289,14 @@ public class VideoActivity extends BaseActivity {
                                         .request( getOnPermissionCallback() );
                 break;
             case R.id.btn_app_player:
-                WindowManagerUtil.createSmallApp(mActivity, videoView.getMediaPlayer());
-                videoView.setRenderView(null);
+                WindowManagerUtil.createSmallApp(mActivity, mVideoView.getMediaPlayer());
+                mVideoView.setRenderView(null);
                 WindowManagerUtil.setAppCallBack(new WindowManagerUtil.AppCallBack() {
                     @Override
                     public void removeSmallApp(IMediaPlayer mediaPlayer) {
                         WindowManagerUtil.removeSmallApp(mActivity);
-                        //videoView.setMediaPlayer(mediaPlayer);
-                        videoView.resetRenders();
+                        //mVideoView.setMediaPlayer(mediaPlayer);
+                        mVideoView.resetRenders();
                     }
                 });
                 break;
@@ -298,14 +307,14 @@ public class VideoActivity extends BaseActivity {
         return new OnPermissionCallback() {
             @Override
             public void onGranted(@NonNull List<String> permissions, boolean all) {
-                WindowManagerUtil.createSmallWindow(mContext, videoView.getMediaPlayer());
-                videoView.setRenderView(null);
+                WindowManagerUtil.createSmallWindow(mContext, mVideoView.getMediaPlayer());
+                mVideoView.setRenderView(null);
                 WindowManagerUtil.setWindowCallBack(new WindowManagerUtil.WindowCallBack() {
                     @Override
                     public void removeSmallWindow(IMediaPlayer mediaPlayer) {
                         WindowManagerUtil.removeSmallWindow(mContext);
-                        //videoView.setMediaPlayer(mediaPlayer);
-                        videoView.resetRenders();
+                        //mVideoView.setMediaPlayer(mediaPlayer);
+                        mVideoView.resetRenders();
                     }
                 });
             }
@@ -319,14 +328,14 @@ public class VideoActivity extends BaseActivity {
     }
 
     private void initVideoListener() {
-        videoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
+        mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(IMediaPlayer iMediaPlayer) {
                 appVideoReplay.setVisibility(View.GONE);
                 appVideoRetry.setVisibility(View.GONE);
                 hideVideoLoading();
                 // exoPlayer 如果是直播流返回1
-                seekbar.setEnabled(videoView.getDuration() > 1);
+                seekbar.setEnabled(mVideoView.getDuration() > 1);
                 playIcon.setEnabled(true);
 
                 if (Utils.isWifiConnected(mActivity)
@@ -339,8 +348,8 @@ public class VideoActivity extends BaseActivity {
                 //     mPlayerController.showWifiDialog();
                 // }
 
-                videoView.startVideoInfo();
-                if (videoView.hasVideoTrackInfo()) {
+                mVideoView.startVideoInfo();
+                if (mVideoView.hasVideoTrackInfo()) {
                     videoCover.setImageDrawable(new ColorDrawable(0));
                 }
                 // else {
@@ -355,17 +364,17 @@ public class VideoActivity extends BaseActivity {
                 mPlayerController.setSpeed(1.0f);
             }
         });
-        videoView.setVideoInfoListener(new IjkVideoView.VideoInfoListener() {
+        mVideoView.setVideoInfoListener(new IjkVideoView.VideoInfoListener() {
             @Override
             public void updateVideoInfo(IMediaPlayer mMediaPlayer) {
                 showVideoInfo(mMediaPlayer);
             }
         });
-        videoView.setOnCompletionListener(new IMediaPlayer.OnCompletionListener() {
+        mVideoView.setOnCompletionListener(new IMediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(IMediaPlayer iMediaPlayer) {
-                videoView.release(false);
-                videoView.stopVideoInfo();
+                mVideoView.release(false);
+                mVideoView.stopVideoInfo();
                 appVideoReplay.setVisibility(View.VISIBLE);
                 appVideoRetry.setVisibility(View.GONE);
                 playIcon.setEnabled(false);
@@ -375,7 +384,7 @@ public class VideoActivity extends BaseActivity {
                 WindowManagerUtil.removeSmallApp(mActivity);
             }
         });
-        videoView.setOnErrorListener(new IMediaPlayer.OnErrorListener() {
+        mVideoView.setOnErrorListener(new IMediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(IMediaPlayer iMediaPlayer, int framework_err, int impl_err) {
                 hideVideoLoading();
@@ -383,7 +392,7 @@ public class VideoActivity extends BaseActivity {
                 if (mPlayerController != null) {
                     mPlayerController.setGestureEnabled(false).setAutoControlPanel(false);
                 }
-                videoView.stopVideoInfo();
+                mVideoView.stopVideoInfo();
                 appVideoReplay.setVisibility(View.GONE);
                 appVideoRetry.setVisibility(View.VISIBLE);
                 playIcon.setEnabled(false);
@@ -394,7 +403,7 @@ public class VideoActivity extends BaseActivity {
                 return true;
             }
         });
-        videoView.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
+        mVideoView.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
                 Log.d(TAG, "onInfo: what= " + what + ", extra= " + extra);
@@ -489,7 +498,7 @@ public class VideoActivity extends BaseActivity {
         appVideoReplay.setVisibility(View.GONE);
         appVideoRetry.setVisibility(View.GONE);
 
-        mPlayerController = new PlayerController(this, videoView)
+        mPlayerController = new PlayerController(this, mVideoView)
                 .setVideoParentLayout(findViewById(R.id.rl_video_view_layout)) // 建议第一个调用
                 .setVideoController((SeekBar) findViewById(R.id.seekbar))
                 .setVolumeController()
@@ -502,12 +511,12 @@ public class VideoActivity extends BaseActivity {
                 .setNetWorkListener(new PlayerController.OnNetWorkListener() {
                     @Override
                     public void onChanged() {
-                        if (videoView.getCurrentState() == IjkVideoView.STATE_IDLE) {
+                        if (mVideoView.getCurrentState() == IjkVideoView.STATE_IDLE) {
                             appVideoReplay.setVisibility(View.VISIBLE);
                             appVideoRetry.setVisibility(View.GONE);
                             playIcon.setEnabled(false);
                             updatePlayBtnBgState(true);
-                        } else if (videoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
+                        } else if (mVideoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
                             updatePlayBtnBg(false);
                         } else {
                             updatePlayBtnBg(false);
@@ -617,62 +626,57 @@ public class VideoActivity extends BaseActivity {
         Settings settings = new Settings(this);
         settings.setPlayer(Settings.PV_PLAYER__IjkMediaPlayer);
         if (mVideoPath != null)
-            videoView.setVideoPath(mVideoPath);
+            mVideoView.setVideoPath(mVideoPath);
         else if (mVideoUri != null)
-            videoView.setVideoURI(mVideoUri);
+            mVideoView.setVideoURI(mVideoUri);
         else {
             Log.e(TAG, "Null Data Source\n");
             finish();
             return;
         }
-        videoView.start();
+        mVideoView.start();
         */
 
         onDestroyVideo();
         if (mVideoPath != null) {
             showVideoLoading();
-            videoView.setVideoPath(mVideoPath);
-            // 需要在 videoView.setRender() 方法之后调用
-            //videoView.setVideoRadius(50);
+            mVideoView.setVideoPath(mVideoPath);
+            // 需要在 mVideoView.setRender() 方法之后调用
+            //mVideoView.setVideoRadius(50);
             if (!Utils.isWifiConnected(mActivity)
                     && !mPlayerController.isLocalDataSource(mVideoUri)
                     && !PlayerController.WIFI_TIP_DIALOG_SHOWED)
             {
                 mPlayerController.showWifiDialog();
             } else {
-                videoView.start();
+                mVideoView.start();
             }
         }
     }
 
-    private void initClipListFragment() {
-        /*
-        ClipListFragment clf = ClipListFragment.newInstance();
+    private void initClipGridFragment() {
+        ClipGridFragment cgf = new ClipGridFragment();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.fl_clip_list, clf);
+        fragmentTransaction.add(R.id.fl_clip_list, cgf);
         fragmentTransaction.commit();
+    }
 
-        clf.setOnItemClickListener(new ClipListFragment.OnItemClickListener() {
-            @Override
-            public void OnItemClick(Context context, String videoPath, String videoTitle) {
-                onDestroyVideo();
-                mVideoPath = videoPath;
-                Log.d(TAG, "OnItemClick: mVideoPath: " + mVideoPath);
-                if (mVideoPath != null) {
-                    showVideoLoading();
-                    videoView.setVideoPath(mVideoPath);
-                    videoView.start();
-                }
-            }
-        });
-        */
+    public void changeVideo(String videoUri) {
+        onDestroyVideo();
+        mVideoPath = videoUri;
+        Log.d(TAG, "change to video via mVideoPath: " + mVideoPath);
+        if (mVideoPath != null) {
+            showVideoLoading();
+            mVideoView.setVideoPath(mVideoPath);
+            mVideoView.start();
+        }
     }
 
     /*
     private void initFragment() {
         SampleMediaListFragment videoUrlFragment = SampleMediaListFragment.newInstance();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.fl_video_url, videoUrlFragment);
+        fragmentTransaction.add(R.id.fl_clip_list, videoUrlFragment);
         fragmentTransaction.commit();
 
         videoUrlFragment.setOnItemClickListener(new SampleMediaListFragment.OnItemClickListener() {
@@ -683,8 +687,8 @@ public class VideoActivity extends BaseActivity {
                 Log.d(TAG, "OnItemClick: mVideoPath: " + mVideoPath);
                 if (mVideoPath != null) {
                     showVideoLoading();
-                    videoView.setVideoPath(mVideoPath);
-                    videoView.start();
+                    mVideoView.setVideoPath(mVideoPath);
+                    mVideoView.start();
                 }
             }
         });
@@ -695,12 +699,12 @@ public class VideoActivity extends BaseActivity {
         playIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (videoView.getCurrentState() == IjkVideoView.STATE_PLAYING) {
+                if (mVideoView.getCurrentState() == IjkVideoView.STATE_PLAYING) {
                     updatePlayBtnBg(true);
-                } else if (videoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
+                } else if (mVideoView.getCurrentState() == IjkVideoView.STATE_PAUSED) {
                     updatePlayBtnBg(false);
                 } else {
-                    videoView.clickStart();
+                    mVideoView.clickStart();
                 }
             }
         });
@@ -747,13 +751,13 @@ public class VideoActivity extends BaseActivity {
                     mPlayerController
                             .setGestureEnabled(false)
                             .setAutoControlPanel(false);
-                    videoView.setGesture(true, true, true);
+                    mVideoView.setGesture(true, true, true);
                 } else if (pos == 2) {
                     mPlayerController
                             .setGestureEnabled(true)
                             .setAutoControlPanel(true);
-                    videoView.setGesture(false, false, false);
-                    videoView.resetGesture();
+                    mVideoView.setGesture(false, false, false);
+                    mVideoView.resetGesture();
                 }
             }
 
@@ -779,7 +783,7 @@ public class VideoActivity extends BaseActivity {
                 }
                 try {
                     float parseFloat = Float.parseFloat(speeds[pos]);
-                    videoView.setSpeed(parseFloat);
+                    mVideoView.setSpeed(parseFloat);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
@@ -949,11 +953,11 @@ public class VideoActivity extends BaseActivity {
             if (isPlay) {
                 // 暂停
                 resid = R.drawable.player_click_play_selector;
-                videoView.pause();
+                mVideoView.pause();
             } else {
                 // 播放
                 resid = R.drawable.player_click_pause_selector;
-                videoView.start();
+                mVideoView.start();
             }
             playIcon.setImageResource(resid);
         } catch (Exception e) {
@@ -1010,7 +1014,7 @@ public class VideoActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (!videoView.isBackgroundPlayEnabled()) {
+        if (!mVideoView.isBackgroundPlayEnabled()) {
             if (!Utils.isWifiConnected(mActivity) && !mPlayerController.isLocalDataSource(mVideoUri) && !PlayerController.WIFI_TIP_DIALOG_SHOWED) {
                 //mPlayerController.showWifiDialog();
             } else {
@@ -1023,13 +1027,13 @@ public class VideoActivity extends BaseActivity {
     protected void onStop() {
         super.onStop();
 
-        if (mBackPressed || !videoView.isBackgroundPlayEnabled()) {
+        if (mBackPressed || !mVideoView.isBackgroundPlayEnabled()) {
             //mVideoView.stopPlayback();
             //mVideoView.release(true);
             //mVideoView.stopBackgroundPlay();
             updatePlayBtnBg(true);
         } else {
-            videoView.enterBackground();
+            mVideoView.enterBackground();
         }
     }
 
@@ -1049,11 +1053,11 @@ public class VideoActivity extends BaseActivity {
         if (mPlayerController != null) {
             mPlayerController.onDestroy();
         }
-        if (videoView != null) {
-            videoView.stopPlayback();
-            videoView.release(true);
-            videoView.stopBackgroundPlay();
-            videoView.stopVideoInfo();
+        if (mVideoView != null) {
+            mVideoView.stopPlayback();
+            mVideoView.release(true);
+            mVideoView.stopBackgroundPlay();
+            mVideoView.stopVideoInfo();
         }
         WindowManagerUtil.removeSmallWindow(mContext);
         WindowManagerUtil.removeSmallApp(mActivity);
@@ -1067,4 +1071,20 @@ public class VideoActivity extends BaseActivity {
         }
 
     }
+    
+    public static String getDefaultUri() {
+        return URI_LIST[3][1];
+    }
+
+    final static String[][] URI_LIST = {
+            {"0", "http://192.168.2.6/vod/3s.mp4"},
+            {"1", "http://192.168.2.6/vod/10s.mp4"},
+            {"2", "rtmp://192.168.2.6:2023/vod/10s.mp4"},
+            {"3", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
+            {"4", "rtmp://mozicode.com:2023/live/home"},
+            {"5", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
+            {"6", "rtmp://mozicode.com:2023/vod/b01.mp4"},
+            {"7", "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8"},
+            {"双打0721-1", "http://mozicode.com/20230729-133932.mp4"},
+    };
 }

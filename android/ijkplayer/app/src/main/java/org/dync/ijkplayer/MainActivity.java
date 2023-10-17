@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(mContext, SettingActivity.class));
                 break;
             case R.id.btn_ijkPlayer: // TODO: WHY label not ijkPlayer but IJKPLAYER ?
-                String url = SampleMediaListFragment.getDefaultURL();
+                String url = VideoActivity.getDefaultUri();
                 VideoActivity.intentTo(mContext, url, "Default Video");
                 break;
             //case R.id.btn_exoPlayer:

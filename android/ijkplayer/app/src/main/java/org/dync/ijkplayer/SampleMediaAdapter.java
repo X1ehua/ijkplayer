@@ -55,8 +55,8 @@ public class SampleMediaAdapter extends RecyclerView.Adapter<SampleMediaAdapter.
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (onItemClickListener != null) {
-                    onItemClickListener.OnItemClick(v, item, position);
+                if (onAdapterItemClickListener != null) {
+                    onAdapterItemClickListener.OnAdapterItemClick(v, item, position);
                 }
             }
         });
@@ -83,13 +83,13 @@ public class SampleMediaAdapter extends RecyclerView.Adapter<SampleMediaAdapter.
         }
     }
 
-    interface OnItemClickListener {
-        void OnItemClick(View view, SampleMediaItem item, int position);
+    interface OnAdapterItemClickListener {
+        void OnAdapterItemClick(View view, SampleMediaItem item, int position);
     }
 
-    OnItemClickListener onItemClickListener;
+    OnAdapterItemClickListener onAdapterItemClickListener;
 
-    void setOnItemClickListener(OnItemClickListener listener) {
-        onItemClickListener = listener;
+    void setOnItemClickListener(OnAdapterItemClickListener listener) {
+        onAdapterItemClickListener = listener;
     }
 }

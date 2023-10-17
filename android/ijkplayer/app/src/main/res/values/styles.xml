@@ -23,4 +23,5 @@
         <item name="windowNoTitle">false</item>
     </style>
 
+    <style name="ProgressBarStyle" parent="@android:style/Widget.ProgressBar.Horizontal"/>
 </resources>

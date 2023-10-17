@@ -17,6 +17,8 @@
 
 package org.dync.ijkplayer;
 
+import static org.dync.ijkplayer.VideoActivity.URI_LIST;
+
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -54,9 +56,9 @@ public class SampleMediaListFragment extends Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(sma);
 
-        sma.setOnItemClickListener(new SampleMediaAdapter.OnItemClickListener() {
+        sma.setOnItemClickListener(new SampleMediaAdapter.OnAdapterItemClickListener() {
             @Override
-            public void OnItemClick(View view, SampleMediaAdapter.SampleMediaItem item, int position) {
+            public void OnAdapterItemClick(View view, SampleMediaAdapter.SampleMediaItem item, int position) {
                 String name = item.mName;
                 String url = item.mUrl;
                 if (onItemClickListener != null) {
@@ -65,26 +67,10 @@ public class SampleMediaListFragment extends Fragment {
             }
         });
 
-        for (int i=0; i<URL_LIST.length; i++) {
-            sma.addItem(URL_LIST[i][1], URL_LIST[i][0]);
+        for (int i=0; i<URI_LIST.length; i++) {
+            sma.addItem(URI_LIST[i][1], URI_LIST[i][0]);
         }
     }
-
-    public static String getDefaultURL() {
-        return URL_LIST[6][1];
-    }
-
-    final static String[][] URL_LIST = {
-            {"0", "http://192.168.2.6/vod/3s.mp4"},
-            {"1", "http://192.168.2.6/vod/10s.mp4"},
-            {"2", "rtmp://192.168.2.6:2023/vod/10s.mp4"},
-            {"3", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
-            {"4", "rtmp://mozicode.com:2023/live/home"},
-            {"5", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
-            {"6", "rtmp://mozicode.com:2023/vod/b01.mp4"},
-            {"7", "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8"},
-            {"双打0721-1", "http://mozicode.com/20230729-133932.mp4"},
-    };
 
     interface OnItemClickListener {
         void OnItemClick(Context context, String videoPath, String videoTitle);
