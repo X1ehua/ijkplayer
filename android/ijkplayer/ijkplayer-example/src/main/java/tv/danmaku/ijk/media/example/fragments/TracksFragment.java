@@ -99,7 +99,7 @@ public class TracksFragment extends Fragment {
                 }
             });
         } else {
-            Log.e("TracksFragment", "activity is not an instance of ITrackHolder.");
+            Log.e("ijkJava", "activity is not an instance of ITrackHolder.");
         }
     }
 

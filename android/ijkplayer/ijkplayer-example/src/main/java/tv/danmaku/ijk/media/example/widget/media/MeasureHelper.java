@@ -71,7 +71,7 @@ public final class MeasureHelper {
      * @param heightMeasureSpec
      */
     public void doMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //Log.i("@@@@", "onMeasure(" + MeasureSpec.toString(widthMeasureSpec) + ", "
+        //Log.i("ijkJava", "onMeasure(" + MeasureSpec.toString(widthMeasureSpec) + ", "
         //        + MeasureSpec.toString(heightMeasureSpec) + ")");
         if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270) {
             int tempSpec = widthMeasureSpec;
@@ -160,10 +160,10 @@ public final class MeasureHelper {
 
                 // for compatibility, we adjust size based on aspect ratio
                 if (mVideoWidth * height < width * mVideoHeight) {
-                    //Log.i("@@@", "image too wide, correcting");
+                    //Log.i("ijkJava", "image too wide, correcting");
                     width = height * mVideoWidth / mVideoHeight;
                 } else if (mVideoWidth * height > width * mVideoHeight) {
-                    //Log.i("@@@", "image too tall, correcting");
+                    //Log.i("ijkJava", "image too tall, correcting");
                     height = width * mVideoHeight / mVideoWidth;
                 }
             } else if (widthSpecMode == View.MeasureSpec.EXACTLY) {

@@ -167,7 +167,7 @@ public class NetworkUtils {
                 return res1.toString();
             }
         } catch (Exception ex) {
-            android.util.Log.e("ijk", "getMacAddr() got exception: " + ex.toString());
+            android.util.Log.e("ijkJava", "getMacAddr() got exception: " + ex.toString());
         }
 
         return "02:00:00:00:00:00";

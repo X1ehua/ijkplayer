@@ -50,10 +50,8 @@ public class WindowManagerUtil {
 
     /**
      * 创建一个小悬浮窗。初始位置为屏幕的右部中间位置。
-     *
-     * @param context
-     * @param mediaPlayer
      */
+    @SuppressLint("ClickableViewAccessibility")
     @SuppressWarnings("deprecation")
     public static void createSmallWindow(final Context context, final IMediaPlayer mediaPlayer) {
         if (smallWindow != null) {
@@ -77,11 +75,10 @@ public class WindowManagerUtil {
             int height;
             if (screenWidth > screenHeight) {
                 width = screenHeight / 2;
-                height = width * 9 / 16;
             } else {
                 width = screenWidth / 2;
-                height = width * 9 / 16;
             }
+            height = width * 9 / 16;
             //小窗口摆放的位置，手机屏幕中央
             smallWindowParams.x = screenWidth / 2 - width / 2;
             smallWindowParams.y = screenHeight / 2 - height / 2;
@@ -100,40 +97,25 @@ public class WindowManagerUtil {
         relativeLayout.setBackgroundColor(ContextCompat.getColor(context, android.R.color.black));
         mWindowManager.addView(relativeLayout, smallWindowParams);
         relativeLayout.setOnTouchListener(new View.OnTouchListener() {
-
-            /**
-             * 记录当前手指位置在屏幕上的横坐标值
-             */
+            // 记录当前手指位置在屏幕上的横坐标值
             private float xInScreen;
 
-            /**
-             * 记录当前手指位置在屏幕上的纵坐标值
-             */
+            // 记录当前手指位置在屏幕上的纵坐标值
             private float yInScreen;
 
-            /**
-             * 记录手指按下时在屏幕上的横坐标的值
-             */
+            // 记录手指按下时在屏幕上的横坐标的值
             private float xDownInScreen;
 
-            /**
-             * 记录手指按下时在屏幕上的纵坐标的值
-             */
+            // 记录手指按下时在屏幕上的纵坐标的值
             private float yDownInScreen;
 
-            /**
-             * 记录手指按下时在小悬浮窗的View上的横坐标的值
-             */
+            // 记录手指按下时在小悬浮窗的View上的横坐标的值
             private float xInView;
 
-            /**
-             * 记录手指按下时在小悬浮窗的View上的纵坐标的值
-             */
+            // 记录手指按下时在小悬浮窗的View上的纵坐标的值
             private float yInView;
 
-            /**
-             * 按下的开始时间
-             */
+            // 按下的开始时间
             private long startTime;
 
             @Override
@@ -198,8 +180,6 @@ public class WindowManagerUtil {
 
     /**
      * 在当前页面创建一个视图
-     * @param activity
-     * @param mediaPlayer
      */
     @SuppressLint("ClickableViewAccessibility")
     public static void createSmallApp(final Activity activity, IMediaPlayer mediaPlayer) {
@@ -223,11 +203,10 @@ public class WindowManagerUtil {
         int height;
         if (screenWidth > screenHeight) {
             width = screenHeight / 2;
-            height = width * 9 / 16;
         } else {
             width = screenWidth / 2;
-            height = width * 9 / 16;
         }
+        height = width * 9 / 16;
         layoutParams.width = width;
         layoutParams.height = height;
 
@@ -248,7 +227,7 @@ public class WindowManagerUtil {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 int action = event.getAction();
-                Log.i("TAG", "Touch:"+action);
+                Log.i("ijkJava", "Touch: " + action);
                 switch(action) {
                     case MotionEvent.ACTION_DOWN:
                         lastX = (int) event.getRawX();

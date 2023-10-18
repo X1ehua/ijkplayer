@@ -20,20 +20,18 @@ import java.util.Enumeration;
  * Created by KathLine on 2017/10/17.
  */
 
+@SuppressWarnings("deprecation")
 public class NetworkManager {
 
     /**
      * 判断当前网络是否是移动网络
-     *
-     * @param context
      * @return boolean
      */
     public static boolean isMobile(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-        if (activeNetInfo != null
-                && activeNetInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+        if (activeNetInfo != null && activeNetInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
             return true;
         }
         return false;
@@ -41,16 +39,13 @@ public class NetworkManager {
 
     /**
      * 判断当前网络是否是wifi网络
-     *
-     * @param context
      * @return boolean
      */
     public static boolean isWifi(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-        if (activeNetInfo != null
-                && activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+        if (activeNetInfo != null && activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
             return true;
         }
         return false;
@@ -270,7 +265,7 @@ public class NetworkManager {
             while ((content = in.readLine()) != null) {
                 stringBuffer.append(content);
             }
-            Log.d("------ping-----", "result content : " + stringBuffer.toString());
+            Log.d("ijkJava", "result content : " + stringBuffer.toString());
             // ping的状态
             int status = p.waitFor();
             if (status == 0) {
@@ -284,7 +279,7 @@ public class NetworkManager {
         } catch (InterruptedException e) {
             result = "InterruptedException";
         } finally {
-            Log.d("----result---", "result = " + result);
+            Log.d("ijkJava", "result = " + result);
         }
         return false;
 

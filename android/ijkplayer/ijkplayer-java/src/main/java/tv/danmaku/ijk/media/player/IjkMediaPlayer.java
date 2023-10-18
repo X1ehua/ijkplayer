@@ -73,7 +73,7 @@ import tv.danmaku.ijk.media.player.pragma.DebugLog;
  */
 public final class IjkMediaPlayer extends AbstractMediaPlayer {
     //private final static String TAG = IjkMediaPlayer.class.getName();
-    private final static String TAG = "IjkMediaPlayer";
+    private final static String TAG = "ijkJava";
 
     private static final int MEDIA_NOP = 0; // interface test message
     private static final int MEDIA_PREPARED = 1;
@@ -1037,7 +1037,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
                         DebugLog.i(TAG, "Info: MEDIA_INFO_VIDEO_RENDERING_START\n");
                         break;
                 }
-                Log.e("IJKMEDIA", "MEDIA_INFO skipped");
+                Log.e(TAG, "MEDIA_INFO skipped");
                 //player.notifyOnInfo(msg.arg1, msg.arg2);
                 // No real default action so far.
                 return;
@@ -1087,7 +1087,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         if (what == MEDIA_INFO && arg1 == MEDIA_INFO_STARTED_AS_NEXT) {
             // this acquires the wakelock if needed, and sets the client side
             // state
-            Log.w("IJKMEDIA", ">>>>>> mp.start()");
+            Log.w(TAG, ">>>>>> mp.start()");
             mp.start();
         }
         if (mp.mEventHandler != null) {
@@ -1305,7 +1305,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         File dir = new File(dirPath);
         if (!dir.exists()) {
             if (!dir.mkdirs()) {
-                Log.e("ijk", "startRecord() is broken for mkdir('" + dirPath + "') failed");
+                Log.e(TAG, "startRecord() is broken for mkdir('" + dirPath + "') failed");
                 return;
             }
         }
@@ -1316,7 +1316,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         int ret = native_startRecord(videoPath);
         if (ret != 0) {
             //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
-            Log.e("ijk", ">> native_startRecord() failed: " + ret);
+            Log.e(TAG, ">> native_startRecord() failed: " + ret);
         }
 
         if (snapshot) {
@@ -1327,9 +1327,11 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public void stopRecord() {
         int ret = native_stopRecord();
         if (ret != 0) {
-            Log.e("ijk", ">> native_stopRecord() failed: " + ret);
+            Log.e(TAG, ">> native_stopRecord() failed: " + ret);
         }
     }
+
+    private final static int SNAPSHOT_JPEG_QUALITY = 90;
 
     public void snapshot(final String path) {
         new Thread(new Runnable() {
@@ -1346,7 +1348,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
         int ret = native_snapshot(bitmap);
         if (ret != 0) {
-            Log.e("IjkMedia", ">> native_snapshot() failed, ret " + ret);
+            Log.e(TAG, ">> native_snapshot() failed, ret " + ret);
             return;
         }
         long t1 = System.currentTimeMillis();
@@ -1359,18 +1361,18 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         saveBitmap(path, bitmap);
 
         long t2 = System.currentTimeMillis();
-        Log.w("ijkJava", String.format("doSnapshot() time cost: %d + %d = %d", t1-t0, t2-t1, t2-t0));
+        Log.w(TAG, String.format("doSnapshot() time cost: %d + %d = %d", t1-t0, t2-t1, t2-t0));
     }
 
     static void saveBitmap(String path, Bitmap bitmap) {
         File saveFile = new File(path);
         try {
             java.io.FileOutputStream fos = new java.io.FileOutputStream(saveFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, SNAPSHOT_JPEG_QUALITY, fos);
             fos.flush();
             fos.close();
         } catch (IOException e) {
-            Log.e("IjkMedia", "saveBitmap " + path + " failed: " + e.toString());
+            Log.e(TAG, "saveBitmap " + path + " failed: " + e.toString());
         }
     }
 }
