@@ -32,6 +32,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -1299,14 +1300,27 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public native int native_stopRecord();
     public native int native_snapshot(Bitmap bitmap);
 
-    public void startRecord() {
-        String dt = new SimpleDateFormat("MMdd-HHmmss").format(new Date());
-        // /data/data/org.dync.ijkplayer
-        String videoPath = "/sdcard/Movies/CCLive-" + dt + ".mp4";
+    public void startRecord(boolean snapshot) {
+        String dirPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/CCLive/";
+        File dir = new File(dirPath);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                Log.e("ijk", "startRecord() is broken for mkdir('" + dirPath + "') failed");
+                return;
+            }
+        }
+
+        String mainFilename = dirPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
+        String videoPath = mainFilename + ".mp4";
+
         int ret = native_startRecord(videoPath);
         if (ret != 0) {
             //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
             Log.e("ijk", ">> native_startRecord() failed: " + ret);
+        }
+
+        if (snapshot) {
+            snapshot(mainFilename + ".jpg");
         }
     }
 
@@ -1317,16 +1331,16 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         }
     }
 
-    public void snapshot() {
+    public void snapshot(final String path) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                doSnapshot();
+                doSnapshot(path);
             }
         }).start();
     }
 
-    public void doSnapshot() {
+    public void doSnapshot(String path) {
         long t0 = System.currentTimeMillis();
 
         Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
@@ -1337,23 +1351,26 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
         }
         long t1 = System.currentTimeMillis();
 
-        String path = "/sdcard/Pictures/Screenshots/";
-        String filename = "Screenshot_" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".jpg";
-        saveBitmap(path, filename, bitmap);
+        if (path == null) {
+            path = Environment.getExternalStorageDirectory().getPath() + "/Pictures/Screenshots/"
+                 + new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date()) + ".jpg";
+        }
+
+        saveBitmap(path, bitmap);
 
         long t2 = System.currentTimeMillis();
         Log.w("ijkJava", String.format("doSnapshot() time cost: %d + %d = %d", t1-t0, t2-t1, t2-t0));
     }
 
-    static void saveBitmap(String path, String filename, Bitmap bitmap) {
-        File saveFile = new File(path, filename);
+    static void saveBitmap(String path, Bitmap bitmap) {
+        File saveFile = new File(path);
         try {
             java.io.FileOutputStream fos = new java.io.FileOutputStream(saveFile);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.flush();
             fos.close();
         } catch (IOException e) {
-            Log.e("IjkMedia", "saveBitmap " + path + filename + " failed: " + e.toString());
+            Log.e("IjkMedia", "saveBitmap " + path + " failed: " + e.toString());
         }
     }
 }

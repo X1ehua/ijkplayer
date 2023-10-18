@@ -214,9 +214,9 @@ public interface IMediaPlayer {
     void setDataSource(IMediaDataSource mediaDataSource);
 
     // for video recording
-    void startRecord();
+    void startRecord(boolean snapshot);
 
     void stopRecord();
 
-    void snapshot();
+    void snapshot(final String path);
 }

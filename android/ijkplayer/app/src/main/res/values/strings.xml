@@ -40,4 +40,5 @@
     <string name="tcp_speed">TCP Speed</string>
     <string name="bit_rate">Bit Rate</string>
     <string name="fps">FPS</string>
+    <string name="clip_item_desc">Clip Item</string>
 </resources>

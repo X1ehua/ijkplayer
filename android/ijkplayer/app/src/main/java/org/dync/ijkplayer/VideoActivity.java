@@ -278,11 +278,10 @@ public class VideoActivity extends BaseActivity {
             */
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
-                mPlayerController.startRecord(); // TODO: replay the recorded clips
-                mPlayerController.snapshot();
+                mPlayerController.startRecord(true);
                 break;
             case R.id.btn_snapshot:
-                mPlayerController.snapshot();
+                mPlayerController.snapshot(null);
                 break;
             case R.id.btn_window_player:
                 XXPermissions.with(this).permission(Permission.SYSTEM_ALERT_WINDOW)

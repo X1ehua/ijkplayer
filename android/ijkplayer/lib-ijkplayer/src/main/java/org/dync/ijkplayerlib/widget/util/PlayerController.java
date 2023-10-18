@@ -400,16 +400,16 @@ public class PlayerController {
         return this;
     }
 
-    public void startRecord() {
-        mVideoView.getMediaPlayer().startRecord();
+    public void startRecord(boolean snapshot) {
+        mVideoView.getMediaPlayer().startRecord(snapshot);
     }
 
     public void stopRecord() {
         mVideoView.getMediaPlayer().stopRecord();
     }
 
-    public void snapshot() {
-        mVideoView.getMediaPlayer().snapshot();
+    public void snapshot(final String path) {
+        mVideoView.getMediaPlayer().snapshot(path);
     }
 
     /**

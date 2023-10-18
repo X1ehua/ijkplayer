@@ -64,6 +64,7 @@ public class SurfaceRenderView extends SurfaceView implements IRenderView {
         initView(context);
     }
 
+    @SuppressWarnings("deprecation")
     private void initView(Context context) {
         mMeasureHelper = new MeasureHelper(this);
         mSurfaceCallback = new SurfaceCallback(this);
