@@ -69,7 +69,7 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 
 public class IjkVideoView extends FrameLayout implements MediaController.MediaPlayerControl {
-    private String TAG = "IjkVideoView";
+    private String TAG = "ijkJava";
     // settable by the client
     private Uri mUri;
     private Map<String, String> mHeaders;

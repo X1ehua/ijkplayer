@@ -26,7 +26,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 public class WindowManagerUtil {
 
-    private static final String TAG = "WindowManagerUtil";
+    private static final String TAG = "ijkJava";
 
     /**
      * 小悬浮窗View的实例

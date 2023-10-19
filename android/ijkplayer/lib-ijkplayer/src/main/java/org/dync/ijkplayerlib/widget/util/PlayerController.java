@@ -50,7 +50,7 @@ public class PlayerController {
     /**
      * 打印日志的TAG
      */
-    private static final String TAG = PlayerController.class.getSimpleName();
+    private static final String TAG = "ijkJava";
     /**
      * 全局上下文
      */

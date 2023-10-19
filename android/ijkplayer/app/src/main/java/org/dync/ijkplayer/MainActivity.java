@@ -21,7 +21,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
     private Context mContext;
-    private final String TAG = "MainActivity";
+    private final String TAG = "ijkJava";
 
     @BindView(R.id.btn_setting)
     Button btnSetting;

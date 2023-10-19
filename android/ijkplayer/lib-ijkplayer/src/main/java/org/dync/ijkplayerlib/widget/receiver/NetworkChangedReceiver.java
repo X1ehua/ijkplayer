@@ -17,7 +17,7 @@ import android.util.Log;
 @SuppressWarnings("deprecation")
 public class NetworkChangedReceiver extends BroadcastReceiver {
 
-    private static final String TAG = "NetworkChangedReceiver";
+    private static final String TAG = "ijkJava";
 
     private NetWorkControl.NetWorkChangeListener netWorkChangeListener;
 

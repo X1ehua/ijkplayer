@@ -45,7 +45,7 @@ public class PlayerBottom extends RelativeLayout implements View.OnClickListener
     private SimpleDateFormat mFormatter = null;
     private static final String ZERO_TIME = "00:00";
     private boolean mUserOperateSeecbar = false;//用户是否正在操作进度条
-    private static final String TAG = "PlayerController";
+    private static final String TAG = "ijkJava";
 
     private int iconPause = R.drawable.player_click_pause_selector;
     private int iconPlay = R.drawable.player_click_play_selector;

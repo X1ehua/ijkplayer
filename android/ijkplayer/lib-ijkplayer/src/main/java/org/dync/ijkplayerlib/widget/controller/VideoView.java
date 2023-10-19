@@ -48,7 +48,7 @@ import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedSpeed;
 
 public class VideoView extends RelativeLayout {
 
-    private static final String TAG = "VideoView";
+    private static final String TAG = "ijkJava";
     private Context mContext;
 
     private RelativeLayout rlVideoParent;

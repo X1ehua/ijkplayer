@@ -60,7 +60,7 @@ import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedSize;
 import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedSpeed;
 
 public class VideoActivity extends BaseActivity {
-    private static final String TAG = "VideoActivity";
+    private static final String TAG = "ijkJava";
     private String mVideoPath;
     private Uri mVideoUri;
 

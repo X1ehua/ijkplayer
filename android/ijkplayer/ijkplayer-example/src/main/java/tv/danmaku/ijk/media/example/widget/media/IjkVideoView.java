@@ -63,7 +63,7 @@ import tv.danmaku.ijk.media.example.application.Settings;
 import tv.danmaku.ijk.media.example.services.MediaPlayerService;
 
 public class IjkVideoView extends FrameLayout implements MediaController.MediaPlayerControl {
-    private String TAG = "IjkVideoView";
+    private String TAG = "ijkJava";
     // settable by the client
     private Uri mUri;
     private Map<String, String> mHeaders;

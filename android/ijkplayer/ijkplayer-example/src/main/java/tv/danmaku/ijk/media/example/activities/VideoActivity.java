@@ -49,7 +49,7 @@ import tv.danmaku.ijk.media.example.widget.media.IjkVideoView;
 import tv.danmaku.ijk.media.example.widget.media.MeasureHelper;
 
 public class VideoActivity extends AppCompatActivity implements TracksFragment.ITrackHolder {
-    private static final String TAG = "VideoActivity";
+    private static final String TAG = "ijkJava";
 
     private String mVideoPath;
     private Uri    mVideoUri;
