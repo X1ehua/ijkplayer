@@ -64,7 +64,8 @@ public class BaseImageDownloader implements ImageDownloader {
 
 	protected static final String CONTENT_CONTACTS_URI_PREFIX = "content://com.android.contacts/";
 
-	private static final String ERROR_UNSUPPORTED_SCHEME = "UIL doesn't support scheme(protocol) by default [%s]. " + "You should implement this support yourself (BaseImageDownloader.getStreamFromOtherSource(...))";
+	private static final String ERROR_UNSUPPORTED_SCHEME = "UIL doesn't support scheme(protocol) by default [%s]. "
+			+ "You should implement this support yourself (BaseImageDownloader.getStreamFromOtherSource(...))";
 
 	protected final Context context;
 	protected final int connectTimeout;

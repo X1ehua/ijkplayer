@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,30 +24,67 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ClipGridFragment extends Fragment {
-	protected AbsListView listView;
+	final static String TAG = "ijkJava";
+	protected AbsListView mListView;
+
+	static List<String> sMp4Files = new ArrayList<>();
+	static List<String> sJpgFiles = new ArrayList<>();
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fr_image_grid, container, false);
-		listView = (GridView) rootView.findViewById(R.id.grid);
+		mListView = (GridView) rootView.findViewById(R.id.grid);
+
+		String clipDir = Environment.getExternalStorageDirectory().getPath() + "/DCIM/CCLive/";
+		getClipFiles(clipDir);
 
 		final Activity a = getActivity();
 		ClipAdapter ca = new ClipAdapter(a);
-		((GridView) listView).setAdapter(ca);
+		((GridView) mListView).setAdapter(ca);
 
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				onClipItemClick((VideoActivity)a, position);
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				onClipItemClick((VideoActivity)a, pos);
 			}
 		});
 
 		return rootView;
 	}
 
-	void onClipItemClick(VideoActivity va, int position) {
-		String uri = VideoActivity.URI_LIST[position][1];
+	void getClipFiles(String clipDir) {
+		File fd = new File(clipDir);
+		File[] files = fd.listFiles();
+
+		if (files == null) {
+			Log.e(TAG, "listFiles() got null in " + clipDir);
+			return;
+		}
+
+		for (File file : files) {
+			if (file.isDirectory()) {
+				getClipFiles(file.getAbsolutePath());
+			} else if (file.getName().endsWith(".mp4")) {
+				String mp4 = file.getAbsolutePath();
+				String jpg = mp4.substring(0, mp4.length() - 3) + "jpg";
+				if (new File(jpg).isFile()) {
+					sMp4Files.add(mp4);
+					sJpgFiles.add("file://" + jpg);
+				}
+				else {
+					Log.e(TAG, ">> No .jpg file found corresponding to " + mp4);
+				}
+			}
+		}
+	}
+
+	void onClipItemClick(VideoActivity va, int pos) {
+		String uri = sMp4Files.get(pos);
 		va.changeVideo(uri);
 	}
 
@@ -62,19 +100,6 @@ public class ClipGridFragment extends Fragment {
 
 	//String[] getClipList() { return }
 	private static class ClipAdapter extends BaseAdapter {
-		private static final String[] IMAGE_URLS = {
-			// Heavy images
-			"https://lh6.googleusercontent.com/-55osAWw3x0Q/URquUtcFr5I/AAAAAAAAAbs/rWlj1RUKrYI/s1024/A%252520Photographer.jpg",
-			"https://lh4.googleusercontent.com/--dq8niRp7W4/URquVgmXvgI/AAAAAAAAAbs/-gnuLQfNnBA/s1024/A%252520Song%252520of%252520Ice%252520and%252520Fire.jpg",
-			"https://lh5.googleusercontent.com/-7qZeDtRKFKc/URquWZT1gOI/AAAAAAAAAbs/hqWgteyNXsg/s1024/Another%252520Rockaway%252520Sunset.jpg",
-			"https://lh3.googleusercontent.com/--L0Km39l5J8/URquXHGcdNI/AAAAAAAAAbs/3ZrSJNrSomQ/s1024/Antelope%252520Butte.jpg",
-			"https://lh6.googleusercontent.com/-8HO-4vIFnlw/URquZnsFgtI/AAAAAAAAAbs/WT8jViTF7vw/s1024/Antelope%252520Hallway.jpg",
-			"https://lh4.googleusercontent.com/-WIuWgVcU3Qw/URqubRVcj4I/AAAAAAAAAbs/YvbwgGjwdIQ/s1024/Antelope%252520Walls.jpg",
-			"https://lh6.googleusercontent.com/-UBmLbPELvoQ/URqucCdv0kI/AAAAAAAAAbs/IdNhr2VQoQs/s1024/Apre%2525CC%252580s%252520la%252520Pluie.jpg",
-			"https://lh3.googleusercontent.com/-s-AFpvgSeew/URquc6dF-JI/AAAAAAAAAbs/Mt3xNGRUd68/s1024/Backlit%252520Cloud.jpg",
-			"https://lh5.googleusercontent.com/-bvmif9a9YOQ/URquea3heHI/AAAAAAAAAbs/rcr6wyeQtAo/s1024/Bee%252520and%252520Flower.jpg"
-		};
-
 		private final LayoutInflater inflater;
 
 		ClipAdapter(Context context) {
@@ -83,21 +108,21 @@ public class ClipGridFragment extends Fragment {
 
 		@Override
 		public int getCount() {
-			return IMAGE_URLS.length;
+			return sMp4Files.size();
 		}
 
 		@Override
-		public Object getItem(int position) {
+		public Object getItem(int pos) {
 			return null;
 		}
 
 		@Override
-		public long getItemId(int position) {
-			return position;
+		public long getItemId(int pos) {
+			return pos;
 		}
 
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
+		public View getView(int pos, View convertView, ViewGroup parent) {
 			final ViewHolder holder;
 			View view = convertView;
 			if (view == null) {
@@ -122,7 +147,7 @@ public class ClipGridFragment extends Fragment {
 					.considerExifParams(true)
 					.bitmapConfig(Bitmap.Config.RGB_565)
 					.build();
-			imageLoader.displayImage(IMAGE_URLS[position], holder.imageView, options, new SimpleImageLoadingListener() {
+			imageLoader.displayImage(sJpgFiles.get(pos), holder.imageView, options, new SimpleImageLoadingListener() {
 				@Override
 				public void onLoadingStarted(String imageUri, View view) {
 					holder.progressBar.setProgress(0);
