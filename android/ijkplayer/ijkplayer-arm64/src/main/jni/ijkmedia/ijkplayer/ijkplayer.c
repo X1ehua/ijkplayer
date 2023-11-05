@@ -140,9 +140,9 @@ void *ijkmp_set_inject_opaque(IjkMediaPlayer *mp, void *opaque)
 {
     assert(mp);
 
-    MPTRACE("%s(%p)\n", __func__, opaque);
+    // MPTRACE("%s(%p)\n", __func__, opaque);
     void *prev_weak_thiz = ffp_set_inject_opaque(mp->ffplayer, opaque);
-    MPTRACE("%s()=void\n", __func__);
+    // MPTRACE("%s()=void\n", __func__);
     return prev_weak_thiz;
 }
 
@@ -160,9 +160,9 @@ void *ijkmp_set_ijkio_inject_opaque(IjkMediaPlayer *mp, void *opaque)
 {
     assert(mp);
 
-    MPTRACE("%s(%p)\n", __func__, opaque);
+    // MPTRACE("%s(%p)\n", __func__, opaque);
     void *prev_weak_thiz = ffp_set_ijkio_inject_opaque(mp->ffplayer, opaque);
-    MPTRACE("%s()=void\n", __func__);
+    // MPTRACE("%s()=void\n", __func__);
     return prev_weak_thiz;
 }
 
@@ -368,11 +368,11 @@ int ijkmp_set_data_source(IjkMediaPlayer *mp, const char *url)
 {
     assert(mp);
     assert(url);
-    MPTRACE("ijkmp_set_data_source(url=\"%s\")\n", url);
+    // MPTRACE("ijkmp_set_data_source(url=\"%s\")\n", url);
     pthread_mutex_lock(&mp->mutex);
     int retval = ijkmp_set_data_source_l(mp, url);
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_set_data_source(url=\"%s\")=%d\n", url, retval);
+    // MPTRACE("ijkmp_set_data_source(url=\"%s\")=%d\n", url, retval);
     return retval;
 }
 
@@ -422,11 +422,11 @@ static int ijkmp_prepare_async_l(IjkMediaPlayer *mp)
 int ijkmp_prepare_async(IjkMediaPlayer *mp)
 {
     assert(mp);
-    MPTRACE("ijkmp_prepare_async()\n");
+    // MPTRACE("ijkmp_prepare_async()\n");
     pthread_mutex_lock(&mp->mutex);
     int retval = ijkmp_prepare_async_l(mp);
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_prepare_async()=%d\n", retval);
+    // MPTRACE("ijkmp_prepare_async()=%d\n", retval);
     return retval;
 }
 
@@ -462,11 +462,11 @@ static int ijkmp_start_l(IjkMediaPlayer *mp)
 int ijkmp_start(IjkMediaPlayer *mp)
 {
     assert(mp);
-    MPTRACE("ijkmp_start()\n");
+    // MPTRACE("ijkmp_start()\n");
     pthread_mutex_lock(&mp->mutex);
     int retval = ijkmp_start_l(mp);
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_start()=%d\n", retval);
+    // MPTRACE("ijkmp_start()=%d\n", retval);
     return retval;
 }
 
@@ -697,7 +697,7 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
 
         switch (msg->what) {
         case FFP_MSG_PREPARED:
-            MPTRACE("ijkmp_get_msg: FFP_MSG_PREPARED\n");
+            // MPTRACE("ijkmp_get_msg: FFP_MSG_PREPARED\n");
             pthread_mutex_lock(&mp->mutex);
             if (mp->mp_state == MP_STATE_ASYNC_PREPARING) {
                 ijkmp_change_state_l(mp, MP_STATE_PREPARED);
@@ -712,7 +712,7 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
             break;
 
         case FFP_MSG_COMPLETED:
-            MPTRACE("ijkmp_get_msg: FFP_MSG_COMPLETED\n");
+            // MPTRACE("ijkmp_get_msg: FFP_MSG_COMPLETED\n");
 
             pthread_mutex_lock(&mp->mutex);
             mp->restart = 1;
@@ -722,7 +722,7 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
             break;
 
         case FFP_MSG_SEEK_COMPLETE:
-            MPTRACE("ijkmp_get_msg: FFP_MSG_SEEK_COMPLETE\n");
+            // MPTRACE("ijkmp_get_msg: FFP_MSG_SEEK_COMPLETE\n");
 
             pthread_mutex_lock(&mp->mutex);
             mp->seek_req = 0;
@@ -731,7 +731,7 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
             break;
 
         case FFP_REQ_START:
-            MPTRACE("ijkmp_get_msg: FFP_REQ_START\n");
+            // MPTRACE("ijkmp_get_msg: FFP_REQ_START\n");
             continue_wait_next_msg = 1;
             pthread_mutex_lock(&mp->mutex);
             if (0 == ikjmp_chkst_start_l(mp->mp_state)) {
@@ -864,14 +864,18 @@ int clamp(int x)
 	return x;
 }
 
-/* YUV to RGB: http://en.wikipedia.org/wiki/YUV */
-void YV12_to_RGB32(Uint8 *buffRGB, Uint8 **dataYUV, int width, int height)
+/* YUV to RGB: http://en.wikipedia.org/wiki/YUV
+ * buffRGB 由于是写入 bitmap，所以需要每行 16 个像素对齐
+ */
+void YV12_to_RGB32_aligned_16(Uint8 *buffRGB, Uint8 **dataYUV, int width, int height)
 {
     Uint8 *dataY = dataYUV[0];
     Uint8 *dataU = dataYUV[1];
     Uint8 *dataV = dataYUV[2];
 
     int x, y, Y, U, V, posRowX0 = 0;
+    int padding = (int)(ceil(width / 16.0) * 16) - width;
+    ALOGW(">>>>>>>> %s(): padding %d", __FUNCTION__, padding);
     for (y = 0; y < height; y++)
     {
         for (x = 0; x < width; x++)
@@ -886,6 +890,7 @@ void YV12_to_RGB32(Uint8 *buffRGB, Uint8 **dataYUV, int width, int height)
             buffRGB++;
         }
         posRowX0 += width;
+        buffRGB  += padding * 4;
     }
 }
 
@@ -911,7 +916,7 @@ void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
         int height = vp->bmp->h;
 
         // copy data to java Bitmap.pixels
-        YV12_to_RGB32(frame_buf, vp->bmp->pixels, width, height);
+        YV12_to_RGB32_aligned_16(frame_buf, vp->bmp->pixels, width, height);
 
         /*
         int pixels    = width * 4;

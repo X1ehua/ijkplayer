@@ -149,10 +149,10 @@ SDL_Android_AudioTrack *SDL_Android_AudioTrack_new_from_spec(JNIEnv *env, SDL_An
 
     switch (spec->channel_config) {
     case CHANNEL_OUT_MONO:
-        ALOGI("SDL_Android_AudioTrack: %s", "CHANNEL_OUT_MONO");
+        // ALOGI("SDL_Android_AudioTrack: %s", "CHANNEL_OUT_MONO");
         break;
     case CHANNEL_OUT_STEREO:
-        ALOGI("SDL_Android_AudioTrack: %s", "CHANNEL_OUT_STEREO");
+        // ALOGI("SDL_Android_AudioTrack: %s", "CHANNEL_OUT_STEREO");
         break;
     default:
         ALOGE("%s: invalid channel %d", __func__, spec->channel_config);
@@ -161,10 +161,10 @@ SDL_Android_AudioTrack *SDL_Android_AudioTrack_new_from_spec(JNIEnv *env, SDL_An
 
     switch (spec->audio_format) {
     case ENCODING_PCM_16BIT:
-        ALOGI("SDL_Android_AudioTrack: %s", "ENCODING_PCM_16BIT");
+        // ALOGI("SDL_Android_AudioTrack: %s", "ENCODING_PCM_16BIT");
         break;
     case ENCODING_PCM_8BIT:
-        ALOGI("SDL_Android_AudioTrack: %s", "ENCODING_PCM_8BIT");
+        // ALOGI("SDL_Android_AudioTrack: %s", "ENCODING_PCM_8BIT");
         break;
 #if 0
     case ENCODING_PCM_FLOAT:
@@ -236,7 +236,7 @@ SDL_Android_AudioTrack *SDL_Android_AudioTrack_new_from_spec(JNIEnv *env, SDL_An
     float init_volume = 1.0f;
     init_volume = IJKMIN(init_volume, atrack->max_volume);
     init_volume = IJKMAX(init_volume, atrack->min_volume);
-    ALOGI("%s: init volume as %f/(%f,%f)", __func__, init_volume, atrack->min_volume, atrack->max_volume);
+    ALOGI("%s: init volume as %.3f/(%.3f, %.3f)", __func__, init_volume, atrack->min_volume, atrack->max_volume);
     J4AC_AudioTrack__setStereoVolume__catchAll(env, atrack->thiz, init_volume, init_volume);
 
     return atrack;

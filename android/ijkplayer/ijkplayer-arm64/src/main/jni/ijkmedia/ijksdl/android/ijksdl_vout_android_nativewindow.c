@@ -229,7 +229,7 @@ SDL_Vout *SDL_VoutAndroid_CreateForANativeWindow()
     if (!opaque->egl)
         goto fail;
 
-    ALOGW(">> vout->display_overlay = func_display_overlay");
+    // ALOGW(">> vout->display_overlay = func_display_overlay");
     vout->opaque_class    = &g_nativewindow_class;
     vout->create_overlay  = func_create_overlay;
     vout->free_l          = func_free_l;

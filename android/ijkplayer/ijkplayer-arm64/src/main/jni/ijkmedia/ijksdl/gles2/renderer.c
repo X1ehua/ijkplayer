@@ -160,10 +160,10 @@ IJK_GLES2_Renderer *IJK_GLES2_Renderer_create(SDL_VoutOverlay *overlay)
     IJK_GLES2_printString("Version", GL_VERSION);
     IJK_GLES2_printString("Vendor", GL_VENDOR);
     IJK_GLES2_printString("Renderer", GL_RENDERER);
-    IJK_GLES2_printString("Extensions", GL_EXTENSIONS);
+    // IJK_GLES2_printString("Extensions", GL_EXTENSIONS);
 
-    ALOGW(">> overlay->format: 0x%x", overlay->format);
-    ALOGW(">> SDL_FCC_RV32: 0x%x", SDL_FCC_RV32);
+    // ALOGW(">> overlay->format: 0x%x", overlay->format);
+    // ALOGW(">> SDL_FCC_RV32: 0x%x", SDL_FCC_RV32);
 
     IJK_GLES2_Renderer *renderer = NULL;
     switch (overlay->format) {
@@ -324,7 +324,7 @@ static void IJK_GLES2_Renderer_TexCoords_reset(IJK_GLES2_Renderer *renderer)
 
 static void IJK_GLES2_Renderer_TexCoords_cropRight(IJK_GLES2_Renderer *renderer, GLfloat cropRight)
 {
-    ALOGE("IJK_GLES2_Renderer_TexCoords_cropRight\n");
+    // ALOGI("IJK_GLES2_Renderer_TexCoords_cropRight\n");
     renderer->texcoords[0] = 0.0f;
     renderer->texcoords[1] = 1.0f;
     renderer->texcoords[2] = 1.0f - cropRight;
@@ -337,8 +337,10 @@ static void IJK_GLES2_Renderer_TexCoords_cropRight(IJK_GLES2_Renderer *renderer,
 
 static void IJK_GLES2_Renderer_TexCoords_reloadVertex(IJK_GLES2_Renderer *renderer)
 {
-    glVertexAttribPointer(renderer->av2_texcoord, 2, GL_FLOAT, GL_FALSE, 0, renderer->texcoords);   IJK_GLES2_checkError_TRACE("glVertexAttribPointer(av2_texcoord)");
-    glEnableVertexAttribArray(renderer->av2_texcoord);                                              IJK_GLES2_checkError_TRACE("glEnableVertexAttribArray(av2_texcoord)");
+    glVertexAttribPointer(renderer->av2_texcoord, 2, GL_FLOAT, GL_FALSE, 0, renderer->texcoords);
+    IJK_GLES2_checkError_TRACE("glVertexAttribPointer(av2_texcoord)");
+    glEnableVertexAttribArray(renderer->av2_texcoord);
+    IJK_GLES2_checkError_TRACE("glEnableVertexAttribArray(av2_texcoord)");
 }
 
 /*

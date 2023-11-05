@@ -134,7 +134,7 @@ inline static bool check_ffpipeline(IJKFF_Pipeline* pipeline, const char *func_n
 
 IJKFF_Pipeline *ffpipeline_create_from_android(FFPlayer *ffp)
 {
-    ALOGD("ffpipeline_create_from_android()\n");
+    // ALOGD("ffpipeline_create_from_android()\n");
     IJKFF_Pipeline *pipeline = ffpipeline_alloc(&g_pipeline_class, sizeof(IJKFF_Pipeline_Opaque));
     if (!pipeline)
         return pipeline;
@@ -208,7 +208,7 @@ void ffpipeline_set_vout(IJKFF_Pipeline* pipeline, SDL_Vout *vout)
 
 int ffpipeline_set_surface(JNIEnv *env, IJKFF_Pipeline* pipeline, jobject surface)
 {
-    ALOGD("%s()\n", __func__);
+    // ALOGD("%s()\n", __func__);
     if (!check_ffpipeline(pipeline, __func__))
         return -1;
 
@@ -261,7 +261,7 @@ void ffpipeline_set_surface_need_reconfigure_l(IJKFF_Pipeline* pipeline, bool ne
 
 void ffpipeline_set_mediacodec_select_callback(IJKFF_Pipeline* pipeline, bool (*callback)(void *opaque, ijkmp_mediacodecinfo_context *mcc), void *opaque)
 {
-    ALOGD("%s\n", __func__);
+    // ALOGD("%s\n", __func__);
     if (!check_ffpipeline(pipeline, __func__))
         return;
 

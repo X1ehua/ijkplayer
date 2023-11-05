@@ -186,7 +186,7 @@ static int aout_open_audio_n(JNIEnv *env, SDL_Aout *aout, const SDL_AudioSpec *d
     }
 
     opaque->audio_session_id = SDL_Android_AudioTrack_getAudioSessionId(env, opaque->atrack);
-    ALOGI("audio_session_id = %d\n", opaque->audio_session_id);
+    // ALOGI("audio_session_id = %d\n", opaque->audio_session_id);
 
     opaque->pause_on = 1;
     opaque->abort_request = 0;

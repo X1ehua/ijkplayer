@@ -76,9 +76,9 @@ public class ClipGridFragment extends Fragment {
 					sMp4Files.add(mp4);
 					sJpgFiles.add("file://" + jpg);
 				}
-				else {
-					Log.e(TAG, ">> No .jpg file found corresponding to " + mp4);
-				}
+				//else {
+				//	Log.e(TAG, ">> No .jpg file found corresponding to " + mp4);
+				//}
 			}
 		}
 	}

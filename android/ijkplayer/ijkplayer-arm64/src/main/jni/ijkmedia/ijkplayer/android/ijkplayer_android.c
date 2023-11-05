@@ -68,11 +68,11 @@ void ijkmp_android_set_surface(JNIEnv *env, IjkMediaPlayer *mp, jobject android_
     if (!mp)
         return;
 
-    MPTRACE("ijkmp_set_android_surface(surface=%p)", (void*)android_surface);
+    // MPTRACE("ijkmp_set_android_surface(surface=%p)", (void*)android_surface);
     pthread_mutex_lock(&mp->mutex);
     ijkmp_android_set_surface_l(env, mp, android_surface);
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_set_android_surface(surface=%p)=void", (void*)android_surface);
+    // MPTRACE("ijkmp_set_android_surface(surface=%p)=void", (void*)android_surface);
 }
 
 void ijkmp_android_set_volume(JNIEnv *env, IjkMediaPlayer *mp, float left, float right)
@@ -115,7 +115,7 @@ void ijkmp_android_set_mediacodec_select_callback(IjkMediaPlayer *mp, bool (*cal
     if (!mp)
         return;
 
-    MPTRACE("ijkmp_android_set_mediacodec_select_callback()");
+    // MPTRACE("ijkmp_android_set_mediacodec_select_callback()");
     pthread_mutex_lock(&mp->mutex);
 
     if (mp && mp->ffplayer && mp->ffplayer->pipeline) {
@@ -123,5 +123,5 @@ void ijkmp_android_set_mediacodec_select_callback(IjkMediaPlayer *mp, bool (*cal
     }
 
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_android_set_mediacodec_select_callback()=void");
+    // MPTRACE("ijkmp_android_set_mediacodec_select_callback()=void");
 }

@@ -117,7 +117,7 @@ IJK_GLES2_Renderer *IJK_GLES2_Renderer_create_yuv420sp()
     renderer->func_use            = yuv420sp_use;
     renderer->func_getBufferWidth = yuv420sp_getBufferWidth;
     renderer->func_uploadTexture  = yuv420sp_uploadTexture;
-    av_log(NULL, AV_LOG_ERROR, ">> create render yuv420sp, renderer->func_uploadTexture = yuv420sp_uploadTextur");
+    // av_log(NULL, AV_LOG_ERROR, ">> create render yuv420sp, renderer->func_uploadTexture = yuv420sp_uploadTextur");
 
     return renderer;
 fail:

@@ -156,7 +156,7 @@ IjkMediaPlayer_setDataSourceAndHeaders(
     JNIEnv *env, jobject thiz, jstring path,
     jobjectArray keys, jobjectArray values)
 {
-    MPTRACE("%s\n", __func__);
+    // MPTRACE("%s\n", __func__);
     int retval = 0;
     const char *c_path = NULL;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -245,7 +245,7 @@ LABEL_RETURN:
 static void
 IjkMediaPlayer_setVideoSurface(JNIEnv *env, jobject thiz, jobject jsurface)
 {
-    MPTRACE("%s\n", __func__);
+    // MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: setVideoSurface: null mp", LABEL_RETURN);
 
@@ -259,7 +259,7 @@ LABEL_RETURN:
 static void
 IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
 {
-    MPTRACE("%s\n", __func__);
+    // MPTRACE("%s\n", __func__);
     int retval = 0;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, "java/lang/IllegalStateException", "mpjni: prepareAsync: null mp", LABEL_RETURN);
@@ -531,7 +531,7 @@ LABEL_RETURN:
 static void
 IjkMediaPlayer_setOption(JNIEnv *env, jobject thiz, jint category, jobject name, jobject value)
 {
-    MPTRACE("%s\n", __func__);
+    // MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     const char *c_name = NULL;
     const char *c_value = NULL;
@@ -751,8 +751,8 @@ IjkMediaPlayer_native_init(JNIEnv *env)
 static void
 IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this)
 {
-    ALOGE(">>> IjkMediaPlayer_native_setup() #1");
-    MPTRACE("%s\n", __func__);
+    // ALOGE(">>> IjkMediaPlayer_native_setup() #1");
+    // MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = ijkmp_android_create(message_loop);
     JNI_CHECK_GOTO(mp, env, "java/lang/OutOfMemoryError", "mpjni: native_setup: ijkmp_create() failed", LABEL_RETURN);
 
@@ -921,7 +921,7 @@ static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
 
         switch (msg.what) {
         case FFP_MSG_FLUSH:
-            MPTRACE("FFP_MSG_FLUSH:\n");
+            // MPTRACE("FFP_MSG_FLUSH:\n");
             post_event(env, weak_thiz, MEDIA_NOP, 0, 0);
             break;
         case FFP_MSG_ERROR:
@@ -941,7 +941,7 @@ static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
             post_event(env, weak_thiz, MEDIA_SET_VIDEO_SIZE, msg.arg1, msg.arg2);
             break;
         case FFP_MSG_SAR_CHANGED:
-            MPTRACE("FFP_MSG_SAR_CHANGED: %d, %d\n", msg.arg1, msg.arg2);
+            // MPTRACE("FFP_MSG_SAR_CHANGED: %d, %d\n", msg.arg1, msg.arg2);
             post_event(env, weak_thiz, MEDIA_SET_VIDEO_SAR, msg.arg1, msg.arg2);
             break;
         case FFP_MSG_VIDEO_RENDERING_START:
@@ -949,31 +949,31 @@ static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_VIDEO_RENDERING_START, 0);
             break;
         case FFP_MSG_AUDIO_RENDERING_START:
-            MPTRACE("FFP_MSG_AUDIO_RENDERING_START:\n");
+            // MPTRACE("FFP_MSG_AUDIO_RENDERING_START:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_AUDIO_RENDERING_START, 0);
             break;
         case FFP_MSG_VIDEO_ROTATION_CHANGED:
-            MPTRACE(">> FFP_MSG_VIDEO_ROTATION_CHANGED: %d\n", msg.arg1);
+            // MPTRACE(">> FFP_MSG_VIDEO_ROTATION_CHANGED: %d\n", msg.arg1);
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_VIDEO_ROTATION_CHANGED, msg.arg1);
             break;
         case FFP_MSG_AUDIO_DECODED_START:
-            MPTRACE("FFP_MSG_AUDIO_DECODED_START:\n");
+            // MPTRACE("FFP_MSG_AUDIO_DECODED_START:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_AUDIO_DECODED_START, 0);
             break;
         case FFP_MSG_VIDEO_DECODED_START:
-            MPTRACE("FFP_MSG_VIDEO_DECODED_START:\n");
+            // MPTRACE("FFP_MSG_VIDEO_DECODED_START:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_VIDEO_DECODED_START, 0);
             break;
         case FFP_MSG_OPEN_INPUT:
-            MPTRACE("FFP_MSG_OPEN_INPUT:\n");
+            // MPTRACE("FFP_MSG_OPEN_INPUT:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_OPEN_INPUT, 0);
             break;
         case FFP_MSG_FIND_STREAM_INFO:
-            MPTRACE("FFP_MSG_FIND_STREAM_INFO:\n");
+            // MPTRACE("FFP_MSG_FIND_STREAM_INFO:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_FIND_STREAM_INFO, 0);
             break;
         case FFP_MSG_COMPONENT_OPEN:
-            MPTRACE("FFP_MSG_COMPONENT_OPEN:\n");
+            // MPTRACE("FFP_MSG_COMPONENT_OPEN:\n");
             post_event(env, weak_thiz, MEDIA_INFO, MEDIA_INFO_COMPONENT_OPEN, 0);
             break;
         case FFP_MSG_BUFFERING_START:
@@ -1043,7 +1043,7 @@ LABEL_RETURN:
 
 static int message_loop(void *arg)
 {
-    MPTRACE(">>> %s\n", __func__);
+    // MPTRACE(">>> %s\n", __func__);
 
     JNIEnv *env = NULL;
     if (JNI_OK != SDL_JNI_SetupThreadEnv(&env)) {
@@ -1083,7 +1083,7 @@ IjkMediaPlayer_native_profileBegin(JNIEnv *env, jclass clazz, jstring libName)
         return;
     }
 
-    c_lib_name = (*env)->GetStringUTFChars(env, libName, NULL );
+    c_lib_name = (*env)->GetStringUTFChars(env, libName, NULL);
     JNI_CHECK_GOTO(c_lib_name, env, "java/lang/OutOfMemoryError", "mpjni: monstartup: libName.string oom", LABEL_RETURN);
 
     s_monstartup = 1;

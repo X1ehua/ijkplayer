@@ -255,7 +255,7 @@ public class VideoActivity extends BaseActivity {
         config.diskCacheFileNameGenerator(new Md5FileNameGenerator());
         config.diskCacheSize(50 * 1024 * 1024); // 50 MB
         config.tasksProcessingOrder(QueueProcessingType.LIFO);
-        config.writeDebugLogs(); // Remove for release app
+        //config.writeDebugLogs(); // Remove for release version
 
         // Initialize ImageLoader with configuration.
         ImageLoader.getInstance().init(config.build());
@@ -1070,7 +1070,7 @@ public class VideoActivity extends BaseActivity {
         }
 
     }
-    
+
     public static String getDefaultUri() {
         return URI_LIST[3][1];
     }
@@ -1078,7 +1078,7 @@ public class VideoActivity extends BaseActivity {
     final static String[][] URI_LIST = {
             {"0", "http://192.168.2.6/vod/3s.mp4"},
             {"1", "http://192.168.2.6/vod/10s.mp4"},
-            {"2", "rtmp://192.168.2.6:2023/vod/10s.mp4"},
+            {"2", "rtmp://192.168.2.6:2023/vod/o3.mp4"},
             {"3", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
             {"4", "rtmp://mozicode.com:2023/live/home"},
             {"5", "rtmp://mozicode.com:2023/vod/garfield.mp4"},

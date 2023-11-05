@@ -31,6 +31,9 @@
 #define J4A_UNUSED(x) x __attribute__((unused))
 #endif
 
+#define J4A_LOG_ENABLED 0
+
+#if J4A_LOG_ENABLED
 #define J4A_LOG_TAG "J4A"
 #define J4A_VLOGV(...)  __android_log_vprint(ANDROID_LOG_VERBOSE,   J4A_LOG_TAG, __VA_ARGS__)
 #define J4A_VLOGD(...)  __android_log_vprint(ANDROID_LOG_DEBUG,     J4A_LOG_TAG, __VA_ARGS__)
@@ -43,6 +46,21 @@
 #define J4A_ALOGI(...)  __android_log_print(ANDROID_LOG_INFO,       J4A_LOG_TAG, __VA_ARGS__)
 #define J4A_ALOGW(...)  __android_log_print(ANDROID_LOG_WARN,       J4A_LOG_TAG, __VA_ARGS__)
 #define J4A_ALOGE(...)  __android_log_print(ANDROID_LOG_ERROR,      J4A_LOG_TAG, __VA_ARGS__)
+
+#else
+#define J4A_VLOGV
+#define J4A_VLOGD
+#define J4A_VLOGI
+#define J4A_VLOGW
+#define J4A_VLOGE
+
+#define J4A_ALOGV
+#define J4A_ALOGD
+#define J4A_ALOGI
+#define J4A_ALOGW
+#define J4A_ALOGE
+
+#endif // J4A_LOG_ENABLED
 
 #define J4A_FUNC_FAIL_TRACE()               do {J4A_ALOGE("%s: failed\n", __func__);} while (0)
 #define J4A_FUNC_FAIL_TRACE1(x__)           do {J4A_ALOGE("%s: failed: %s\n", __func__, x__);} while (0)
