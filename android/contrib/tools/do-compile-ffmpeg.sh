@@ -231,10 +231,12 @@ export LD=${FF_CROSS_PREFIX}-ld
 export AR=${FF_CROSS_PREFIX}-ar
 export STRIP=${FF_CROSS_PREFIX}-strip
 
-FF_CFLAGS="-O3 -Wall -pipe \
+# -O3 to -O0 for debugging, should be reversed to -O3 for release build
+# FF_CFLAGS="-O3 -Wall -pipe \
+FF_CFLAGS="-O0 -Wall -pipe \
     -std=c99 \
     -ffast-math \
-    -fstrict-aliasing -Werror=strict-aliasing \
+    -fstrict-aliasing -Werror=strict-aliasing -Werror=format \
     -Wno-psabi -Wa,--noexecstack \
     -DANDROID -DNDEBUG"
 
@@ -314,10 +316,12 @@ if [ -f "./config.h" ]; then
     echo 'reuse configure'
 else
     which $CC
+    echo ./configure $FF_CFG_FLAGS \
+        --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
+        --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS"
     ./configure $FF_CFG_FLAGS \
         --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
         --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS"
-#       --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS" --enable-shared
     make clean
 fi
 
@@ -328,7 +332,12 @@ echo "[*] compile ffmpeg"
 echo "--------------------"
 echo pwd: `pwd` ff_prefix: $FF_PREFIX ff_make_flags: $FF_MAKE_FLAGS
 cp config.* $FF_PREFIX
-make $FF_MAKE_FLAGS > /dev/null
+#make $FF_MAKE_FLAGS > /dev/null
+echo make $FF_MAKE_FLAGS
+make $FF_MAKE_FLAGS
+
+echo ''
+echo make install
 make install
 mkdir -p $FF_PREFIX/include/libffmpeg
 cp -f config.h $FF_PREFIX/include/libffmpeg/config.h
