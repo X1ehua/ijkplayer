@@ -819,44 +819,6 @@ int ijkmp_stop_record(IjkMediaPlayer *mp)
     return retval;
 }
 
-#if 0
-void YUV_NV21_to_RGB(Uint8* buffRGB, Uint8** dataYUV, int width, int height, int uv_columns)
-{
-    #define max(a, b) (a > b ? a : b)
-    #define min(a, b) (a < b ? a : b)
-
-    Uint8* rgb = buffRGB;
-
-    int posRowX0 = 0;
-    for (int y = 0; y < height; y++)
-    {
-        //int offset = ((y>>1)<<1) * uv_columns;
-        for (int x = 0; x < width; x++)
-        {
-            int posY  = posRowX0 + x; // y * width + x
-        //  int posUV = offset + ((x>>1)<<1); // ((y/2) * uv_columns + x/2) * 2
-            int posUV = ((y/2) * uv_columns + x/2) * 2;
-            int Y     = dataYUV[0][posY];
-            int U     = dataYUV[1][posUV] - 128; // NV21: vuvuvu...
-            int V     = dataYUV[2][posUV] - 128;
-            int r     = Y + (int)(1.4075 * V);
-            int g     = Y - (int)(0.3455 * U) - (int)(0.7169 * V);
-            int b     = Y + (int)(1.7790 * U);
-            r         = max(0, min(r, 255));
-            g         = max(0, min(g, 255));
-            b         = max(0, min(b, 255));
-
-            *rgb       = (Uint8)r;
-            *(rgb + 1) = (Uint8)g;
-            *(rgb + 2) = (Uint8)b;
-            *(rgb + 3) = 0xff;
-            rgb += 4;
-        }
-        posRowX0 += width;
-    }
-}
-#endif
-
 int clamp(int x)
 {
 	if(x <   0) return   0;

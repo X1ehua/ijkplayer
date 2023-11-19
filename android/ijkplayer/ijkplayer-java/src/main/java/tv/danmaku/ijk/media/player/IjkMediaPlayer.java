@@ -1301,7 +1301,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public native int native_snapshot(Bitmap bitmap);
 
     public void startRecord(boolean snapshot) {
-        String dirPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/CCLive/";
+        String dirPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
         File dir = new File(dirPath);
         if (!dir.exists()) {
             if (!dir.mkdirs()) {

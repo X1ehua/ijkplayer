@@ -40,7 +40,7 @@ public class ClipGridFragment extends Fragment {
 		View rootView = inflater.inflate(R.layout.fr_image_grid, container, false);
 		mListView = (GridView) rootView.findViewById(R.id.grid);
 
-		String clipDir = Environment.getExternalStorageDirectory().getPath() + "/DCIM/CCLive/";
+		String clipDir = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
 		getClipFiles(clipDir);
 
 		final Activity a = getActivity();
