@@ -32,4 +32,8 @@ echo "== pull soundtouch fork =="
 sh $TOOLS/pull-repo-ref.sh $IJK_SOUNDTOUCH_FORK ijkmedia/ijksoundtouch ${IJK_SOUNDTOUCH_LOCAL_REPO}
 cd ijkmedia/ijksoundtouch
 git checkout ${IJK_SOUNDTOUCH_COMMIT}
+
+ln -s `pwd` ../../android/ijkplayer/ijkplayer-$1/src/main/jni/ijkmedia/
+#ls -l android/ijkplayer/ijkplayer-$1/src/main/jni/ijkmedia/
+
 cd -

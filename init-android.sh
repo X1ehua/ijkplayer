@@ -16,10 +16,15 @@
 # limitations under the License.
 #
 
-# IJK_FFMPEG_UPSTREAM=git://git.videolan.org/ffmpeg.git
-IJK_FFMPEG_UPSTREAM=https://github.com/Bilibili/FFmpeg.git
-IJK_FFMPEG_FORK=https://github.com/Bilibili/FFmpeg.git
-IJK_FFMPEG_COMMIT=ff3.4--ijk0.8.7--20180103--001
+#IJK_FFMPEG_UPSTREAM=git://git.videolan.org/ffmpeg.git
+#IJK_FFMPEG_UPSTREAM=https://github.com/Bilibili/FFmpeg.git
+#IJK_FFMPEG_FORK=https://github.com/Bilibili/FFmpeg.git
+#IJK_FFMPEG_COMMIT=ff3.4--ijk0.8.7--20180103--001
+
+IJK_FFMPEG_UPSTREAM=https://github.com/X1ehua/FFmpeg.git
+IJK_FFMPEG_FORK=https://github.com/X1ehua/FFmpeg.git
+IJK_FFMPEG_COMMIT=ijk-xiehua
+
 IJK_FFMPEG_LOCAL_REPO=extra/ffmpeg
 
 set -e
@@ -33,14 +38,23 @@ sh $TOOLS/pull-repo-base.sh $IJK_FFMPEG_UPSTREAM $IJK_FFMPEG_LOCAL_REPO
 function pull_fork()
 {
     echo "== pull ffmpeg fork $1 =="
+    echo sh $TOOLS/pull-repo-ref.sh $IJK_FFMPEG_FORK android/contrib/ffmpeg-$1 ${IJK_FFMPEG_LOCAL_REPO}
     sh $TOOLS/pull-repo-ref.sh $IJK_FFMPEG_FORK android/contrib/ffmpeg-$1 ${IJK_FFMPEG_LOCAL_REPO}
+
+    echo cd android/contrib/ffmpeg-$1
     cd android/contrib/ffmpeg-$1
-    git checkout ${IJK_FFMPEG_COMMIT} -B ijkplayer
+
+    echo git checkout ${IJK_FFMPEG_COMMIT} # -B ijkplayer
+    git checkout ${IJK_FFMPEG_COMMIT} # -B ijkplayer
     cd -
 }
 
-pull_fork "arm64"
+ARCH=arm64
+pull_fork $ARCH
 
 ./init-config.sh
-./init-android-libyuv.sh
-./init-android-soundtouch.sh
+./init-android-libyuv.sh $ARCH
+./init-android-soundtouch.sh $ARCH
+
+ls -l android/ijkplayer/ijkplayer-$ARCH/src/main/jni/ijkmedia/
+

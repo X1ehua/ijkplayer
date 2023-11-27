@@ -64,6 +64,7 @@ do_sub_cmd () {
             $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
         ;;
         *)
+            echo $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
             $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
         ;;
     esac
