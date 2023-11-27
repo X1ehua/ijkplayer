@@ -192,32 +192,31 @@ case "$UNAME_S" in
     ;;
 esac
 
-if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
-    FF_SYSROOT=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
-    echo "\n对于 NDK r23+, FF_SYSROOT 设置为: \$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
-fi
-
 mkdir -p $FF_PREFIX
 
-FF_TOOLCHAIN_TOUCH="$FF_TOOLCHAIN_PATH/touch"
-if [ ! -f "$FF_TOOLCHAIN_TOUCH" ]; then
-    case $IJK_NDK_REL in
-        23*|24*|25*|26*|27*)
-            # echo python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                # --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
-            # python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                # --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
-            echo NDK r23+ 不再使用 make-standalone-toolchina.sh
+if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
+    case $UNAME_S in
+        CYGWIN_NT-*)
+            export HOST_PREBUILT=$ANDROID_NDK/toolchains/llvm/prebuilt/windows-x86_64
         ;;
-        *)
-            $ANDROID_NDK/build/tools/make-standalone-toolchain.sh \
-                $FF_MAKE_TOOLCHAIN_FLAGS --platform=$FF_ANDROID_PLATFORM \
-                --toolchain=$FF_TOOLCHAIN_NAME
-            touch $FF_TOOLCHAIN_TOUCH;
+        Darwin)
+            export HOST_PREBUILT=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64
         ;;
     esac
-fi
 
+    FF_SYSROOT=$HOST_PREBUILT/sysroot
+    echo "\n对于 NDK r23+:"
+    echo - 不再使用 make-standalone-toolchina.sh
+    echo - FF_SYSROOT=$HOST_PREBUILT/sysroot
+else
+    FF_TOOLCHAIN_TOUCH="$FF_TOOLCHAIN_PATH/touch"
+    if [ ! -f "$FF_TOOLCHAIN_TOUCH" ]; then
+        $ANDROID_NDK/build/tools/make-standalone-toolchain.sh \
+            $FF_MAKE_TOOLCHAIN_FLAGS --platform=$FF_ANDROID_PLATFORM \
+            --toolchain=$FF_TOOLCHAIN_NAME
+        touch $FF_TOOLCHAIN_TOUCH;
+    fi
+fi
 
 #--------------------
 echo ""
@@ -236,10 +235,7 @@ echo IJK_NDK_REL: $IJK_NDK_REL
 
 case $IJK_NDK_REL in
     23*|24*|25*|26*|27*)
-        if [ `uname -s` != 'Dawrinx' ]; then
-            echo 🔸注意：当前系统不是 Dawrin，$0 需要修改 PATH
-        fi
-        export PATH=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin/:$PATH
+        export PATH=$HOST_PREBUILT/bin/:$PATH
         export CC="${FF_CROSS_PREFIX}${FF_ANDROID_API}-clang++"
         export LD=ld
         export AR=llvm-ar
@@ -247,6 +243,7 @@ case $IJK_NDK_REL in
         echo CC: $CC
         echo LD: $LD
         echo AR: $AR
+        FF_CFG_FLAGS="$FF_CFG_FLAGS --cc=$HOST_PREBUILT/bin/aarch64-linux-android21-clang"
     ;;
     *)
         export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
@@ -306,7 +303,6 @@ FF_CFG_FLAGS="$FF_CFG_FLAGS --prefix=$FF_PREFIX"
 
 # Advanced options (experts only):
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --cross-prefix=${FF_CROSS_PREFIX}-"
-FF_CFG_FLAGS="$FF_CFG_FLAGS --cc=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin//aarch64-linux-android21-clang"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-cross-compile"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --target-os=linux"
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
