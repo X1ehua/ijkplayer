@@ -1,8 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="tv.danmaku.ijk.media.player_arm64">
 
-    <!-- # not used
-    <uses-sdk android:minSdkVersion="23" />
-    -->
+    <uses-sdk android:minSdkVersion="21" />
 
 </manifest>

@@ -40,8 +40,8 @@ fi
 
 
 FF_BUILD_ROOT=`pwd` # android/contrib
-FF_ANDROID_PLATFORM=android-9
-
+FF_ANDROID_PLATFORM=android-21
+FF_ANDROID_API=`echo $FF_ANDROID_PLATFORM|awk -F '-' '{print $2}'`
 
 FF_BUILD_NAME=
 FF_SOURCE=
@@ -154,9 +154,9 @@ elif [ "$FF_ARCH" = "arm64" ]; then
     FF_CROSS_PREFIX=aarch64-linux-android
     FF_TOOLCHAIN_NAME=${FF_CROSS_PREFIX}-${FF_GCC_64_VER}
 
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --enable-yasm"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64" # --enable-yasm"
 
-    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS"
+    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -mfloat-abi=softfp" # -Wl,-Bsymbolic"
     FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
 
     FF_ASSEMBLER_SUB_DIRS="aarch64 neon"
@@ -192,30 +192,30 @@ case "$UNAME_S" in
     ;;
 esac
 
+if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
+    FF_SYSROOT=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+    echo "\n对于 NDK r23+, FF_SYSROOT 设置为: \$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+fi
 
 mkdir -p $FF_PREFIX
-# mkdir -p $FF_SYSROOT
 
-# TODO!
-FF_ANDROID_API=21
-
-echo IJK_NDK_REL=$IJK_NDK_REL
 FF_TOOLCHAIN_TOUCH="$FF_TOOLCHAIN_PATH/touch"
 if [ ! -f "$FF_TOOLCHAIN_TOUCH" ]; then
     case $IJK_NDK_REL in
         23*|24*|25*|26*|27*)
-            echo python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
-            python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
-                --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
+            # echo python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
+                # --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
+            # python $ANDROID_NDK/build/tools/make_standalone_toolchain.py \
+                # --arch $FF_ARCH --api $FF_ANDROID_API $FF_MAKE_TOOLCHAIN_FLAGS
+            echo NDK r23+ 不再使用 make-standalone-toolchina.sh
         ;;
         *)
             $ANDROID_NDK/build/tools/make-standalone-toolchain.sh \
                 $FF_MAKE_TOOLCHAIN_FLAGS --platform=$FF_ANDROID_PLATFORM \
                 --toolchain=$FF_TOOLCHAIN_NAME
+            touch $FF_TOOLCHAIN_TOUCH;
         ;;
     esac
-    touch $FF_TOOLCHAIN_TOUCH;
 fi
 
 
@@ -224,17 +224,43 @@ echo ""
 echo "--------------------"
 echo "[*] check ffmpeg env"
 echo "--------------------"
-export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
-#export CC="ccache ${FF_CROSS_PREFIX}-gcc"
-export CC="${FF_CROSS_PREFIX}-gcc"
-export LD=${FF_CROSS_PREFIX}-ld
-export AR=${FF_CROSS_PREFIX}-ar
-export STRIP=${FF_CROSS_PREFIX}-strip
+
+# export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
+# #export CC="ccache ${FF_CROSS_PREFIX}-gcc"
+# export CC="${FF_CROSS_PREFIX}-gcc"
+# export LD=${FF_CROSS_PREFIX}-ld
+# export AR=${FF_CROSS_PREFIX}-ar
+# export STRIP=${FF_CROSS_PREFIX}-strip
+
+echo IJK_NDK_REL: $IJK_NDK_REL
+
+case $IJK_NDK_REL in
+    23*|24*|25*|26*|27*)
+        if [ `uname -s` != 'Dawrinx' ]; then
+            echo 🔸注意：当前系统不是 Dawrin，$0 需要修改 PATH
+        fi
+        export PATH=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin/:$PATH
+        export CC="${FF_CROSS_PREFIX}${FF_ANDROID_API}-clang++"
+        export LD=ld
+        export AR=llvm-ar
+        export STRIP=llvm-strip
+        echo CC: $CC
+        echo LD: $LD
+        echo AR: $AR
+    ;;
+    *)
+        export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
+        export CC="${FF_CROSS_PREFIX}-gcc"
+        export LD=${FF_CROSS_PREFIX}-ld
+        export AR=${FF_CROSS_PREFIX}-ar
+        export STRIP=${FF_CROSS_PREFIX}-strip
+    ;;
+esac
 
 # -O3 to -O0 for debugging, should be reversed to -O3 for release build
 # FF_CFLAGS="-O3 -Wall -pipe \
-FF_CFLAGS="-O0 -Wall -pipe \
-    -std=c99 \
+#   -std=c99 \
+FF_CFLAGS="-O0 -w -pipe \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing -Werror=format \
     -Wno-psabi -Wa,--noexecstack \
@@ -279,18 +305,20 @@ FF_CFG_FLAGS="$FF_CFG_FLAGS $COMMON_FF_CFG_FLAGS"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --prefix=$FF_PREFIX"
 
 # Advanced options (experts only):
-FF_CFG_FLAGS="$FF_CFG_FLAGS --cross-prefix=${FF_CROSS_PREFIX}-"
+# FF_CFG_FLAGS="$FF_CFG_FLAGS --cross-prefix=${FF_CROSS_PREFIX}-"
+FF_CFG_FLAGS="$FF_CFG_FLAGS --cc=$ANDROID_NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin//aarch64-linux-android21-clang"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-cross-compile"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --target-os=linux"
-FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
+# FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-symver"
 
 if [ "$FF_ARCH" = "x86" ]; then
     FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
 else
     # Optimization options (experts only):
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
+    # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
+    # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
 fi
 
 case "$FF_BUILD_OPT" in
@@ -369,12 +397,21 @@ do
     done
 done
 
-$CC -lm -lz -shared --sysroot=$FF_SYSROOT -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
+link_cmd="$CC -lm -lz -shared --sysroot=$FF_SYSROOT \
+    -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
     -Wl,-soname,libijkffmpeg.so \
     $FF_C_OBJ_FILES \
     $FF_ASM_OBJ_FILES \
     $FF_DEP_LIBS \
-    -o $FF_PREFIX/libijkffmpeg.so
+    -o $FF_PREFIX/libijkffmpeg.so"
+# echo $link_cmd
+$link_cmd
+# $CC -lm -lz -shared --sysroot=$FF_SYSROOT -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
+#     -Wl,-soname,libijkffmpeg.so \
+#     $FF_C_OBJ_FILES \
+#     $FF_ASM_OBJ_FILES \
+#     $FF_DEP_LIBS \
+#     -o $FF_PREFIX/libijkffmpeg.so
 
 mysedi() {
     f=$1

@@ -100,7 +100,7 @@ static SDL_VoutOverlay *func_create_overlay_l(int width, int height, int frame_f
         ALOGW(">> SDL_VoutAMediaCodec_CreateOverlay");
         return SDL_VoutAMediaCodec_CreateOverlay(width, height, vout);
     default:
-        ALOGW(">> SDL_VoutFFmpeg_CreateOverlay");
+        ALOGW(">> SDL_VoutFFmpeg_CreateOverlay(%d, %d, %d)", width, height, frame_format);
         return SDL_VoutFFmpeg_CreateOverlay(width, height, frame_format, vout);
     }
 }

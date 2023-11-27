@@ -21,12 +21,13 @@
 APP_OPTIM := debug
 APP_PLATFORM := android-21
 APP_ABI := arm64-v8a
-NDK_TOOLCHAIN_VERSION=4.9
+# NDK_TOOLCHAIN_VERSION=4.9
 APP_PIE := false
 
 APP_STL := c++_static
 
-APP_CFLAGS := -O0 -Wall -pipe \
+#APP_CFLAGS:= -O0 -Wall -pipe
+APP_CFLAGS := -O0 -w -pipe \
     -Werror=format \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing \
