@@ -205,7 +205,10 @@ if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
     esac
 
     FF_SYSROOT=$HOST_PREBUILT/sysroot
-    echo "\n对于 NDK r23+:"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --sysroot=$FF_SYSROOT"
+
+    echo ""
+    echo "对于 NDK r23+:"
     echo - 不再使用 make-standalone-toolchina.sh
     echo - FF_SYSROOT=$HOST_PREBUILT/sysroot
 else
@@ -240,6 +243,7 @@ case $IJK_NDK_REL in
         export LD=ld
         export AR=llvm-ar
         export STRIP=llvm-strip
+        alias ranlib='llvm-ranlib'
         echo CC: $CC
         echo LD: $LD
         echo AR: $AR
@@ -400,7 +404,8 @@ link_cmd="$CC -lm -lz -shared --sysroot=$FF_SYSROOT \
     $FF_ASM_OBJ_FILES \
     $FF_DEP_LIBS \
     -o $FF_PREFIX/libijkffmpeg.so"
-# echo $link_cmd
+echo ""
+echo $link_cmd
 $link_cmd
 # $CC -lm -lz -shared --sysroot=$FF_SYSROOT -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
 #     -Wl,-soname,libijkffmpeg.so \
