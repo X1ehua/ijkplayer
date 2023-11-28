@@ -154,9 +154,14 @@ elif [ "$FF_ARCH" = "arm64" ]; then
     FF_CROSS_PREFIX=aarch64-linux-android
     FF_TOOLCHAIN_NAME=${FF_CROSS_PREFIX}-${FF_GCC_64_VER}
 
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64" # --enable-yasm"
+    # NDK r23+ fft_neon.S 使用 asm 编译出错，所以关闭 asm 使用 softfp
+    if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
+        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64" # --enable-yasm"
+        FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -mfloat-abi=softfp" # 为 NDK r23+ 新增
+    else
+        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --enable-yasm"
+    fi
 
-    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -mfloat-abi=softfp" # -Wl,-Bsymbolic"
     FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
 
     FF_ASSEMBLER_SUB_DIRS="aarch64 neon"
@@ -243,11 +248,12 @@ case $IJK_NDK_REL in
         export LD=ld
         export AR=llvm-ar
         export STRIP=llvm-strip
-        alias ranlib='llvm-ranlib'
         echo CC: $CC
         echo LD: $LD
         echo AR: $AR
+
         FF_CFG_FLAGS="$FF_CFG_FLAGS --cc=$HOST_PREBUILT/bin/aarch64-linux-android21-clang"
+        FF_CFG_FLAGS="$FF_CFG_FLAGS --ranlib=llvm-ranlib --ar=llvm-ar" # macOS 会优先使用 /usr/bin/ranlib (Xcode toolchain)
     ;;
     *)
         export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
