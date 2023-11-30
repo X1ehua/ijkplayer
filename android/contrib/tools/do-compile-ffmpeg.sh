@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 #
 # Copyright (C) 2013-2014 Zhang Rui <bbcallen@gmail.com>
+# Copyright (C) 2023 Wang Xiehua <2255270@QQ.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +55,8 @@ FF_DEP_LIBSOXR_LIB=
 
 FF_CFG_FLAGS=
 
-FF_EXTRA_CFLAGS=
+LIB_X264=$HOME/Documents/x264/libx264.a
+FF_EXTRA_CFLAGS="-I$HOME/Documents/x264/libs-arm64/include"
 FF_EXTRA_LDFLAGS=
 FF_DEP_LIBS=
 
@@ -156,8 +158,8 @@ elif [ "$FF_ARCH" = "arm64" ]; then
 
     # NDK r23+ fft_neon.S 使用 asm 编译出错，所以关闭 asm 使用 softfp
     if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
-        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64" # --enable-yasm"
-        FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -mfloat-abi=softfp" # 为 NDK r23+ 新增
+        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --disable-asm"
+        FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -fPIC"
     else
         FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --enable-yasm"
     fi
@@ -170,6 +172,14 @@ else
     echo "unknown architecture $FF_ARCH";
     exit 1
 fi
+
+# if [ "$FF_ARCH" = "x86" ]; then
+#     FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
+# else
+#     # Optimization options (experts only):
+#     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
+#     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
+# fi
 
 if [ ! -d $FF_SOURCE ]; then
     echo ""
@@ -231,13 +241,6 @@ echo ""
 echo "--------------------"
 echo "[*] check ffmpeg env"
 echo "--------------------"
-
-# export PATH=$FF_TOOLCHAIN_PATH/bin/:$PATH
-# #export CC="ccache ${FF_CROSS_PREFIX}-gcc"
-# export CC="${FF_CROSS_PREFIX}-gcc"
-# export LD=${FF_CROSS_PREFIX}-ld
-# export AR=${FF_CROSS_PREFIX}-ar
-# export STRIP=${FF_CROSS_PREFIX}-strip
 
 echo IJK_NDK_REL: $IJK_NDK_REL
 
@@ -318,15 +321,6 @@ FF_CFG_FLAGS="$FF_CFG_FLAGS --target-os=linux"
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-symver"
 
-if [ "$FF_ARCH" = "x86" ]; then
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
-else
-    # Optimization options (experts only):
-    # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
-    # FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
-fi
-
 case "$FF_BUILD_OPT" in
     debug)
         FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-optimizations"
@@ -349,7 +343,6 @@ cd $FF_SOURCE
 if [ -f "./config.h" ]; then
     echo 'reuse configure'
 else
-    which $CC
     echo ./configure $FF_CFG_FLAGS \
         --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
         --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS"
@@ -406,6 +399,7 @@ done
 link_cmd="$CC -lm -lz -shared --sysroot=$FF_SYSROOT \
     -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
     -Wl,-soname,libijkffmpeg.so \
+    $LIB_X264 \
     $FF_C_OBJ_FILES \
     $FF_ASM_OBJ_FILES \
     $FF_DEP_LIBS \

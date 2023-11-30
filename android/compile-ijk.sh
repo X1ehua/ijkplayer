@@ -65,7 +65,12 @@ do_sub_cmd () {
         ;;
         *)
             echo $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
-            $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
+            $ANDROID_NDK/ndk-build $FF_MAKEFLAGS --output-sync=none
+
+            err_code=$?
+            if [ $err_code -ne 0 ]; then
+                exit $err_code
+            fi
         ;;
     esac
 }
@@ -88,6 +93,10 @@ do_ndk_build () {
     esac
 }
 
+echo ""
+echo ""
+echo ""
+clear
 
 case "$REQUEST_TARGET" in
     "")
@@ -124,4 +133,3 @@ case "$REQUEST_TARGET" in
 esac
 
 ls -lh ijkplayer/ijkplayer-arm64/src/main/libs/arm64-v8a/
-
