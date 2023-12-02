@@ -55,8 +55,7 @@ FF_DEP_LIBSOXR_LIB=
 
 FF_CFG_FLAGS=
 
-LIB_X264=$HOME/Documents/x264/libx264.a
-FF_EXTRA_CFLAGS="-I$HOME/Documents/x264/libs-arm64/include"
+FF_EXTRA_CFLAGS=
 FF_EXTRA_LDFLAGS=
 FF_DEP_LIBS=
 
@@ -95,56 +94,6 @@ if [ "$FF_ARCH" = "armv7a" ]; then
 
     FF_ASSEMBLER_SUB_DIRS="arm"
 
-elif [ "$FF_ARCH" = "armv5" ]; then
-    FF_BUILD_NAME=ffmpeg-armv5
-    FF_BUILD_NAME_OPENSSL=openssl-armv5
-    FF_BUILD_NAME_LIBSOXR=libsoxr-armv5
-    FF_SOURCE=$FF_BUILD_ROOT/$FF_BUILD_NAME
-
-    FF_CROSS_PREFIX=arm-linux-androideabi
-    FF_TOOLCHAIN_NAME=${FF_CROSS_PREFIX}-${FF_GCC_VER}
-
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=arm"
-
-    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -march=armv5te -mtune=arm9tdmi -msoft-float"
-    FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
-
-    FF_ASSEMBLER_SUB_DIRS="arm"
-
-elif [ "$FF_ARCH" = "x86" ]; then
-    FF_BUILD_NAME=ffmpeg-x86
-    FF_BUILD_NAME_OPENSSL=openssl-x86
-    FF_BUILD_NAME_LIBSOXR=libsoxr-x86
-    FF_SOURCE=$FF_BUILD_ROOT/$FF_BUILD_NAME
-
-    FF_CROSS_PREFIX=i686-linux-android
-    FF_TOOLCHAIN_NAME=x86-${FF_GCC_VER}
-
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=x86 --cpu=i686 --enable-yasm"
-
-    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -march=atom -msse3 -ffast-math -mfpmath=sse"
-    FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
-
-    FF_ASSEMBLER_SUB_DIRS="x86"
-
-elif [ "$FF_ARCH" = "x86_64" ]; then
-    FF_ANDROID_PLATFORM=android-21
-
-    FF_BUILD_NAME=ffmpeg-x86_64
-    FF_BUILD_NAME_OPENSSL=openssl-x86_64
-    FF_BUILD_NAME_LIBSOXR=libsoxr-x86_64
-    FF_SOURCE=$FF_BUILD_ROOT/$FF_BUILD_NAME
-
-    FF_CROSS_PREFIX=x86_64-linux-android
-    FF_TOOLCHAIN_NAME=${FF_CROSS_PREFIX}-${FF_GCC_64_VER}
-
-    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=x86_64 --enable-yasm"
-
-    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS"
-    FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
-
-    FF_ASSEMBLER_SUB_DIRS="x86"
-
 elif [ "$FF_ARCH" = "arm64" ]; then
     FF_ANDROID_PLATFORM=android-21
 
@@ -158,12 +107,11 @@ elif [ "$FF_ARCH" = "arm64" ]; then
 
     # NDK r23+ fft_neon.S 使用 asm 编译出错，所以关闭 asm 使用 softfp
     if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
-        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --disable-asm"
         FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS -fPIC"
-    else
-        FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --enable-yasm"
     fi
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --arch=aarch64 --enable-yasm --enable-neon"
 
+    FF_EXTRA_CFLAGS="$FF_EXTRA_CFLAGS"
     FF_EXTRA_LDFLAGS="$FF_EXTRA_LDFLAGS"
 
     FF_ASSEMBLER_SUB_DIRS="aarch64 neon"
@@ -172,14 +120,6 @@ else
     echo "unknown architecture $FF_ARCH";
     exit 1
 fi
-
-# if [ "$FF_ARCH" = "x86" ]; then
-#     FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
-# else
-#     # Optimization options (experts only):
-#     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
-#     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
-# fi
 
 if [ ! -d $FF_SOURCE ]; then
     echo ""
@@ -242,8 +182,6 @@ echo "--------------------"
 echo "[*] check ffmpeg env"
 echo "--------------------"
 
-echo IJK_NDK_REL: $IJK_NDK_REL
-
 case $IJK_NDK_REL in
     23*|24*|25*|26*|27*)
         export PATH=$HOST_PREBUILT/bin/:$PATH
@@ -268,8 +206,7 @@ case $IJK_NDK_REL in
 esac
 
 # -O3 to -O0 for debugging, should be reversed to -O3 for release build
-# FF_CFLAGS="-O3 -Wall -pipe \
-#   -std=c99 \
+# FF_CFLAGS="-O3 -Wall -pipe -std=c99 \
 FF_CFLAGS="-O0 -w -pipe \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing -Werror=format \
@@ -293,9 +230,7 @@ export COMMON_FF_CFG_FLAGS=
 # with openssl
 if [ -f "${FF_DEP_OPENSSL_LIB}/libssl.a" ]; then
     echo "OpenSSL detected"
-# FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-nonfree"
     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-openssl"
-
     FF_CFLAGS="$FF_CFLAGS -I${FF_DEP_OPENSSL_INC}"
     FF_DEP_LIBS="$FF_DEP_LIBS -L${FF_DEP_OPENSSL_LIB} -lssl -lcrypto"
 fi
@@ -303,7 +238,6 @@ fi
 if [ -f "${FF_DEP_LIBSOXR_LIB}/libsoxr.a" ]; then
     echo "libsoxr detected"
     FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-libsoxr"
-
     FF_CFLAGS="$FF_CFLAGS -I${FF_DEP_LIBSOXR_INC}"
     FF_DEP_LIBS="$FF_DEP_LIBS -L${FF_DEP_LIBSOXR_LIB} -lsoxr"
 fi
@@ -315,11 +249,19 @@ FF_CFG_FLAGS="$FF_CFG_FLAGS $COMMON_FF_CFG_FLAGS"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --prefix=$FF_PREFIX"
 
 # Advanced options (experts only):
-# FF_CFG_FLAGS="$FF_CFG_FLAGS --cross-prefix=${FF_CROSS_PREFIX}-"
+FF_CFG_FLAGS="$FF_CFG_FLAGS --cross-prefix=${FF_CROSS_PREFIX}-"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-cross-compile"
 FF_CFG_FLAGS="$FF_CFG_FLAGS --target-os=linux"
-# FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
+FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-pic"
 # FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-symver"
+
+if [ "$FF_ARCH" = "x86" ]; then
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --disable-asm"
+else
+    # Optimization options (experts only):
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-asm"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-inline-asm"
+fi
 
 case "$FF_BUILD_OPT" in
     debug)
@@ -344,7 +286,7 @@ if [ -f "./config.h" ]; then
     echo 'reuse configure'
 else
     echo ./configure $FF_CFG_FLAGS \
-        --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
+        --extra-cflags="$FF_CFLAGS    $FF_EXTRA_CFLAGS" \
         --extra-ldflags="$FF_DEP_LIBS $FF_EXTRA_LDFLAGS"
     ./configure $FF_CFG_FLAGS \
         --extra-cflags="$FF_CFLAGS $FF_EXTRA_CFLAGS" \
@@ -361,6 +303,8 @@ echo pwd: `pwd` ff_prefix: $FF_PREFIX ff_make_flags: $FF_MAKE_FLAGS
 cp config.* $FF_PREFIX
 #make $FF_MAKE_FLAGS > /dev/null
 echo make $FF_MAKE_FLAGS
+echo CC: $CC
+which $CC
 make $FF_MAKE_FLAGS
 
 echo ''
@@ -399,7 +343,6 @@ done
 link_cmd="$CC -lm -lz -shared --sysroot=$FF_SYSROOT \
     -Wl,--no-undefined -Wl,-z,noexecstack $FF_EXTRA_LDFLAGS \
     -Wl,-soname,libijkffmpeg.so \
-    $LIB_X264 \
     $FF_C_OBJ_FILES \
     $FF_ASM_OBJ_FILES \
     $FF_DEP_LIBS \

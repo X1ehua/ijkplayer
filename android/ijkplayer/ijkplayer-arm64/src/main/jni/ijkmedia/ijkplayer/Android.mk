@@ -35,11 +35,10 @@ LOCAL_C_INCLUDES += $(realpath $(LOCAL_PATH)/..)
 LOCAL_C_INCLUDES += $(MY_APP_FFMPEG_INCLUDE_PATH)
 LOCAL_C_INCLUDES += $(realpath $(LOCAL_PATH)/../ijkj4a)
 
-LOCAL_SRC_FILES += cmdutils.c # ff_cmdutils.c
+LOCAL_SRC_FILES += ff_cmdutils.c
 LOCAL_SRC_FILES += ff_ffplay.c
 LOCAL_SRC_FILES += ff_ffpipeline.c
 LOCAL_SRC_FILES += ff_ffpipenode.c
-LOCAL_SRC_FILES += ff_record.c
 LOCAL_SRC_FILES += ijkmeta.c
 LOCAL_SRC_FILES += ijkplayer.c
 
