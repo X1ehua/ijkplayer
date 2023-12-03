@@ -946,11 +946,18 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
 
         memcpy(buf_YV12, dataY, sizePlaneY); // Y plane
 
+#if 0   /* COLOR_FormatYUV411Planar */
+        memcpy(buf_YV12 + sizePlaneY,   dataU, sizePlaneY / 4); // Y plane
+        memcpy(buf_YV12 + sizePlaneY*2, dataV, sizePlaneY / 4); // Y plane
+#endif
+
+#if 1   /* COLOR_FormatYUV420SemiPlanar: Y plane + UV plane(UVUVUV) */
         Uint8 *ptrUV = buf_YV12 + sizePlaneY;
         for (int j = 0; j < sizePlaneY / 4; ++j) {
             *ptrUV++ = *dataV++;
             *ptrUV++ = *dataU++;
         }
+#endif
 
         return 0;
     }

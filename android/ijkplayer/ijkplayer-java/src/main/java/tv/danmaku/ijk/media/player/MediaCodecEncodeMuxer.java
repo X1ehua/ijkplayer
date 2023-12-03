@@ -42,13 +42,15 @@ public class MediaCodecEncodeMuxer implements Runnable {
         mBitRate = mWidth * mHeight * 4;
    }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
     private void prepareEncoder() throws Exception {
         mBufferInfo = new MediaCodec.BufferInfo();
 
         // Set some props. Failing to specify some of these can cause MediaCodec configure() throw unhelpful exception
         MediaFormat format = MediaFormat.createVideoFormat("video/avc", mWidth, mHeight);
-        // TODO: 去掉 deprecation warning, COLOR_FormatYUV420SemiPlanar 换为 auto，看能否略过 NV21_to_NV12() CPU 计算
+        /* COLOR_FormatYUV420SemiPlanar: Y plane + UV plane(UVUVUV)
+         * COLOR_FormatYUV411Planar: not supported (HUAWEI P30)
+         */
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
         format.setInteger(MediaFormat.KEY_BIT_RATE, mBitRate);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
@@ -79,7 +81,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     @Override //@SuppressWarnings("deprecation")
     public void run() {
         try {
-            prepareEncoder();
+            prepareEncoder(); // 耗时较长，放在主线程会导致阻塞/卡顿
         }
         catch(Exception e) {
             Log.e(TAG, ">> prepareEncoder() failed:");
