@@ -4,7 +4,7 @@
     android:id="@+id/app_video_box"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="org.dync.ijkplayer.VideoActivity">
+    tools:context="com.cclive.cc.VideoActivity">
 
     <RelativeLayout
         android:id="@+id/rl_video_view_layout"

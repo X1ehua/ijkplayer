@@ -1,4 +1,4 @@
-package org.dync.ijkplayer;
+package com.cclive.cc;
 
 import android.app.Application;
 import android.content.Context;

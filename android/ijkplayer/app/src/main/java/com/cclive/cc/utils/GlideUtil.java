@@ -1,4 +1,4 @@
-package org.dync.ijkplayer.utils;
+package com.cclive.cc.utils;
 
 import android.content.Context;
 import android.widget.ImageView;
@@ -8,7 +8,7 @@ import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 
-import org.dync.ijkplayer.R;
+import com.cclive.cc.R;
 
 /**
  * Created by KathLine on 2017/12/6.

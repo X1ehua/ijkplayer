@@ -1,4 +1,4 @@
-package org.dync.ijkplayer;
+package com.cclive.cc;
 
 import android.os.Bundle;
 import android.widget.CheckBox;

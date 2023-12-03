@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dync.ijkplayer;
+package com.cclive.cc;
 
 import android.os.Bundle;
 import android.widget.FrameLayout;

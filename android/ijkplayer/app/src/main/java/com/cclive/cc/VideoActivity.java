@@ -1,4 +1,4 @@
-package org.dync.ijkplayer;
+package com.cclive.cc;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -37,7 +37,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 
-import org.dync.ijkplayer.utils.StatusBarUtil;
+import com.cclive.cc.utils.StatusBarUtil;
 import org.dync.ijkplayerlib.widget.media.AndroidMediaController;
 import org.dync.ijkplayerlib.widget.media.IRenderView;
 import org.dync.ijkplayerlib.widget.media.IjkVideoView;

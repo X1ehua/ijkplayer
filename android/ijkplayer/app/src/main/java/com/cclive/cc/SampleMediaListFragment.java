@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-package org.dync.ijkplayer;
+package com.cclive.cc;
 
-import static org.dync.ijkplayer.VideoActivity.URI_LIST;
+import static com.cclive.cc.VideoActivity.URI_LIST;
 
 import android.app.Activity;
 import android.content.Context;

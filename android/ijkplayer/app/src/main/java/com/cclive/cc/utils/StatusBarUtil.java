@@ -1,4 +1,4 @@
-package org.dync.ijkplayer.utils;
+package com.cclive.cc.utils;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import org.dync.ijkplayer.R;
+import com.cclive.cc.R;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
