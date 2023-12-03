@@ -278,7 +278,7 @@ public class VideoActivity extends BaseActivity {
                 break;
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
-                mPlayerController.startRecord(false);
+                mPlayerController.startRecord(3, false);
                 break;
             case R.id.btn_snapshot:
                 mPlayerController.snapshot(null);

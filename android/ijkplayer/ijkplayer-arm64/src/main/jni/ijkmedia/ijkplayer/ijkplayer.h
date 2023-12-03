@@ -218,8 +218,12 @@ void           *ijkmp_set_weak_thiz(IjkMediaPlayer *mp, void *weak_thiz);
 int             ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block);
 void            ijkmp_set_frame_at_time(IjkMediaPlayer *mp, const char *path, int64_t start_time, int64_t end_time, int num, int definition);
 
+#if 0
 int             ijkmp_start_record(IjkMediaPlayer *mp, const char *file_name);
 int             ijkmp_stop_record(IjkMediaPlayer *mp);
+int             ijkmp_get_video_resolution(IjkMediaPlayer *mp, int *width, int *height);
+#endif
+
 int             ijkmp_snapshot(IjkMediaPlayer *mp, uint8_t *frame_buf);
 int             ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height);
 

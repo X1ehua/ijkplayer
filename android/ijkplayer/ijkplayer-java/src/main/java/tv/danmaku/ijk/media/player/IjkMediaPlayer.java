@@ -58,6 +58,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import tv.danmaku.ijk.media.player.annotations.AccessedByNative;
 import tv.danmaku.ijk.media.player.annotations.CalledByNative;
@@ -73,7 +76,6 @@ import tv.danmaku.ijk.media.player.pragma.DebugLog;
  *         Java wrapper of ffplay.
  */
 public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDataProvider {
-    //private final static String TAG = "ijkJava";
     private final static String TAG = "ijkJava";
 
     private static final int MEDIA_NOP = 0; // interface test message
@@ -85,8 +87,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
     private static final int MEDIA_TIMED_TEXT = 99;
     private static final int MEDIA_ERROR = 100;
     private static final int MEDIA_INFO = 200;
-
-    protected static final int MEDIA_SET_VIDEO_SAR = 10001;
+    private static final int MEDIA_SET_VIDEO_SAR = 10001;
 
     //----------------------------------------
     // options
@@ -125,10 +126,10 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
 
     public static final int FFP_PROP_INT64_VIDEO_DECODER                    = 20003;
     public static final int FFP_PROP_INT64_AUDIO_DECODER                    = 20004;
-    public static final int     FFP_PROPV_DECODER_UNKNOWN                   = 0;
-    public static final int     FFP_PROPV_DECODER_AVCODEC                   = 1;
-    public static final int     FFP_PROPV_DECODER_MEDIACODEC                = 2;
-    public static final int     FFP_PROPV_DECODER_VIDEOTOOLBOX              = 3;
+    public static final int FFP_PROPV_DECODER_UNKNOWN                       = 0;
+    public static final int FFP_PROPV_DECODER_AVCODEC                       = 1;
+    public static final int FFP_PROPV_DECODER_MEDIACODEC                    = 2;
+    public static final int FFP_PROPV_DECODER_VIDEOTOOLBOX                  = 3;
     public static final int FFP_PROP_INT64_VIDEO_CACHED_DURATION            = 20005;
     public static final int FFP_PROP_INT64_AUDIO_CACHED_DURATION            = 20006;
     public static final int FFP_PROP_INT64_VIDEO_CACHED_BYTES               = 20007;
@@ -177,6 +178,12 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
     private int mVideoSarDen;
 
     private String mDataSource;
+    private String mRecordFolderPath = null;
+
+    private MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
+    private byte[] mYV12Data = null;
+
+    private final static int SNAPSHOT_JPEG_QUALITY = 90;
 
     /**
      * Default library loader
@@ -1020,8 +1027,13 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
             case MEDIA_SET_VIDEO_SIZE:
                 player.mVideoWidth = msg.arg1;
                 player.mVideoHeight = msg.arg2;
-                player.notifyOnVideoSizeChanged(player.mVideoWidth, player.mVideoHeight,
-                        player.mVideoSarNum, player.mVideoSarDen);
+                player.notifyOnVideoSizeChanged(msg.arg1, msg.arg2, player.mVideoSarNum, player.mVideoSarDen);
+                return;
+
+            case MEDIA_SET_VIDEO_SAR:
+                player.mVideoSarNum = msg.arg1;
+                player.mVideoSarDen = msg.arg2;
+                player.notifyOnVideoSizeChanged(player.mVideoWidth, player.mVideoHeight, msg.arg1, msg.arg2);
                 return;
 
             case MEDIA_ERROR:
@@ -1033,14 +1045,11 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
                 return;
 
             case MEDIA_INFO:
-                switch (msg.arg1) {
-                    case MEDIA_INFO_VIDEO_RENDERING_START:
-                        DebugLog.i(TAG, "Info: MEDIA_INFO_VIDEO_RENDERING_START\n");
-                        break;
+                if (msg.arg1 == MEDIA_INFO_VIDEO_RENDERING_START) {
+                    DebugLog.i(TAG, "Info: MEDIA_INFO_VIDEO_RENDERING_START\n");
                 }
-                Log.e(TAG, "MEDIA_INFO skipped");
-                //player.notifyOnInfo(msg.arg1, msg.arg2);
-                // No real default action so far.
+                //Log.e(TAG, "MEDIA_INFO skipped");
+                //player.notifyOnInfo(msg.arg1, msg.arg2); // No real default action so far.
                 return;
             case MEDIA_TIMED_TEXT:
                 if (msg.obj == null) {
@@ -1051,13 +1060,6 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
                 }
                 return;
             case MEDIA_NOP: // interface test message - ignore
-                break;
-
-            case MEDIA_SET_VIDEO_SAR:
-                player.mVideoSarNum = msg.arg1;
-                player.mVideoSarDen = msg.arg2;
-                player.notifyOnVideoSizeChanged(player.mVideoWidth, player.mVideoHeight,
-                        player.mVideoSarNum, player.mVideoSarDen);
                 break;
 
             default:
@@ -1293,59 +1295,39 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
         }
     }
 
-    public static native void native_profileBegin(String libName);
-    public static native void native_profileEnd();
-    public static native void native_setLogLevel(int level);
-
-    public native int native_startRecord(String file);
-    public native int native_stopRecord();
-    public native int native_snapshot(Bitmap bitmap);
-    public native int native_copyYV12Data(byte[] buff, int width, int height);
-
-    private String mRecordFolerPath = null;
-
     private String getRecordFilePath() {
-        if (mRecordFolerPath == null) {
-            mRecordFolerPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
-            File dir = new File(mRecordFolerPath);
+        if (mRecordFolderPath == null) {
+            mRecordFolderPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
+            File dir = new File(mRecordFolderPath);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
-                    throw new RuntimeException("mkdir('" + mRecordFolerPath + "') failed in getRecordFilePath()");
+                    throw new RuntimeException("mkdir('" + mRecordFolderPath + "') failed in getRecordFilePath()");
                 }
             }
         }
 
-        String mainFilename = mRecordFolerPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
+        String mainFilename = mRecordFolderPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
         return mainFilename + ".mp4";
     }
 
-    private MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
-
-    int[] native_getVideoSize() { // Todo: JNI
-        return new int[] {1920, 1080};
-    }
-
-    byte[] mYV12Data = null;
-
+    @Override // IYuvDataProvider
     public byte[] getYuvData() {
         if (mYV12Data == null)
-            mYV12Data = new byte[1920 * 1080 * 3 / 2];
-        native_copyYV12Data(mYV12Data, 1920, 1080);
+            mYV12Data = new byte[mVideoWidth * mVideoHeight * 3 / 2];
+        native_copyYV12Data(mYV12Data, mVideoWidth, mVideoHeight);
         return mYV12Data;
     }
 
-    public void startRecord(boolean snapshot) {
+    public void startRecord(int seconds, boolean snapshot) {
         String recordFilePath = getRecordFilePath();
 
-        int[] size = native_getVideoSize();
-        mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, size[0], size[1]);
+        // int[] videoResolution = native_getResolution();
+        mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, mVideoWidth, mVideoHeight);
         mMediaCodecEncodeMuxer.startThread();
 
-        // int ret = native_startRecord(recordFilePath);
-        // if (ret != 0) {
-        //     //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
-        //     Log.e(TAG, ">> native_startRecord() failed: " + ret);
-        // }
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(this::stopRecord, seconds, TimeUnit.SECONDS);
+        executor.shutdown();
 
         if (snapshot) {
             snapshot(recordFilePath.replaceFirst(".mp4", ".jpg"));
@@ -1355,13 +1337,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
     public void stopRecord() {
         if (mMediaCodecEncodeMuxer != null)
             mMediaCodecEncodeMuxer.stopThread();
-        // int ret = native_stopRecord();
-        // if (ret != 0) {
-            // Log.e(TAG, ">> native_stopRecord() failed: " + ret);
-        // }
     }
-
-    private final static int SNAPSHOT_JPEG_QUALITY = 90;
 
     public void snapshot(final String path) {
         Thread thread = new Thread(new Runnable() {
@@ -1407,4 +1383,14 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
             Log.e(TAG, "saveBitmap " + path + " failed: " + e.toString());
         }
     }
+
+    public static native void native_profileBegin(String libName);
+    public static native void native_profileEnd();
+    public static native void native_setLogLevel(int level);
+
+//  public native int   native_startRecord(String file);
+//  public native int   native_stopRecord();
+//  public native int[] native_getResolution();
+    public native int   native_snapshot(Bitmap bitmap);
+    public native int   native_copyYV12Data(byte[] buff, int width, int height);
 }

@@ -1146,6 +1146,24 @@ LABEL_RETURN:
     return retval;
 }
 
+#if 0
+static jintArray IjkMediaPlayer_native_getVideoResolution(JNIEnv *env, jobject thiz)
+{
+    jintArray resArr = NULL;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyYV12Data: null IjkMediaPlayer", LABEL_RETURN);
+
+    resArr = (*env)->NewIntArray(env, 2);
+    int videoResolution[2] = {0, 0};
+    ijkmp_get_video_resolution(mp, &videoResolution[0], &videoResolution[1]);
+    (*env)->SetIntArrayRegion(env, resArr, 0, 2, videoResolution);
+
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return resArr;
+}
+#endif
+
 static jboolean IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint width, jint height)
 {
     jboolean retval = JNI_TRUE;
@@ -1217,8 +1235,9 @@ static JNINativeMethod g_methods[] = {
     { "native_setLogLevel",     "(I)V",                         (void *)IjkMediaPlayer_native_setLogLevel },
     { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V",    (void *)IjkMediaPlayer_setFrameAtTime },
 
-    { "native_startRecord",     "(Ljava/lang/String;)I",        (void *)IjkMediaPlayer_native_startRecord },
-    { "native_stopRecord",      "()I",                          (void *)IjkMediaPlayer_native_stopRecord },
+//  { "native_startRecord",     "(Ljava/lang/String;)I",        (void *)IjkMediaPlayer_native_startRecord },
+//  { "native_stopRecord",      "()I",                          (void *)IjkMediaPlayer_native_stopRecord },
+//  { "native_getResolution",   "()[I",                         (void *)IjkMediaPlayer_native_getVideoResolution },
     { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *)IjkMediaPlayer_native_snapshot },
     { "native_copyYV12Data",    "([BII)I",                      (void *)IjkMediaPlayer_native_copyYV12Data },
 };

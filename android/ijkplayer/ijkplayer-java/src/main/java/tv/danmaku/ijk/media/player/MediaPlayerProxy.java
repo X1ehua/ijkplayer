@@ -338,7 +338,7 @@ public class MediaPlayerProxy implements IMediaPlayer {
     }
 
     @Override
-    public void startRecord(boolean snapshot) {}
+    public void startRecord(int seconds, boolean snapshot) {}
 
     @Override
     public void stopRecord() {}

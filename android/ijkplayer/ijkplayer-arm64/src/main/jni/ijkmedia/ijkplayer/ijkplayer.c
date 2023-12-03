@@ -797,7 +797,7 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
     return -1;
 }
 
-#if 1
+#if 0
 int ijkmp_start_record(IjkMediaPlayer *mp, const char *file_name)
 {
     assert(mp && mp->ffplayer && file_name);
@@ -813,7 +813,6 @@ int ijkmp_start_record(IjkMediaPlayer *mp, const char *file_name)
     // MPTRACE("ijkmp_startRecord()=%d, tid %ld\n", retval, (intptr_t)tid);
     return 0; // retval;
 }
-#endif
 
 int ijkmp_stop_record(IjkMediaPlayer *mp)
 {
@@ -825,6 +824,30 @@ int ijkmp_stop_record(IjkMediaPlayer *mp)
     MPTRACE("ijkmp_stopRecord()=%d\n", retval);
     return retval;
 }
+
+int ffp_get_video_resolution(FFPlayer *ffp, int *width, int *height)
+{
+    VideoState *is = ffp->is;
+    Frame *vp  = &is->pictq.queue[ is->pictq.rindex ];
+    if (!vp || !vp->bmp) {
+        ALOGE(">> vp || vp->bmp is null in %s()", __FUNCTION__);
+        return -1;
+    }
+
+    *width  = vp->bmp->w;
+    *height = vp->bmp->h;
+    return 0;
+}
+
+int ijkmp_get_video_resolution(IjkMediaPlayer *mp, int *width, int *height)
+{
+    assert(mp);
+    pthread_mutex_lock(&mp->mutex);
+    int ret = ffp_get_video_resolution(mp->ffplayer, width, height);
+    pthread_mutex_unlock(&mp->mutex);
+    return ret;
+}
+#endif // 0
 
 int clamp(int x)
 {
@@ -890,6 +913,15 @@ void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
     }
 }
 
+int ijkmp_snapshot(IjkMediaPlayer *mp, Uint8 *frame_buf)
+{
+    assert(mp);
+    pthread_mutex_lock(&mp->mutex);
+    ffp_snapshot(mp->ffplayer, frame_buf);
+    pthread_mutex_unlock(&mp->mutex);
+    return 0;
+}
+
 int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
 {
     VideoState *is = ffp->is;
@@ -924,26 +956,11 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
     }
 }
 
-int ijkmp_snapshot(IjkMediaPlayer *mp, Uint8 *frame_buf)
-{
-    assert(mp);
-    pthread_mutex_lock(&mp->mutex);
-    ALOGW(">>> lock %p", &mp->mutex);
-    ffp_snapshot(mp->ffplayer, frame_buf);
-    ALOGW(">>> unlock %p", &mp->mutex);
-    pthread_mutex_unlock(&mp->mutex);
-    ALOGW(">>> unlocked %p", &mp->mutex);
-    return 0;
-}
-
 int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height)
 {
     assert(mp);
     pthread_mutex_lock(&mp->mutex);
-    //ALOGW(">>> lock %p", &mp->mutex);
     int ret = ffp_copy_YV12_data(mp->ffplayer, buf_YV12, width, height);
-    //ALOGW(">>> unlock %p", &mp->mutex);
     pthread_mutex_unlock(&mp->mutex);
-    //ALOGW(">>> unlocked %p", &mp->mutex);
     return ret;
 }
