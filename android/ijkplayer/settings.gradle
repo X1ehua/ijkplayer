@@ -9,5 +9,3 @@ include ':lib-ijkplayer'
 include ':app'
 
 include ':lib-cliploader'
-
-//include ':ijkplayer-arm64:src:main:jni:ijkmedia'

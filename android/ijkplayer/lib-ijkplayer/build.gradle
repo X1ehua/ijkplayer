@@ -22,43 +22,25 @@ android {
 
 dependencies {
     api fileTree(include: ['*.jar'], dir: 'libs')
-    api 'androidx.appcompat:appcompat:' + rootProject.supportLibraryVersion
+//  api 'androidx.appcompat:appcompat:' + rootProject.supportLibraryVersion
     implementation 'com.github.bumptech.glide:glide:4.10.0'
 
-    //第一种
-    /*
-    api (project(':ijkplayer-exo2')) {
-        exclude group: 'tv.danmaku.ijk.media',
-                module: 'ijkplayer-java'
-    }
-    */
+//  api 'com.google.android.exoplayer:exoplayer:' + rootProject.exoplayer
+//  api 'com.google.android.exoplayer:extension-rtmp:' + rootProject.exoplayer
 
-    //第二种
-    //api 'com.github.dynckathline:ijkplayer-exo2:1.0'
-    /*
-    api (project(':ijkplayer-exo2'))
-    api ('com.github.dynckathline:ijkplayer-exo2:1.0') {
-        exclude group: 'tv.danmaku.ijk.media',
-                module: 'ijkplayer-java'
-    }
-    */
-
-    api 'com.google.android.exoplayer:exoplayer:' + rootProject.exoplayer
-    api 'com.google.android.exoplayer:extension-rtmp:' + rootProject.exoplayer
-
-//  api 'tv.danmaku.ijk.media:ijkplayer-java:' + rootProject.ijkplayer // 0.8.8.2
-    // 改为 project 本地引用的方式:
+//  api 'tv.danmaku.ijk.media:ijkplayer-java:' + rootProject.ijkplayer
+    /* 改为 project 本地引用的方式: */
 //  implementation project(":ijkplayer:android:ijkplayer:ijkplayer-arm64")
     implementation project(":ijkplayer-java")
 
 //  api 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.8'
 
 //  api 'tv.danmaku.ijk.media:ijkplayer-armv7a:' + rootProject.ijkplayer
-//  api 'tv.danmaku.ijk.media:ijkplayer-arm64:' + rootProject.ijkplayer // 0.8.8.2
+//  api 'tv.danmaku.ijk.media:ijkplayer-arm64:'  + rootProject.ijkplayer
 }
 
-//解决 gradlew 构建错误: 编码 GBK的不可映射字符
-tasks.withType(Javadoc) {
+// 解决 gradlew 构建错误: 编码 GBK 的不可映射字符
+tasks.withType(Javadoc).configureEach {
 //  options.encoding = "UTF-8"
     options.addStringOption('Xdoclint:none', '-quiet')
     options.addStringOption('encoding', 'UTF-8')
