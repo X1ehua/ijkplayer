@@ -1093,7 +1093,7 @@ LABEL_RETURN:
     return;
 }
 
-#if 1
+#if 0
 static jint IjkMediaPlayer_native_startRecord(JNIEnv* env, jobject thiz, jstring path)
 {
     jint retval = 0;
@@ -1106,7 +1106,6 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
     return retval;
 }
-#endif
 
 static jint IjkMediaPlayer_native_stopRecord(JNIEnv *env, jobject thiz)
 {
@@ -1120,6 +1119,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
     return retval;
 }
+#endif
 
 static jboolean IjkMediaPlayer_native_snapshot(JNIEnv *env, jobject thiz, jobject bitmap)
 {

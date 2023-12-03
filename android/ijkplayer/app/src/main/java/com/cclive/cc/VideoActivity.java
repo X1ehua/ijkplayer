@@ -141,8 +141,8 @@ public class VideoActivity extends BaseActivity {
     RelativeLayout rlVideoViewLayout;
     @BindView(R.id.btn_start_record)
     Button btnStartRecord;
-    @BindView(R.id.btn_stop_record)
-    Button btnStopRecord;
+//  @BindView(R.id.btn_stop_record)
+//  Button btnStopRecord;
     @BindView(R.id.btn_snapshot)
     Button btnSnapshot;
 //  @BindView(R.id.btn_exo_player)
@@ -271,11 +271,11 @@ public class VideoActivity extends BaseActivity {
             case R.id.btn_exo_player:
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkExoMediaPlayer);
                 break;
-            */
             case R.id.btn_stop_record:
                 //mPlayerController.setPlayerRotation(90);
                 mPlayerController.stopRecord();
                 break;
+            */
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
                 mPlayerController.startRecord(3, false);
