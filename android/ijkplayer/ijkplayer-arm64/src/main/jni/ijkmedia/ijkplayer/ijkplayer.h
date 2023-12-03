@@ -164,8 +164,8 @@ void            ijkmp_io_stat_complete_register(void (*cb)(const char *url,
 
 // ref_count is 1 after open
 IjkMediaPlayer *ijkmp_create(int (*msg_loop)(void*));
-void*            ijkmp_set_inject_opaque(IjkMediaPlayer *mp, void *opaque);
-void*            ijkmp_set_ijkio_inject_opaque(IjkMediaPlayer *mp, void *opaque);
+void           *ijkmp_set_inject_opaque(IjkMediaPlayer *mp, void *opaque);
+void           *ijkmp_set_ijkio_inject_opaque(IjkMediaPlayer *mp, void *opaque);
 
 void            ijkmp_set_option(IjkMediaPlayer *mp, int opt_category, const char *name, const char *value);
 void            ijkmp_set_option_int(IjkMediaPlayer *mp, int opt_category, const char *name, int64_t value);
@@ -221,5 +221,6 @@ void            ijkmp_set_frame_at_time(IjkMediaPlayer *mp, const char *path, in
 int             ijkmp_start_record(IjkMediaPlayer *mp, const char *file_name);
 int             ijkmp_stop_record(IjkMediaPlayer *mp);
 int             ijkmp_snapshot(IjkMediaPlayer *mp, uint8_t *frame_buf);
+int             ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height);
 
 #endif

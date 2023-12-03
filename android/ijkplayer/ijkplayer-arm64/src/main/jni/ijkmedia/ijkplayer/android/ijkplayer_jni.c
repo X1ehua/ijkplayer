@@ -151,8 +151,7 @@ fail:
 
 static int message_loop(void *arg);
 
-static void
-IjkMediaPlayer_setDataSourceAndHeaders(
+static void IjkMediaPlayer_setDataSourceAndHeaders(
     JNIEnv *env, jobject thiz, jstring path,
     jobjectArray keys, jobjectArray values)
 {
@@ -176,8 +175,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setDataSourceFd(JNIEnv *env, jobject thiz, jint fd)
+static void IjkMediaPlayer_setDataSourceFd(JNIEnv *env, jobject thiz, jint fd)
 {
     MPTRACE("%s\n", __func__);
     int retval = 0;
@@ -199,8 +197,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setDataSourceCallback(JNIEnv *env, jobject thiz, jobject callback)
+static void IjkMediaPlayer_setDataSourceCallback(JNIEnv *env, jobject thiz, jobject callback)
 {
     MPTRACE("%s\n", __func__);
     int retval = 0;
@@ -224,8 +221,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setAndroidIOCallback(JNIEnv *env, jobject thiz, jobject callback) {
+static void IjkMediaPlayer_setAndroidIOCallback(JNIEnv *env, jobject thiz, jobject callback) {
     MPTRACE("%s\n", __func__);
     int64_t nativeAndroidIO = 0;
 
@@ -242,8 +238,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setVideoSurface(JNIEnv *env, jobject thiz, jobject jsurface)
+static void IjkMediaPlayer_setVideoSurface(JNIEnv *env, jobject thiz, jobject jsurface)
 {
     // MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -256,8 +251,7 @@ LABEL_RETURN:
     return;
 }
 
-static void
-IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
 {
     // MPTRACE("%s\n", __func__);
     int retval = 0;
@@ -271,8 +265,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_start(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_start(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -284,8 +277,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_stop(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_stop(JNIEnv *env, jobject thiz)
 {
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, "java/lang/IllegalStateException", "mpjni: stop: null mp", LABEL_RETURN);
@@ -296,8 +288,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_pause(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_pause(JNIEnv *env, jobject thiz)
 {
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, "java/lang/IllegalStateException", "mpjni: pause: null mp", LABEL_RETURN);
@@ -308,8 +299,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_seekTo(JNIEnv *env, jobject thiz, jlong msec)
+static void IjkMediaPlayer_seekTo(JNIEnv *env, jobject thiz, jlong msec)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -321,8 +311,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static jboolean
-IjkMediaPlayer_isPlaying(JNIEnv *env, jobject thiz)
+static jboolean IjkMediaPlayer_isPlaying(JNIEnv *env, jobject thiz)
 {
     jboolean retval = JNI_FALSE;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -335,8 +324,7 @@ LABEL_RETURN:
     return retval;
 }
 
-static jlong
-IjkMediaPlayer_getCurrentPosition(JNIEnv *env, jobject thiz)
+static jlong IjkMediaPlayer_getCurrentPosition(JNIEnv *env, jobject thiz)
 {
     jlong retval = 0;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -349,8 +337,7 @@ LABEL_RETURN:
     return retval;
 }
 
-static jlong
-IjkMediaPlayer_getDuration(JNIEnv *env, jobject thiz)
+static jlong IjkMediaPlayer_getDuration(JNIEnv *env, jobject thiz)
 {
     jlong retval = 0;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -363,8 +350,7 @@ LABEL_RETURN:
     return retval;
 }
 
-static void
-IjkMediaPlayer_release(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_release(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -384,8 +370,7 @@ IjkMediaPlayer_release(JNIEnv *env, jobject thiz)
 }
 
 static void IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this);
-static void
-IjkMediaPlayer_reset(JNIEnv *env, jobject thiz)
+static void IjkMediaPlayer_reset(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -400,8 +385,7 @@ IjkMediaPlayer_reset(JNIEnv *env, jobject thiz)
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setLoopCount(JNIEnv *env, jobject thiz, jint loop_count)
+static void IjkMediaPlayer_setLoopCount(JNIEnv *env, jobject thiz, jint loop_count)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -413,8 +397,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static jint
-IjkMediaPlayer_getLoopCount(JNIEnv *env, jobject thiz)
+static jint IjkMediaPlayer_getLoopCount(JNIEnv *env, jobject thiz)
 {
     jint loop_count = 1;
     MPTRACE("%s\n", __func__);
@@ -428,8 +411,7 @@ LABEL_RETURN:
     return loop_count;
 }
 
-static jfloat
-ijkMediaPlayer_getPropertyFloat(JNIEnv *env, jobject thiz, jint id, jfloat default_value)
+static jfloat IjkMediaPlayer_getPropertyFloat(JNIEnv *env, jobject thiz, jint id, jfloat default_value)
 {
     jfloat value = default_value;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -442,8 +424,7 @@ LABEL_RETURN:
     return value;
 }
 
-static void
-ijkMediaPlayer_setPropertyFloat(JNIEnv *env, jobject thiz, jint id, jfloat value)
+static void IjkMediaPlayer_setPropertyFloat(JNIEnv *env, jobject thiz, jint id, jfloat value)
 {
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: setPropertyFloat: null mp", LABEL_RETURN);
@@ -455,8 +436,7 @@ LABEL_RETURN:
     return;
 }
 
-static jlong
-ijkMediaPlayer_getPropertyLong(JNIEnv *env, jobject thiz, jint id, jlong default_value)
+static jlong IjkMediaPlayer_getPropertyLong(JNIEnv *env, jobject thiz, jint id, jlong default_value)
 {
     jlong value = default_value;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -469,8 +449,7 @@ LABEL_RETURN:
     return value;
 }
 
-static void
-ijkMediaPlayer_setPropertyLong(JNIEnv *env, jobject thiz, jint id, jlong value)
+static void IjkMediaPlayer_setPropertyLong(JNIEnv *env, jobject thiz, jint id, jlong value)
 {
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: setPropertyLong: null mp", LABEL_RETURN);
@@ -482,8 +461,7 @@ LABEL_RETURN:
     return;
 }
 
-static void
-ijkMediaPlayer_setStreamSelected(JNIEnv *env, jobject thiz, jint stream, jboolean selected)
+static void IjkMediaPlayer_setStreamSelected(JNIEnv *env, jobject thiz, jint stream, jboolean selected)
 {
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     int ret = 0;
@@ -500,8 +478,7 @@ LABEL_RETURN:
     return;
 }
 
-static void
-IjkMediaPlayer_setVolume(JNIEnv *env, jobject thiz, jfloat leftVolume, jfloat rightVolume)
+static void IjkMediaPlayer_setVolume(JNIEnv *env, jobject thiz, jfloat leftVolume, jfloat rightVolume)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -513,8 +490,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static jint
-IjkMediaPlayer_getAudioSessionId(JNIEnv *env, jobject thiz)
+static jint IjkMediaPlayer_getAudioSessionId(JNIEnv *env, jobject thiz)
 {
     jint audio_session_id = 0;
     MPTRACE("%s\n", __func__);
@@ -528,8 +504,7 @@ LABEL_RETURN:
     return audio_session_id;
 }
 
-static void
-IjkMediaPlayer_setOption(JNIEnv *env, jobject thiz, jint category, jobject name, jobject value)
+static void IjkMediaPlayer_setOption(JNIEnv *env, jobject thiz, jint category, jobject name, jobject value)
 {
     // MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -560,8 +535,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_setOptionLong(JNIEnv *env, jobject thiz, jint category, jobject name, jlong value)
+static void IjkMediaPlayer_setOptionLong(JNIEnv *env, jobject thiz, jint category, jobject name, jlong value)
 {
     //MPTRACE("%s\n", __func__);
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -579,8 +553,7 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static jstring
-IjkMediaPlayer_getColorFormatName(JNIEnv *env, jclass clazz, jint mediaCodecColorFormat)
+static jstring IjkMediaPlayer_getColorFormatName(JNIEnv *env, jclass clazz, jint mediaCodecColorFormat)
 {
     const char *codec_name = SDL_AMediaCodec_getColorFormatName(mediaCodecColorFormat);
     if (!codec_name)
@@ -589,8 +562,7 @@ IjkMediaPlayer_getColorFormatName(JNIEnv *env, jclass clazz, jint mediaCodecColo
     return (*env)->NewStringUTF(env, codec_name);
 }
 
-static jstring
-IjkMediaPlayer_getVideoCodecInfo(JNIEnv *env, jobject thiz)
+static jstring IjkMediaPlayer_getVideoCodecInfo(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     jstring jcodec_info = NULL;
@@ -612,8 +584,7 @@ LABEL_RETURN:
     return jcodec_info;
 }
 
-static jstring
-IjkMediaPlayer_getAudioCodecInfo(JNIEnv *env, jobject thiz)
+static jstring IjkMediaPlayer_getAudioCodecInfo(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     jstring jcodec_info = NULL;
@@ -644,8 +615,7 @@ inline static void fillMetaInternal(JNIEnv *env, jobject jbundle, IjkMediaMeta *
     J4AC_Bundle__putString__withCString__catchAll(env, jbundle, key, value);
 }
 
-static jobject
-IjkMediaPlayer_getMediaMeta(JNIEnv *env, jobject thiz)
+static jobject IjkMediaPlayer_getMediaMeta(JNIEnv *env, jobject thiz)
 {
     MPTRACE("%s\n", __func__);
     bool is_locked = false;
@@ -742,14 +712,12 @@ LABEL_RETURN:
     return jret_bundle;
 }
 
-static void
-IjkMediaPlayer_native_init(JNIEnv *env)
+static void IjkMediaPlayer_native_init(JNIEnv *env)
 {
     MPTRACE("%s\n", __func__);
 }
 
-static void
-IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this)
+static void IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this)
 {
     // ALOGE(">>> IjkMediaPlayer_native_setup() #1");
     // MPTRACE("%s\n", __func__);
@@ -766,16 +734,14 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
 }
 
-static void
-IjkMediaPlayer_native_finalize(JNIEnv *env, jobject thiz, jobject name, jobject value)
+static void IjkMediaPlayer_native_finalize(JNIEnv *env, jobject thiz, jobject name, jobject value)
 {
     MPTRACE("%s\n", __func__);
     IjkMediaPlayer_release(env, thiz);
 }
 
 // NOTE: support to be called from read_thread
-static int
-inject_callback(void *opaque, int what, void *data, size_t data_size)
+static jint inject_callback(void *opaque, int what, void *data, size_t data_size)
 {
     JNIEnv     *env     = NULL;
     jobject     jbundle = NULL;
@@ -896,28 +862,19 @@ inline static void post_event2(JNIEnv *env, jobject weak_this, int what, int arg
     // MPTRACE("post_event2()=void");
 }
 
-static int counter = 0;
-
 static void message_loop_n(JNIEnv *env, IjkMediaPlayer *mp)
 {
     jobject weak_thiz = (jobject) ijkmp_get_weak_thiz(mp);
     JNI_CHECK_GOTO(weak_thiz, env, NULL, "mpjni: message_loop_n: null weak_thiz", LABEL_RETURN);
 
-    if (counter++ == 1) {
-        ALOGE(">> message_loop_n() #1");
-    }
-
     while (1) { // 两次 loop 之间约 0.5 ~ 0.61 秒
         AVMessage msg;
 
         int retval = ijkmp_get_msg(mp, &msg, 1);
-        // ALOGE(">> message_loop_n() #2: %d", retval);
         if (retval < 0)
             break;
 
-        // block-get should never return 0
-        assert(retval > 0);
-        // ALOGW(">> message_loop_n() #3: %d %d", counter, msg.what);
+        assert(retval > 0); // block-get should never return 0
 
         switch (msg.what) {
         case FFP_MSG_FLUSH:
@@ -1064,11 +1021,10 @@ LABEL_RETURN:
 }
 
 // ----------------------------------------------------------------------------
-void monstartup(const char *libname);
+void monstartup(const char *libname); // android-ndk-profiler
 void moncleanup(void);
 
-static void
-IjkMediaPlayer_native_profileBegin(JNIEnv *env, jclass clazz, jstring libName)
+static void IjkMediaPlayer_native_profileBegin(JNIEnv *env, jclass clazz, jstring libName)
 {
     MPTRACE("%s\n", __func__);
 
@@ -1095,8 +1051,7 @@ LABEL_RETURN:
         (*env)->ReleaseStringUTFChars(env, libName, c_lib_name);
 }
 
-static void
-IjkMediaPlayer_native_profileEnd(JNIEnv *env, jclass clazz)
+static void IjkMediaPlayer_native_profileEnd(JNIEnv *env, jclass clazz)
 {
     MPTRACE("%s\n", __func__);
     static int s_moncleanup = 0;
@@ -1111,16 +1066,16 @@ IjkMediaPlayer_native_profileEnd(JNIEnv *env, jclass clazz)
     ALOGD("moncleanup\n");
 }
 
-static void
-IjkMediaPlayer_native_setLogLevel(JNIEnv *env, jclass clazz, jint level)
+static void IjkMediaPlayer_native_setLogLevel(JNIEnv *env, jclass clazz, jint level)
 {
     MPTRACE("%s(%d)\n", __func__, level);
     ijkmp_global_set_log_level(level);
     ALOGD("moncleanup\n");
 }
 
-static void
-IjkMediaPlayer_setFrameAtTime(JNIEnv *env, jobject thiz, jstring path, jlong start_time, jlong end_time, jint num, jint definition) {
+static void IjkMediaPlayer_setFrameAtTime(JNIEnv *env, jobject thiz, jstring path, jlong start_time,
+                                          jlong end_time, jint num, jint definition)
+{
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     const char *c_path = NULL;
     JNI_CHECK_GOTO(path, env, "java/lang/IllegalArgumentException", "mpjni: setFrameAtTime: null path", LABEL_RETURN);
@@ -1138,8 +1093,8 @@ LABEL_RETURN:
     return;
 }
 
-static jint
-IjkMediaPlayer_native_startRecord(JNIEnv* env, jobject thiz, jstring path)
+#if 1
+static jint IjkMediaPlayer_native_startRecord(JNIEnv* env, jobject thiz, jstring path)
 {
     jint retval = 0;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -1151,9 +1106,9 @@ LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
     return retval;
 }
+#endif
 
-static jint
-IjkMediaPlayer_native_stopRecord(JNIEnv *env, jobject thiz)
+static jint IjkMediaPlayer_native_stopRecord(JNIEnv *env, jobject thiz)
 {
     jint retval = 0;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -1166,8 +1121,7 @@ LABEL_RETURN:
     return retval;
 }
 
-static jboolean
-IjkMediaPlayer_native_snapshot(JNIEnv *env, jobject thiz, jobject bitmap)
+static jboolean IjkMediaPlayer_native_snapshot(JNIEnv *env, jobject thiz, jobject bitmap)
 {
     jboolean retval = JNI_TRUE;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
@@ -1192,56 +1146,81 @@ LABEL_RETURN:
     return retval;
 }
 
+static jboolean IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint width, jint height)
+{
+    jboolean retval = JNI_TRUE;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyYV12Data: null IjkMediaPlayer", LABEL_RETURN);
+
+    uint8_t *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
+    if (!buff) {
+        (*env)->ThrowNew(env, "java/lang/IllegalArgumentException", "byteArr is null");
+        return JNI_FALSE;
+    }
+
+    retval = ijkmp_copy_YV12_data(mp, buff, width, height);
+
+    (*env)->ReleaseByteArrayElements(env, jbuff, buff, JNI_ABORT);
+
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return retval;
+}
+
 // ----------------------------------------------------------------------------
 
 static JNINativeMethod g_methods[] = {
     { "_setDataSource",         "(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;)V",
-                                            (void *) IjkMediaPlayer_setDataSourceAndHeaders },
-    { "_setDataSourceFd",       "(I)V",     (void *) IjkMediaPlayer_setDataSourceFd },
-    { "_setDataSource",         "(Ltv/danmaku/ijk/media/player/misc/IMediaDataSource;)V", (void *)IjkMediaPlayer_setDataSourceCallback },
-    { "_setAndroidIOCallback",  "(Ltv/danmaku/ijk/media/player/misc/IAndroidIO;)V", (void *)IjkMediaPlayer_setAndroidIOCallback },
+                                                                (void *)IjkMediaPlayer_setDataSourceAndHeaders },
+    { "_setDataSourceFd",       "(I)V",                         (void *)IjkMediaPlayer_setDataSourceFd },
+    { "_setDataSource",         "(Ltv/danmaku/ijk/media/player/misc/IMediaDataSource;)V",
+                                                                (void *)IjkMediaPlayer_setDataSourceCallback },
+    { "_setAndroidIOCallback",  "(Ltv/danmaku/ijk/media/player/misc/IAndroidIO;)V",
+                                                                (void *)IjkMediaPlayer_setAndroidIOCallback },
 
-    { "_setVideoSurface",       "(Landroid/view/Surface;)V", (void *) IjkMediaPlayer_setVideoSurface },
-    { "_prepareAsync",          "()V",      (void *) IjkMediaPlayer_prepareAsync },
-    { "_start",                 "()V",      (void *) IjkMediaPlayer_start },
-    { "_stop",                  "()V",      (void *) IjkMediaPlayer_stop },
-    { "seekTo",                 "(J)V",     (void *) IjkMediaPlayer_seekTo },
-    { "_pause",                 "()V",      (void *) IjkMediaPlayer_pause },
-    { "isPlaying",              "()Z",      (void *) IjkMediaPlayer_isPlaying },
-    { "getCurrentPosition",     "()J",      (void *) IjkMediaPlayer_getCurrentPosition },
-    { "getDuration",            "()J",      (void *) IjkMediaPlayer_getDuration },
-    { "_release",               "()V",      (void *) IjkMediaPlayer_release },
-    { "_reset",                 "()V",      (void *) IjkMediaPlayer_reset },
-    { "setVolume",              "(FF)V",    (void *) IjkMediaPlayer_setVolume },
-    { "getAudioSessionId",      "()I",      (void *) IjkMediaPlayer_getAudioSessionId },
-    { "native_init",            "()V",      (void *) IjkMediaPlayer_native_init },
-    { "native_setup",           "(Ljava/lang/Object;)V", (void *) IjkMediaPlayer_native_setup },
-    { "native_finalize",        "()V",      (void *) IjkMediaPlayer_native_finalize },
+    { "_setVideoSurface",       "(Landroid/view/Surface;)V",    (void *)IjkMediaPlayer_setVideoSurface },
+    { "_prepareAsync",          "()V",                          (void *)IjkMediaPlayer_prepareAsync },
+    { "_start",                 "()V",                          (void *)IjkMediaPlayer_start },
+    { "_stop",                  "()V",                          (void *)IjkMediaPlayer_stop },
+    { "seekTo",                 "(J)V",                         (void *)IjkMediaPlayer_seekTo },
+    { "_pause",                 "()V",                          (void *)IjkMediaPlayer_pause },
+    { "isPlaying",              "()Z",                          (void *)IjkMediaPlayer_isPlaying },
+    { "getCurrentPosition",     "()J",                          (void *)IjkMediaPlayer_getCurrentPosition },
+    { "getDuration",            "()J",                          (void *)IjkMediaPlayer_getDuration },
+    { "_release",               "()V",                          (void *)IjkMediaPlayer_release },
+    { "_reset",                 "()V",                          (void *)IjkMediaPlayer_reset },
+    { "setVolume",              "(FF)V",                        (void *)IjkMediaPlayer_setVolume },
+    { "getAudioSessionId",      "()I",                          (void *)IjkMediaPlayer_getAudioSessionId },
+    { "native_init",            "()V",                          (void *)IjkMediaPlayer_native_init },
+    { "native_setup",           "(Ljava/lang/Object;)V",        (void *)IjkMediaPlayer_native_setup },
+    { "native_finalize",        "()V",                          (void *)IjkMediaPlayer_native_finalize },
 
-    { "_setOption",             "(ILjava/lang/String;Ljava/lang/String;)V", (void *) IjkMediaPlayer_setOption },
-    { "_setOption",             "(ILjava/lang/String;J)V",                  (void *) IjkMediaPlayer_setOptionLong },
+    { "_setOption",             "(ILjava/lang/String;Ljava/lang/String;)V",
+                                                                (void *)IjkMediaPlayer_setOption },
+    { "_setOption",             "(ILjava/lang/String;J)V",      (void *)IjkMediaPlayer_setOptionLong },
 
-    { "_getColorFormatName",    "(I)Ljava/lang/String;",    (void *) IjkMediaPlayer_getColorFormatName },
-    { "_getVideoCodecInfo",     "()Ljava/lang/String;",     (void *) IjkMediaPlayer_getVideoCodecInfo },
-    { "_getAudioCodecInfo",     "()Ljava/lang/String;",     (void *) IjkMediaPlayer_getAudioCodecInfo },
-    { "_getMediaMeta",          "()Landroid/os/Bundle;",    (void *) IjkMediaPlayer_getMediaMeta },
-    { "_setLoopCount",          "(I)V",                     (void *) IjkMediaPlayer_setLoopCount },
-    { "_getLoopCount",          "()I",                      (void *) IjkMediaPlayer_getLoopCount },
-    { "_getPropertyFloat",      "(IF)F",                    (void *) ijkMediaPlayer_getPropertyFloat },
-    { "_setPropertyFloat",      "(IF)V",                    (void *) ijkMediaPlayer_setPropertyFloat },
-    { "_getPropertyLong",       "(IJ)J",                    (void *) ijkMediaPlayer_getPropertyLong },
-    { "_setPropertyLong",       "(IJ)V",                    (void *) ijkMediaPlayer_setPropertyLong },
-    { "_setStreamSelected",     "(IZ)V",                    (void *) ijkMediaPlayer_setStreamSelected },
+    { "_getColorFormatName",    "(I)Ljava/lang/String;",        (void *)IjkMediaPlayer_getColorFormatName },
+    { "_getVideoCodecInfo",     "()Ljava/lang/String;",         (void *)IjkMediaPlayer_getVideoCodecInfo },
+    { "_getAudioCodecInfo",     "()Ljava/lang/String;",         (void *)IjkMediaPlayer_getAudioCodecInfo },
+    { "_getMediaMeta",          "()Landroid/os/Bundle;",        (void *)IjkMediaPlayer_getMediaMeta },
+    { "_setLoopCount",          "(I)V",                         (void *)IjkMediaPlayer_setLoopCount },
+    { "_getLoopCount",          "()I",                          (void *)IjkMediaPlayer_getLoopCount },
+    { "_getPropertyFloat",      "(IF)F",                        (void *)IjkMediaPlayer_getPropertyFloat },
+    { "_setPropertyFloat",      "(IF)V",                        (void *)IjkMediaPlayer_setPropertyFloat },
+    { "_getPropertyLong",       "(IJ)J",                        (void *)IjkMediaPlayer_getPropertyLong },
+    { "_setPropertyLong",       "(IJ)V",                        (void *)IjkMediaPlayer_setPropertyLong },
+    { "_setStreamSelected",     "(IZ)V",                        (void *)IjkMediaPlayer_setStreamSelected },
 
-    { "native_profileBegin",    "(Ljava/lang/String;)V",        (void *) IjkMediaPlayer_native_profileBegin },
-    { "native_profileEnd",      "()V",                          (void *) IjkMediaPlayer_native_profileEnd },
+    { "native_profileBegin",    "(Ljava/lang/String;)V",        (void *)IjkMediaPlayer_native_profileBegin },
+    { "native_profileEnd",      "()V",                          (void *)IjkMediaPlayer_native_profileEnd },
 
-    { "native_setLogLevel",     "(I)V",                         (void *) IjkMediaPlayer_native_setLogLevel },
-    { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V",    (void *) IjkMediaPlayer_setFrameAtTime },
+    { "native_setLogLevel",     "(I)V",                         (void *)IjkMediaPlayer_native_setLogLevel },
+    { "_setFrameAtTime",        "(Ljava/lang/String;JJII)V",    (void *)IjkMediaPlayer_setFrameAtTime },
 
-    { "native_startRecord",     "(Ljava/lang/String;)I",        (void *) IjkMediaPlayer_native_startRecord},
-    { "native_stopRecord",      "()I",                          (void *) IjkMediaPlayer_native_stopRecord},
-    { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *) IjkMediaPlayer_native_snapshot},
+    { "native_startRecord",     "(Ljava/lang/String;)I",        (void *)IjkMediaPlayer_native_startRecord },
+    { "native_stopRecord",      "()I",                          (void *)IjkMediaPlayer_native_stopRecord },
+    { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *)IjkMediaPlayer_native_snapshot },
+    { "native_copyYV12Data",    "([BII)I",                      (void *)IjkMediaPlayer_native_copyYV12Data },
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)

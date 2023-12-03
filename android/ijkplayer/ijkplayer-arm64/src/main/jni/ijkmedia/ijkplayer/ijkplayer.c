@@ -797,16 +797,23 @@ int ijkmp_get_msg(IjkMediaPlayer *mp, AVMessage *msg, int block)
     return -1;
 }
 
-int ijkmp_start_record(IjkMediaPlayer *mp,const char *file_name)
+#if 1
+int ijkmp_start_record(IjkMediaPlayer *mp, const char *file_name)
 {
-    assert(mp);
-    MPTRACE("ijkmp_startRecord()\n");
+    assert(mp && mp->ffplayer && file_name);
+    // MPTRACE("ijkmp_startRecord()\n");
     pthread_mutex_lock(&mp->mutex);
-    int retval = ffp_start_record(mp->ffplayer,file_name);
+    ALOGW(">>> mp.mutex %p", &mp->mutex);
+    // 改为只是向 read_thread 发消息，在 read_thread 里面调用 ffp_start_record()
+    // int retval = ffp_start_record(mp->ffplayer, file_name);
+    mp->ffplayer->record_scheduled = 1;
+    strcpy(mp->ffplayer->record_file, file_name);
+    // pthread_t tid = pthread_self();
     pthread_mutex_unlock(&mp->mutex);
-    MPTRACE("ijkmp_startRecord()=%d\n", retval);
-    return retval;
+    // MPTRACE("ijkmp_startRecord()=%d, tid %ld\n", retval, (intptr_t)tid);
+    return 0; // retval;
 }
+#endif
 
 int ijkmp_stop_record(IjkMediaPlayer *mp)
 {
@@ -858,11 +865,11 @@ void YV12_to_RGB32_aligned_16(Uint8 *buffRGB, Uint8 **dataYUV, int width, int he
 
 void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
 {
-    VideoState* is = ffp->is;
+    VideoState *is = ffp->is;
     int i = 0;
     while (is->pictq.rindex + i < FRAME_QUEUE_SIZE) {
         int idx = (is->pictq.rindex + i + is->pictq.rindex_shown) % is->pictq.max_size;
-        Frame* vp  = &is->pictq.queue[idx];
+        Frame *vp  = &is->pictq.queue[idx];
         if (!vp || !vp->bmp) {
             ALOGW(">>> vp null or vp->bmp null, i %d", i);
             i++;
@@ -879,17 +886,41 @@ void ffp_snapshot(FFPlayer *ffp, Uint8 *frame_buf)
 
         // copy data to java Bitmap.pixels
         YV12_to_RGB32_aligned_16(frame_buf, vp->bmp->pixels, width, height);
-
-        /*
-        int pixels    = width * 4;
-        int line_size = vp->bmp->pitches[0];
-        Uint8* src    = vp->bmp->pixels[0];
-        for (i = 0; i < height; i++) {
-            memcpy(frame_buf + i * pixels, src + i * line_size, pixels);
-        }
-        */
-
         return;
+    }
+}
+
+int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
+{
+    VideoState *is = ffp->is;
+    int i = 0;
+    while (is->pictq.rindex + i < FRAME_QUEUE_SIZE) {
+        int idx = (is->pictq.rindex + i + is->pictq.rindex_shown) % is->pictq.max_size;
+        Frame *vp  = &is->pictq.queue[idx];
+        if (!vp || !vp->bmp || !vp->bmp->pixels || !vp->bmp->pitches) {
+            ALOGE(">>> vp->bmp->pixels null or vp->bmp->pitches null, i %d", i);
+            return -1;
+        }
+
+        if (vp->bmp->w != width || vp->bmp->h != height) {
+            ALOGE(">>> vp->bmp->w|h %d|%d != width|height %d|%d", vp->bmp->w, vp->bmp->h, width, height);
+            return -2;
+        }
+
+        Uint8 *dataY = vp->bmp->pixels[0];
+        Uint8 *dataU = vp->bmp->pixels[1];
+        Uint8 *dataV = vp->bmp->pixels[2];
+        size_t sizePlaneY = width * height;
+
+        memcpy(buf_YV12, dataY, sizePlaneY); // Y plane
+
+        Uint8 *ptrUV = buf_YV12 + sizePlaneY;
+        for (int j = 0; j < sizePlaneY / 4; ++j) {
+            *ptrUV++ = *dataV++;
+            *ptrUV++ = *dataU++;
+        }
+
+        return 0;
     }
 }
 
@@ -897,7 +928,22 @@ int ijkmp_snapshot(IjkMediaPlayer *mp, Uint8 *frame_buf)
 {
     assert(mp);
     pthread_mutex_lock(&mp->mutex);
+    ALOGW(">>> lock %p", &mp->mutex);
     ffp_snapshot(mp->ffplayer, frame_buf);
+    ALOGW(">>> unlock %p", &mp->mutex);
     pthread_mutex_unlock(&mp->mutex);
+    ALOGW(">>> unlocked %p", &mp->mutex);
     return 0;
+}
+
+int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height)
+{
+    assert(mp);
+    pthread_mutex_lock(&mp->mutex);
+    //ALOGW(">>> lock %p", &mp->mutex);
+    int ret = ffp_copy_YV12_data(mp->ffplayer, buf_YV12, width, height);
+    //ALOGW(">>> unlock %p", &mp->mutex);
+    pthread_mutex_unlock(&mp->mutex);
+    //ALOGW(">>> unlocked %p", &mp->mutex);
+    return ret;
 }

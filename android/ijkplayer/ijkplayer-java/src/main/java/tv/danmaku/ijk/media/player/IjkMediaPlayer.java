@@ -2,6 +2,7 @@
  * Copyright (C) 2006 Bilibili
  * Copyright (C) 2006 The Android Open Source Project
  * Copyright (C) 2013 Zhang Rui <bbcallen@gmail.com>
+ * Copyright (C) 2023 Wang Xiehua <2255270@QQ.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +72,7 @@ import tv.danmaku.ijk.media.player.pragma.DebugLog;
  *
  *         Java wrapper of ffplay.
  */
-public final class IjkMediaPlayer extends AbstractMediaPlayer {
+public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDataProvider {
     //private final static String TAG = "ijkJava";
     private final static String TAG = "ijkJava";
 
@@ -1299,47 +1300,78 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     public native int native_startRecord(String file);
     public native int native_stopRecord();
     public native int native_snapshot(Bitmap bitmap);
+    public native int native_copyYV12Data(byte[] buff, int width, int height);
 
-    public void startRecord(boolean snapshot) {
-        String dirPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
-        File dir = new File(dirPath);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                Log.e(TAG, "startRecord() is broken for mkdir('" + dirPath + "') failed");
-                return;
+    private String mRecordFolerPath = null;
+
+    private String getRecordFilePath() {
+        if (mRecordFolerPath == null) {
+            mRecordFolerPath = Environment.getExternalStorageDirectory().getPath() + "/DCIM/cc/";
+            File dir = new File(mRecordFolerPath);
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw new RuntimeException("mkdir('" + mRecordFolerPath + "') failed in getRecordFilePath()");
+                }
             }
         }
 
-        String mainFilename = dirPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
-        String videoPath = mainFilename + ".mp4";
+        String mainFilename = mRecordFolerPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
+        return mainFilename + ".mp4";
+    }
 
-        int ret = native_startRecord(videoPath);
-        if (ret != 0) {
-            //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
-            Log.e(TAG, ">> native_startRecord() failed: " + ret);
-        }
+    private MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
+
+    int[] native_getVideoSize() { // Todo: JNI
+        return new int[] {1920, 1080};
+    }
+
+    byte[] mYV12Data = null;
+
+    public byte[] getYuvData() {
+        if (mYV12Data == null)
+            mYV12Data = new byte[1920 * 1080 * 3 / 2];
+        native_copyYV12Data(mYV12Data, 1920, 1080);
+        return mYV12Data;
+    }
+
+    public void startRecord(boolean snapshot) {
+        String recordFilePath = getRecordFilePath();
+
+        int[] size = native_getVideoSize();
+        mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, size[0], size[1]);
+        mMediaCodecEncodeMuxer.startThread();
+
+        // int ret = native_startRecord(recordFilePath);
+        // if (ret != 0) {
+        //     //Toast.makeText(this, "Native startRecord() failed: " + ret, Toast.LENGTH_SHORT).show();
+        //     Log.e(TAG, ">> native_startRecord() failed: " + ret);
+        // }
 
         if (snapshot) {
-            snapshot(mainFilename + ".jpg");
+            snapshot(recordFilePath.replaceFirst(".mp4", ".jpg"));
         }
     }
 
     public void stopRecord() {
-        int ret = native_stopRecord();
-        if (ret != 0) {
-            Log.e(TAG, ">> native_stopRecord() failed: " + ret);
-        }
+        if (mMediaCodecEncodeMuxer != null)
+            mMediaCodecEncodeMuxer.stopThread();
+        // int ret = native_stopRecord();
+        // if (ret != 0) {
+            // Log.e(TAG, ">> native_stopRecord() failed: " + ret);
+        // }
     }
 
     private final static int SNAPSHOT_JPEG_QUALITY = 90;
 
     public void snapshot(final String path) {
-        new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 doSnapshot(path);
             }
-        }).start();
+        });
+        thread.setName("Snapshot");
+        thread.start();
     }
 
     public void doSnapshot(String path) {
