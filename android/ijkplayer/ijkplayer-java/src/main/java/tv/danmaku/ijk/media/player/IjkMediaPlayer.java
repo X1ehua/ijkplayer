@@ -1318,8 +1318,8 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         return ret < 0 ? null : mYV12Data;
     }
 
-    public final static int NB_SAMP_BUFFS    = 8;                      // ff_ffplay_def.h SampBuffQueue
-    public final static int SAMPLE_BUFF_SIZE = 2048 * NB_SAMP_BUFFS;   // sdl_audio_produce_callback() 顶部
+    public final static int NB_SAMP_BUFFS    = 1;                      // ff_ffplay_def.h SampBuffQueue
+    public final static int SAMPLE_BUFF_SIZE = 256 * NB_SAMP_BUFFS;   // sdl_audio_produce_callback() 顶部
     byte[] mSampleBuff = new byte[SAMPLE_BUFF_SIZE];
 
     @Override // IEncodeDataProvider

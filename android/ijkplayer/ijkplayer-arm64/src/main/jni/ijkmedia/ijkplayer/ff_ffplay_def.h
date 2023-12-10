@@ -273,21 +273,7 @@ typedef struct Decoder {
     int    first_frame_decoded;
 } Decoder;
 
-#define NB_SAMP_BUFFS 8
-
-typedef struct SampBuffQueue {
-    uint8_t *buffs[NB_SAMP_BUFFS]; // NB_SAMP_BUFFS
-    int buff_len; // eg. 2048 BYTES
-    int windex;
-    int rindex;
-    int initialized;
-    pthread_mutex_t mutex;
-    enum SampBuffStat {
-        SAMP_BUFF_STAT_NOT_FILLED,
-        SAMP_BUFF_STAT_FILLED,
-        SAMP_BUFF_STAT_POLLED
-    } buff_stats[NB_SAMP_BUFFS];
-} SampBuffQueue;
+#define NB_SAMP_BUFFS 1
 
 typedef struct VideoState {
     SDL_Thread *read_tid;

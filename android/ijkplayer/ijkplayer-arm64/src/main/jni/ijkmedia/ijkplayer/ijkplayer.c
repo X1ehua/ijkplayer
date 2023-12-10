@@ -939,6 +939,12 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buff_YV12, int width, int height)
             return -2;
         }
 
+        static void* last_bmp = NULL;
+        if (vp->bmp == last_bmp) {
+            return -1; // already polled
+        }
+        last_bmp = vp->bmp;
+
         Uint8 *dataY = vp->bmp->pixels[0];
         Uint8 *dataU = vp->bmp->pixels[1];
         Uint8 *dataV = vp->bmp->pixels[2];

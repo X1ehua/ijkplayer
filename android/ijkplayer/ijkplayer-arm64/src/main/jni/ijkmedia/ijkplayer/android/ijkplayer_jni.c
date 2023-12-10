@@ -1164,25 +1164,25 @@ LABEL_RETURN:
 }
 #endif
 
-static jboolean IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint width, jint height)
+static jint IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint width, jint height)
 {
-    jboolean retval = JNI_TRUE;
+    jint ret = -1;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyYV12Data: null IjkMediaPlayer", LABEL_RETURN);
 
-    uint8_t *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
+    jbyte *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
     if (!buff) {
         (*env)->ThrowNew(env, "java/lang/IllegalArgumentException", "byteArr is null");
         return JNI_FALSE;
     }
 
-    retval = ijkmp_copy_YV12_data(mp, buff, width, height);
+    ret = ijkmp_copy_YV12_data(mp, (uint8_t *)buff, width, height);
 
     (*env)->ReleaseByteArrayElements(env, jbuff, buff, JNI_ABORT);
 
 LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
-    return retval;
+    return ret;
 }
 
 static jint IjkMediaPlayer_native_copyAudioData(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint length)

@@ -2798,42 +2798,6 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
     is->samp_queue_len_sum += write_len; // debug
     //ALOGW(">> samp_queue_len_sum: %d", is->samp_queue_len_sum);
     pthread_mutex_unlock(&is->samp_mutex);
-
-#if 0
-    SampBuffQueue *samp_q = &is->samp_buff_q;
-    pthread_mutex_lock(&samp_q->mutex);
-    if (!samp_q->initialized) { // 初始化 is->samp_buff_q
-        for (int i=0; i<NB_SAMP_BUFFS; i++) {
-            samp_q->buffs[i] = (uint8_t *)malloc(samp_q->buff_len);
-            if (!samp_q->buffs[i]) {
-                ALOGE(">>> malloc(%d) for is->samp_buff_q.buffs[%d] failed", samp_q->buff_len, i);
-                return;
-            }
-        }
-        samp_q->initialized = 1;
-    }
-    if (samp_q->initialized) {
-        memcpy(samp_q->buffs[ samp_q->windex ], stream, samp_q->buff_len);
-        if (samp_q->buff_stats[ samp_q->windex ] == SAMP_BUFF_STAT_FILLED) {
-            // ALOGW(">> SAMP_BUFF_STAT_FILLED %d", samp_q->windex);
-        }
-        samp_q->buff_stats[ samp_q->windex ] = SAMP_BUFF_STAT_FILLED;
-        samp_q->windex = (samp_q->windex + 1) % NB_SAMP_BUFFS;
-        ALOGW(">> filled: windex %d, rindex %d [%d %d %d %d %d %d %d %d]", samp_q->windex, samp_q->rindex,
-              samp_q->buff_stats[0],
-              samp_q->buff_stats[1],
-              samp_q->buff_stats[2],
-              samp_q->buff_stats[3],
-              samp_q->buff_stats[4],
-              samp_q->buff_stats[5],
-              samp_q->buff_stats[6],
-              samp_q->buff_stats[7]
-        );
-    }
-    pthread_mutex_unlock(&samp_q->mutex);
-#endif
-    // static int sc = 0;
-    // ALOGW("")
 }
 
 static int audio_open(FFPlayer *opaque, int64_t wanted_channel_layout, int wanted_nb_channels, int wanted_sample_rate, struct AudioParams *audio_hw_params)
