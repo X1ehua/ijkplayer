@@ -69,14 +69,21 @@ typedef struct SDL_Aout_Opaque {
     volatile bool speed_changed;
 } SDL_Aout_Opaque;
 
+long get_usec()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec*1000000 + tv.tv_usec;
+}
+
 static int aout_thread_n(JNIEnv *env, SDL_Aout *aout)
 {
     SDL_Aout_Opaque *opaque = aout->opaque;
     SDL_Android_AudioTrack *atrack = opaque->atrack;
-    SDL_AudioCallback audio_cblk = opaque->spec.callback;
+    SDL_AudioCallback sample_produce_callback = opaque->spec.callback; // sdl_audio_produce_callback
     void *userdata = opaque->spec.userdata;
     uint8_t *buffer = opaque->buffer;
-    int copy_size = 256;
+    int copy_size = 2048; // 256;
 
     assert(atrack);
     assert(buffer);
@@ -85,6 +92,13 @@ static int aout_thread_n(JNIEnv *env, SDL_Aout *aout)
 
     if (!opaque->abort_request && !opaque->pause_on)
         SDL_Android_AudioTrack_play(env, atrack);
+
+#define AOUT_DEBUG 0
+
+#if AOUT_DEBUG
+    int cc = 0;
+    long t1 = get_usec();
+#endif
 
     while (!opaque->abort_request) {
         SDL_LockMutex(opaque->wakeup_mutex);
@@ -101,6 +115,10 @@ static int aout_thread_n(JNIEnv *env, SDL_Aout *aout)
                 SDL_Android_AudioTrack_play(env, atrack);
             }
         }
+    #if AOUT_DEBUG
+        cc++;
+        long t2 = get_usec();
+    #endif
         if (opaque->need_flush) {
             opaque->need_flush = 0;
             SDL_Android_AudioTrack_flush(env, atrack);
@@ -115,13 +133,22 @@ static int aout_thread_n(JNIEnv *env, SDL_Aout *aout)
         }
         SDL_UnlockMutex(opaque->wakeup_mutex);
 
-        audio_cblk(userdata, buffer, copy_size);
+        sample_produce_callback(userdata, buffer, copy_size);
+    #if AOUT_DEBUG
+        long t3 = get_usec();
+        long dt = t3 - t1;
+        if (dt >= 1000*1000) {
+            ALOGW(">> flush %d, dt %ld / cc %d = %ld", opaque->need_flush, dt, cc, dt/cc);
+            t1 = t3;
+            cc = 0;
+        }
+    #endif
         if (opaque->need_flush) {
             SDL_Android_AudioTrack_flush(env, atrack);
             opaque->need_flush = false;
         }
 
-        if (opaque->need_flush) {
+        if (opaque->need_flush) { // 上面已经 "确保" need_flush 变为 false 了，此处属多余?
             opaque->need_flush = 0;
             SDL_Android_AudioTrack_flush(env, atrack);
         } else {
@@ -190,7 +217,7 @@ static int aout_open_audio_n(JNIEnv *env, SDL_Aout *aout, const SDL_AudioSpec *d
 
     opaque->pause_on = 1;
     opaque->abort_request = 0;
-    opaque->audio_tid = SDL_CreateThreadEx(&opaque->_audio_tid, aout_thread, aout, "ff_aout_android");
+    opaque->audio_tid = SDL_CreateThreadEx(&opaque->_audio_tid, aout_thread, aout, "ff_aout_android"); // 关键!
     if (!opaque->audio_tid) {
         ALOGE("aout_open_audio_n: failed to create audio thread");
         SDL_Android_AudioTrack_free(env, opaque->atrack);

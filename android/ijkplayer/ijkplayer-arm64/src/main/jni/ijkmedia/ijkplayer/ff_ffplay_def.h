@@ -45,6 +45,7 @@
 #include "libavutil/samplefmt.h"
 #include "libavutil/avassert.h"
 #include "libavutil/time.h"
+#include "libavutil/fifo.h"
 #include "libavformat/avformat.h"
 // FFP_MERGE: #include "libavdevice/avdevice.h"
 #include "libswscale/swscale.h"
@@ -272,6 +273,22 @@ typedef struct Decoder {
     int    first_frame_decoded;
 } Decoder;
 
+#define NB_SAMP_BUFFS 8
+
+typedef struct SampBuffQueue {
+    uint8_t *buffs[NB_SAMP_BUFFS]; // NB_SAMP_BUFFS
+    int buff_len; // eg. 2048 BYTES
+    int windex;
+    int rindex;
+    int initialized;
+    pthread_mutex_t mutex;
+    enum SampBuffStat {
+        SAMP_BUFF_STAT_NOT_FILLED,
+        SAMP_BUFF_STAT_FILLED,
+        SAMP_BUFF_STAT_POLLED
+    } buff_stats[NB_SAMP_BUFFS];
+} SampBuffQueue;
+
 typedef struct VideoState {
     SDL_Thread *read_tid;
     SDL_Thread _read_tid;
@@ -296,7 +313,7 @@ typedef struct VideoState {
     Clock extclk;
 
     FrameQueue pictq;
-    FrameQueue subpq;
+    FrameQueue subtq;
     FrameQueue sampq;
 
     Decoder auddec;
@@ -418,6 +435,13 @@ typedef struct VideoState {
     SDL_cond  *audio_accurate_seek_cond;
     volatile int initialized_decoder;
     int seek_buffering;
+
+    // SampBuffQueue samp_buff_q; // for MediaCodec encoder in java
+    AVFifoBuffer *samp_queue;
+    int samp_queue_len;
+    int samp_available_len;
+    int samp_queue_len_sum;
+    pthread_mutex_t samp_mutex;
 } VideoState;
 
 /* options specified by the user */
@@ -735,6 +759,8 @@ typedef struct FFPlayer {
     AVFormatContext *m_ofmt_ctx;        // 用于输出的 AVFormatContext
     AVOutputFormat  *m_ofmt;
     pthread_mutex_t record_mutex;       // 锁
+    char        record_file[512];
+    int         record_scheduled;
     bool        is_recording;           // 是否在录制
     bool        real_record;            // 判断关键帧再真正保存
     int         record_error;

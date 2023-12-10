@@ -75,7 +75,7 @@ import tv.danmaku.ijk.media.player.pragma.DebugLog;
  *
  *         Java wrapper of ffplay.
  */
-public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDataProvider {
+public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncodeDataProvider {
     private final static String TAG = "ijkJava";
 
     private static final int MEDIA_NOP = 0; // interface test message
@@ -1310,24 +1310,47 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
         return mainFilename + ".mp4";
     }
 
-    @Override // IYuvDataProvider
+    @Override // IEncodeDataProvider
     public byte[] getYuvData() {
         if (mYV12Data == null)
             mYV12Data = new byte[mVideoWidth * mVideoHeight * 3 / 2];
-        native_copyYV12Data(mYV12Data, mVideoWidth, mVideoHeight);
-        return mYV12Data;
+        int ret = native_copyYV12Data(mYV12Data, mVideoWidth, mVideoHeight);
+        return ret < 0 ? null : mYV12Data;
     }
+
+    public final static int NB_SAMP_BUFFS    = 8;                      // ff_ffplay_def.h SampBuffQueue
+    public final static int SAMPLE_BUFF_SIZE = 2048 * NB_SAMP_BUFFS;   // sdl_audio_produce_callback() 顶部
+    byte[] mSampleBuff = new byte[SAMPLE_BUFF_SIZE];
+
+    @Override // IEncodeDataProvider
+    public byte[] getSampleData() {
+        int copiedSize = native_copyAudioData(mSampleBuff, mSampleBuff.length);
+        Log.w(TAG, ">> native_copyAudioData() copiedSize " + copiedSize);
+        if (copiedSize <= 0)
+            return null;
+
+        //copiedSize_sum += copiedSize;
+        //Log.e(TAG, "AUDIO>> copiedSize_sum " + copiedSize_sum);
+        if (copiedSize == mSampleBuff.length)
+            return mSampleBuff;
+
+        byte[] sampleData = new byte[copiedSize];
+        System.arraycopy(mSampleBuff, 0, sampleData, 0, copiedSize);
+        return sampleData;
+    }
+    //int copiedSize_sum = 0;
 
     public void startRecord(int seconds, boolean snapshot) {
         String recordFilePath = getRecordFilePath();
 
+        Log.w(TAG, ">> startRecord(" + recordFilePath + ")");
         // int[] videoResolution = native_getResolution();
         mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, mVideoWidth, mVideoHeight);
         mMediaCodecEncodeMuxer.startThread();
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.schedule(this::stopRecord, seconds, TimeUnit.SECONDS);
-        executor.shutdown();
+//        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+//        executor.schedule(this::stopRecord, seconds, TimeUnit.SECONDS);
+//        executor.shutdown();
 
         if (snapshot) {
             snapshot(recordFilePath.replaceFirst(".mp4", ".jpg"));
@@ -1388,9 +1411,9 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IYuvDat
     public static native void native_profileEnd();
     public static native void native_setLogLevel(int level);
 
-//  public native int   native_startRecord(String file);
-//  public native int   native_stopRecord();
-//  public native int[] native_getResolution();
-    public native int   native_snapshot(Bitmap bitmap);
-    public native int   native_copyYV12Data(byte[] buff, int width, int height);
+//  public native int native_startRecord(String file);
+//  public native int native_stopRecord();
+    public native int native_snapshot(Bitmap bitmap);
+    public native int native_copyYV12Data(byte[] buff, int width, int height);
+    public native int native_copyAudioData(byte[] buff, int length);
 }

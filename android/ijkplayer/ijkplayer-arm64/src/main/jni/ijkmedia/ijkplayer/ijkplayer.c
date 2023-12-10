@@ -922,7 +922,7 @@ int ijkmp_snapshot(IjkMediaPlayer *mp, Uint8 *frame_buf)
     return 0;
 }
 
-int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
+int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buff_YV12, int width, int height)
 {
     VideoState *is = ffp->is;
     int i = 0;
@@ -944,15 +944,15 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
         Uint8 *dataV = vp->bmp->pixels[2];
         size_t sizePlaneY = width * height;
 
-        memcpy(buf_YV12, dataY, sizePlaneY); // Y plane
+        memcpy(buff_YV12, dataY, sizePlaneY); // Y plane
 
 #if 0   /* COLOR_FormatYUV411Planar */
-        memcpy(buf_YV12 + sizePlaneY,   dataU, sizePlaneY / 4); // Y plane
-        memcpy(buf_YV12 + sizePlaneY*2, dataV, sizePlaneY / 4); // Y plane
+        memcpy(buff_YV12 + sizePlaneY,   dataU, sizePlaneY / 4); // Y plane
+        memcpy(buff_YV12 + sizePlaneY*2, dataV, sizePlaneY / 4); // Y plane
 #endif
 
 #if 1   /* COLOR_FormatYUV420SemiPlanar: Y plane + UV plane(UVUVUV) */
-        Uint8 *ptrUV = buf_YV12 + sizePlaneY;
+        Uint8 *ptrUV = buff_YV12 + sizePlaneY;
         for (int j = 0; j < sizePlaneY / 4; ++j) {
             *ptrUV++ = *dataV++;
             *ptrUV++ = *dataU++;
@@ -963,11 +963,172 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buf_YV12, int width, int height)
     }
 }
 
-int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height)
+int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buff_YV12, int width, int height)
 {
     assert(mp);
     pthread_mutex_lock(&mp->mutex);
-    int ret = ffp_copy_YV12_data(mp->ffplayer, buf_YV12, width, height);
+    int ret = ffp_copy_YV12_data(mp->ffplayer, buff_YV12, width, height);
     pthread_mutex_unlock(&mp->mutex);
     return ret;
+}
+
+#if 0
+int ffp_copy_audio_data(FFPlayer *ffp, Uint8 *buff_sample, int length)
+{
+    VideoState *is = ffp->is;
+    if (!is->samp_queue)
+        return -1;
+
+    if (length < is->samp_available_len) {
+        ALOGE("ffp_copy_audio_data() >> should not happen: dest buff len %d < samp_available_len %d",
+              length, is->samp_available_len);
+        return -1;
+    }
+
+    pthread_mutex_lock(&is->samp_mutex);
+    av_fifo_generic_read(is->samp_queue, buff_sample, is->samp_available_len, NULL);
+    av_fifo_drain(is->samp_queue, is->samp_available_len);
+    pthread_mutex_unlock(&is->samp_mutex);
+    return is->samp_available_len;
+
+    //#if 0
+    SampBuffQueue *samp_q = &is->samp_buff_q;
+    if (!samp_q->initialized)
+        return -1;
+
+    if (length < samp_q->buff_len * NB_SAMP_BUFFS ) {
+        ALOGE(">> native_copyAudioData() error: dest buff size %d < %d [samp_buff_q->buff_len %d * NB_SAMP_BUFFS %d]",
+            length, samp_q->buff_len * NB_SAMP_BUFFS, samp_q->buff_len, NB_SAMP_BUFFS);
+        return -1;
+    }
+
+    if (samp_q->buff_stats[ samp_q->rindex ] != SAMP_BUFF_STAT_FILLED) {
+        ALOGE(">>> samp_buff_q.buff_stats[ rindex %d ] %d != SAMP_BUFF_STAT_FILLED %d",
+              samp_q->rindex, samp_q->buff_stats[ samp_q->rindex ], SAMP_BUFF_STAT_FILLED);
+        return -1;
+    }
+
+    /* 将 aout_thread 以更高频率调用 sdl_audio_produce_callback() 所填入的 samp_buff_q.buffs 数据
+     * poll 到 java 侧交给 MediaCodecEncodeMuxer:
+     * 由于 java 侧 EncodeMuxer.doFrame() 的频率要低于 aout_thread 中 audio_produce_callback()
+     * 测试数据为 doFrame FPS 约 35.4，而 sdl_audio_produce_callback 的 FPS 约为 93.6
+     * 所以，每次在调用本函数时，须把所有状态为 SAMP_BUFF_STAT_FILLED 的 samp_buff_q.buffs 都合并后取走，
+     * 然后将这些 buffs 对应的 buff_stat 都置为 SAMP_BUFF_STAT_POLLED
+     * 具体又分两种情况:
+     * 1. windex > rindex, 则直接从 rindex 读取到 wrindex-1, 然后将这些 buff_stat 都置为 polled
+     * 2. windex <=rindex, 则先读取 rindex 到 index = buff_len - 1，再从 index = 0 读到 windex - 1
+     */
+    int buff_offset = 0;
+    if (samp_q->windex > samp_q->rindex) {
+        for (int i=samp_q->rindex; i<samp_q->windex; i++) {
+            if (samp_q->buff_stats[i] == SAMP_BUFF_STAT_POLLED) {
+                ALOGE(">> should not happen: samp_q->buff_stats[%d] %d != SAMP_BUFF_STAT_POLLED %d",
+                      i, samp_q->buff_stats[i], SAMP_BUFF_STAT_POLLED);
+                return -1;
+            }
+            memcpy(buff_sample + buff_offset,
+                   samp_q->buffs[i],
+                   samp_q->buff_len);
+            samp_q->buff_stats[i] = SAMP_BUFF_STAT_POLLED;
+            buff_offset += samp_q->buff_len;
+        }
+        samp_q->rindex = samp_q->windex;
+        ALOGW(">> buff_offset %d, i %d, r/w-idx %d %d [%d %d %d %d %d %d %d %d]", buff_offset, i, samp_q->rindex, samp_q->windex,
+              samp_q->buff_stats[0],
+              samp_q->buff_stats[1],
+              samp_q->buff_stats[2],
+              samp_q->buff_stats[3],
+              samp_q->buff_stats[4],
+              samp_q->buff_stats[5],
+              samp_q->buff_stats[6],
+              samp_q->buff_stats[7]
+        );
+    }
+    else {
+        for (int i=samp_q->rindex; i<samp_q->buff_len; i++) {
+            if (samp_q->buff_stats[i] == SAMP_BUFF_STAT_POLLED) {
+                ALOGE(">> should not happen: samp_q->buff_stats[%d] %d != SAMP_BUFF_STAT_POLLED %d",
+                      i, samp_q->buff_stats[i], SAMP_BUFF_STAT_POLLED);
+                return -1;
+            }
+            ALOGW(">> buff_offset %d, i %d, r/w-idx %d %d [%d %d %d %d %d %d %d %d]", buff_offset, i, samp_q->rindex, samp_q->windex,
+                  samp_q->buff_stats[0],
+                  samp_q->buff_stats[1],
+                  samp_q->buff_stats[2],
+                  samp_q->buff_stats[3],
+                  samp_q->buff_stats[4],
+                  samp_q->buff_stats[5],
+                  samp_q->buff_stats[6],
+                  samp_q->buff_stats[7]
+            );
+            memcpy(buff_sample + buff_offset,
+                   samp_q->buffs[i],
+                   samp_q->buff_len);
+            samp_q->buff_stats[i] = SAMP_BUFF_STAT_POLLED;
+            buff_offset += samp_q->buff_len;
+        }
+        samp_q->rindex = 0;
+        for (int i=0; i<samp_q->windex; i++) {
+            if (samp_q->buff_stats[i] == SAMP_BUFF_STAT_POLLED) {
+                ALOGE(">> should not happen: samp_q->buff_stats[%d] %d != SAMP_BUFF_STAT_POLLED %d",
+                      i, samp_q->buff_stats[i], SAMP_BUFF_STAT_POLLED);
+                return -1;
+            }
+            memcpy(buff_sample + buff_offset,
+                   samp_q->buffs[i],
+                   samp_q->buff_len);
+            samp_q->buff_stats[i] = SAMP_BUFF_STAT_POLLED;
+            buff_offset += samp_q->buff_len;
+        }
+    }
+
+    ALOGW(">> buff polled %d, rindex %d, windex %d", buff_offset, samp_q->rindex, samp_q->windex);
+    return buff_offset;
+}
+#endif
+
+int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
+{
+    assert(mp && mp->ffplayer && mp->ffplayer->is);
+    VideoState *is = mp->ffplayer->is;
+    if (!is->samp_queue)
+        return -1;
+
+    if (length < is->samp_available_len) {
+        ALOGE("ffp_copy_audio_data() >> should not happen: dest buff len %d < samp_available_len %d",
+              length, is->samp_available_len);
+        return -1;
+    }
+
+    pthread_mutex_lock(&is->samp_mutex);
+    int read_len = is->samp_available_len;
+    if (read_len > 0) {
+        av_fifo_generic_read(is->samp_queue, buff_sample, read_len, NULL);
+        int sum = 0;
+        for (int i=0; i<read_len; i++)
+            sum += (signed char)buff_sample[i];
+        ALOGD(">> fifo_read sum: %d", sum);
+#if 0
+        int offset = 104;
+        ALOGD(">> fifo_read: %x %x %x %x %x %x %x %x",
+              buff_sample[offset+0],
+              buff_sample[offset+1],
+              buff_sample[offset+2],
+              buff_sample[offset+3],
+              buff_sample[offset+4],
+              buff_sample[offset+5],
+              buff_sample[offset+6],
+              buff_sample[offset+7]
+              );
+#endif
+        av_fifo_drain(is->samp_queue, read_len);
+       if (read_len != is->samp_queue_len_sum)
+            ALOGE(">> native_copyAudioData: read_len %d != %d samp_queue_len_sum", read_len, is->samp_queue_len_sum);
+        is->samp_available_len = 0;
+        is->samp_queue_len_sum = 0;
+    }
+    //else ALOGE(">> native_copyAudioData: read_len %d <= 0", read_len);
+    pthread_mutex_unlock(&is->samp_mutex);
+
+    return read_len;
 }

@@ -290,7 +290,7 @@
                 android:onClick="onClick"
                 android:text="开始录制" />
 
-            <!--
+            <!-- -->
             <Button
                 android:id="@+id/btn_stop_record"
                 android:layout_width="wrap_content"
@@ -298,7 +298,7 @@
                 android:onClick="onClick"
                 android:text="结束录制"
                 android:visibility="visible" />
-            -->
+            <!-- -->
 
             <Button
                 android:id="@+id/btn_snapshot"

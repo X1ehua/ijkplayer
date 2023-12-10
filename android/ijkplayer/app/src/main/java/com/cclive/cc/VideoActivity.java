@@ -141,8 +141,8 @@ public class VideoActivity extends BaseActivity {
     RelativeLayout rlVideoViewLayout;
     @BindView(R.id.btn_start_record)
     Button btnStartRecord;
-//  @BindView(R.id.btn_stop_record)
-//  Button btnStopRecord;
+    @BindView(R.id.btn_stop_record)
+    Button btnStopRecord;
     @BindView(R.id.btn_snapshot)
     Button btnSnapshot;
 //  @BindView(R.id.btn_exo_player)
@@ -271,11 +271,11 @@ public class VideoActivity extends BaseActivity {
             case R.id.btn_exo_player:
                 mPlayerController.switchPlayer(Settings.PV_PLAYER__IjkExoMediaPlayer);
                 break;
+            */
             case R.id.btn_stop_record:
                 //mPlayerController.setPlayerRotation(90);
                 mPlayerController.stopRecord();
                 break;
-            */
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
                 mPlayerController.startRecord(3, false);
@@ -1072,7 +1072,7 @@ public class VideoActivity extends BaseActivity {
     }
 
     public static String getDefaultUri() {
-        return URI_LIST[1][1];
+        return URI_LIST[6][1];
     }
 
     final static String[][] URI_LIST = {
@@ -1081,8 +1081,8 @@ public class VideoActivity extends BaseActivity {
             {"2", "rtmp://192.168.2.6:2023/vod/o3.mp4"},
             {"3", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
             {"4", "rtmp://mozicode.com:2023/live/home"},
-            {"5", "rtmp://mozicode.com:2023/vod/garfield.mp4"},
-            {"6", "rtmp://mozicode.com:2023/vod/b01.mp4"},
+            {"5", "rtmp://mozicode.com:2023/vod/b01.mp4"},
+            {"6", "rtmp://mozicode.com:2023/vod/mumu20091212.mp4"},
             {"7", "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8"},
             {"双打0721-1", "http://mozicode.com/20230729-133932.mp4"},
     };

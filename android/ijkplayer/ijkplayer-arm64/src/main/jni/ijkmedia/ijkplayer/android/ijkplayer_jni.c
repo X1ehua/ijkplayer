@@ -1185,6 +1185,27 @@ LABEL_RETURN:
     return retval;
 }
 
+static jint IjkMediaPlayer_native_copyAudioData(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint length)
+{
+    jint retval = -1;
+    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
+    JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyAudioData: null IjkMediaPlayer", LABEL_RETURN);
+
+    uint8_t *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
+    if (!buff) {
+        (*env)->ThrowNew(env, "java/lang/IllegalArgumentException", "byteArr is null");
+        return -1;
+    }
+
+    retval = ijkmp_copy_audio_data(mp, buff, length);
+
+    (*env)->ReleaseByteArrayElements(env, jbuff, buff, JNI_ABORT);
+
+LABEL_RETURN:
+    ijkmp_dec_ref_p(&mp);
+    return retval;
+}
+
 // ----------------------------------------------------------------------------
 
 static JNINativeMethod g_methods[] = {
@@ -1240,6 +1261,7 @@ static JNINativeMethod g_methods[] = {
 //  { "native_getResolution",   "()[I",                         (void *)IjkMediaPlayer_native_getVideoResolution },
     { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *)IjkMediaPlayer_native_snapshot },
     { "native_copyYV12Data",    "([BII)I",                      (void *)IjkMediaPlayer_native_copyYV12Data },
+    { "native_copyAudioData",   "([BI)I",                       (void *)IjkMediaPlayer_native_copyAudioData },
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)

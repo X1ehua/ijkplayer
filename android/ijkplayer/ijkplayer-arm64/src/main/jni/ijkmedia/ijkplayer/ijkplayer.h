@@ -225,6 +225,7 @@ int             ijkmp_get_video_resolution(IjkMediaPlayer *mp, int *width, int *
 #endif
 
 int             ijkmp_snapshot(IjkMediaPlayer *mp, uint8_t *frame_buf);
-int             ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buf_YV12, int width, int height);
+int             ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buff_YV12, int width, int height);
+int             ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length);
 
 #endif
