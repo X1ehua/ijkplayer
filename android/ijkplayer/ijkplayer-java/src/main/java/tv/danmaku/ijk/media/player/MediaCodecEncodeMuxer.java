@@ -257,6 +257,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
             Log.e(TAG, ">> dataAudio_n.len % 2048 != 0: " + dataAudio_n.length);
             throw new RuntimeException("dataAudio_n.len % 2048 != 0");
         }
+        Log.d(TAG, ">> buff-counter: >>>>>>>>>>>");
         //
 //        byte[] dataAudio = sAudioSampleQueue.take();
 
