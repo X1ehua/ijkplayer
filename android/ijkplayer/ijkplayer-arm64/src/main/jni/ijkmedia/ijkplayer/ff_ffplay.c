@@ -2768,6 +2768,12 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
         }
     }
 
+    /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
+    if (is->audio_sample_offer_callback) {
+//        is->audio_sample_offer_callback(stream, stream_len);
+    }
+
+#if 1
     /* COPY 到单独的 buff 中，待 java poll 过去交给 MediaCodec 进行 encode
      * 具体的逻辑:
      * 由于 java 侧 EncodeMuxer.doFrame() 的频率要低于 aout_thread 中 audio_produce_callback()
@@ -2786,11 +2792,11 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
         is->samp_available_len -= stream_len;
     }
     is->samp_available_len += stream_len;
-//    for (int i=0; i<stream_len; i++) {
-//        if (stream[i]) {
-//            i++;
-//        }
-//    }
+    // for (int i=0; i<stream_len; i++) {
+    //     if (stream[i]) {
+    //         i++;
+    //     }
+    // }
     int write_len = av_fifo_generic_write(is->samp_queue, stream, stream_len, NULL);
     if (write_len != stream_len) {
         ALOGE(">> av_fifo_generic_write() error: write_len %d != stream_len %d", write_len, stream_len);
@@ -2798,6 +2804,7 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
     is->samp_queue_len_sum += write_len; // debug
     //ALOGW(">> samp_queue_len_sum: %d", is->samp_queue_len_sum);
     pthread_mutex_unlock(&is->samp_mutex);
+#endif
 }
 
 static int audio_open(FFPlayer *opaque, int64_t wanted_channel_layout, int wanted_nb_channels, int wanted_sample_rate, struct AudioParams *audio_hw_params)
@@ -3939,6 +3946,7 @@ static VideoState *stream_open(FFPlayer *ffp, const char *filename, AVInputForma
         }
     }
     is->initialized_decoder = 1;
+    is->audio_sample_offer_callback = audio_sample_offer_callback;
 
     return is;
 fail:

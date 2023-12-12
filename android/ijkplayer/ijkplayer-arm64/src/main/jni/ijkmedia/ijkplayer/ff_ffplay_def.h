@@ -273,7 +273,9 @@ typedef struct Decoder {
     int    first_frame_decoded;
 } Decoder;
 
-#define NB_SAMP_BUFFS 1
+#define NB_SAMP_BUFFS 8
+
+typedef void (*AudioSampleOfferCallback)(Uint8 * stream, int len);
 
 typedef struct VideoState {
     SDL_Thread *read_tid;
@@ -428,6 +430,7 @@ typedef struct VideoState {
     int samp_available_len;
     int samp_queue_len_sum;
     pthread_mutex_t samp_mutex;
+    AudioSampleOfferCallback audio_sample_offer_callback; 
 } VideoState;
 
 /* options specified by the user */

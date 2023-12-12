@@ -122,4 +122,6 @@ int       ffp_start_record(FFPlayer *ffp, const char *file_name);
 int       ffp_stop_record(FFPlayer *ffp);
 int       ffp_record_file(FFPlayer *ffp, const AVPacket *packet);
 
+void      audio_sample_offer_callback(uint8_t *stream, int len);
+
 #endif

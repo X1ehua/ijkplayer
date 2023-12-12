@@ -83,7 +83,7 @@ static int aout_thread_n(JNIEnv *env, SDL_Aout *aout)
     SDL_AudioCallback sample_produce_callback = opaque->spec.callback; // sdl_audio_produce_callback
     void *userdata = opaque->spec.userdata;
     uint8_t *buffer = opaque->buffer;
-    int copy_size = 256;
+    int copy_size = 2048; // 256;
 
     assert(atrack);
     assert(buffer);

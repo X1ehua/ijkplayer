@@ -2,6 +2,7 @@ package tv.danmaku.ijk.media.player;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import android.annotation.SuppressLint;
 import android.media.AudioFormat;
@@ -34,7 +35,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     private final MediaCodec.BufferInfo[] mAVBufferInfos  = new MediaCodec.BufferInfo[2];
     private final IEncodeDataProvider     mEncodeDataProvider;
 
-    private boolean mThreadRunning  = false;
+    private static boolean sThreadRunning  = false;
     private long    mFrameIndex = 0;
 
     private static final String OUTPUT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath()
@@ -63,11 +64,13 @@ public class MediaCodecEncodeMuxer implements Runnable {
         videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
         if (VERBOSE) Log.d(TAG, "videoFormat: " + videoFormat);
 
-        MediaFormat audioFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 48000, 2);
+        MediaFormat audioFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 48000, 1);
         audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_STEREO);
+//        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_STEREO);
+        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
         audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, 128000);
-        audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, IjkMediaPlayer.SAMPLE_BUFF_SIZE); // 2048*8
+    //  audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, IjkMediaPlayer.SAMPLE_BUFF_SIZE); // 2048*8
+        audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 2048*8); // 16384
 
         mAVEncoders[kVideo] = MediaCodec.createEncoderByType("video/avc");
         mAVEncoders[kAudio] = MediaCodec.createEncoderByType("audio/mp4a-latm"); // MediaCodec.MIMETYPE_AUDIO_AAC
@@ -90,7 +93,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     }
 
     public void stopThread() {
-        mThreadRunning = false;
+        sThreadRunning = false;
         Log.w(TAG, ">> stopThread()");
     }
 
@@ -107,25 +110,47 @@ public class MediaCodecEncodeMuxer implements Runnable {
         }
 
         //mInputBuffers  = mVideoEncoder.getInputBuffers();
-        mThreadRunning = true;
+        sThreadRunning = true;
         long startTime = System.nanoTime();
 
-        //long t1 = System.nanoTime();
-        //int fc = 0;
-        while (mThreadRunning) { // FPS ~34.3
-            fc++;
-            doFrame(); // queueInputBuffer & drainEncoder
+        Thread videoThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (sThreadRunning) {
+                    doFrameVideo();
+                }
+            }
+        });
+        videoThread.setName("VideoEncoder");
+//        videoThread.start();
 
-//            if (ret < 0) {
-//                mThreadRunning = false;
-//                Log.w(TAG, "doFrame() failed: " + ret);
-//                break;
-//            }
+        Thread audioThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (sThreadRunning) {
+                    try {
+                        doFrameAudio();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        audioThread.setName("AudioEncoder");
+        audioThread.start();
+
+        while (sThreadRunning) {
+            try {
+                Thread.sleep(50);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         try {
-            drainEncoder(kVideo, true);
-//            drainEncoder(kAudio, true);
+//            drainEncoder(kVideo, true);
+            drainEncoder(kAudio, true);
         }
         catch (Exception e) {
             Log.w(TAG, ">> drainEncoder(true) failed: " + e.toString());
@@ -143,46 +168,45 @@ public class MediaCodecEncodeMuxer implements Runnable {
         }
     }
 
-    private final static long DEQUEUE_TIMEOUT_US = 1000L; // 1ms
+    private final static long DEQUEUE_TIMEOUT_US    = 1000L; // 1ms
+    private final static int  SAMPLE_QUEUE_CAPACITY = 96;
     long mAudioStartTime;
+    static ArrayBlockingQueue<byte[]> sAudioSampleQueue = new ArrayBlockingQueue<byte[]>(SAMPLE_QUEUE_CAPACITY);
 
-    private void doFrame() {
+    public static void offerSampleData(byte[] stream, int len) { // called in ijkplayer_jni.c
+        if (!sThreadRunning)
+            return;
+
+        if (stream == null || len != stream.length) {
+            throw new RuntimeException(String.format(
+                    "should not happen: incoming stream is null or arg len %d != stream.length %d",
+                    len, stream != null ? stream.length : -1));
+        }
+        if (sAudioSampleQueue.remainingCapacity() == 0) {
+            Log.w(TAG, "mSampleBlockingQueue.remainingCapacity() == 0, let's drop one!");
+            sAudioSampleQueue.poll();
+        }
+        byte[] sampleData = new byte[len];
+        System.arraycopy(stream, 0, sampleData, 0, len);
+        sAudioSampleQueue.offer(sampleData);
+    }
+
+    private void doFrameVideo() {
         long t0 = System.nanoTime();
-        byte[] dataYUV   = mEncodeDataProvider.getYuvData();
+        byte[] dataYUV = mEncodeDataProvider.getYuvData();
         long t1 = System.nanoTime();
-//        byte[] dataAudio = mEncodeDataProvider.getSampleData();
+        if (dataYUV == null || dataYUV.length == 0) {
+            try {
+                Thread.sleep(50);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            return;
+        }
 
-//        if (dataAudio != null && dataAudio.length > 0) {
-//            long pts = (System.nanoTime() - mAudioStartTime) / 1000;
-//            int inputBufferIndex;
-//            if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
-//                ByteBuffer inputBuffer = mAVEncoders[kAudio].getInputBuffer(inputBufferIndex);
-//                if (inputBuffer != null) {
-//                    //inputBuffer.clear();
-//                    inputBuffer.put(dataAudio);
-////                    int sum = 0;
-////                    for (byte b: dataAudio) {
-////                        sum += b;
-////                    }
-////                    Log.e(TAG, ">> inputData sum: " + sum);
-//                    if (dataAudio.length != inputBuffer.capacity()) {
-//                        Log.e(TAG, String.format("inputBuffer: cap %d, limit %d, put data.len %d",
-//                                inputBuffer.capacity(), inputBuffer.limit(), dataAudio.length));
-//                    }
-//                    mAVEncoders[kAudio].queueInputBuffer(inputBufferIndex, 0, dataAudio.length, pts, 0);
-//                }
-//                else {
-//                    Log.e(TAG, "\t>> audioEncoder.getInputBuffer() returned null!");
-//                }
-//            }
-//
-//            drainEncoder(kAudio, false);
-//        }
-
-        if (dataYUV != null && dataYUV.length > 0) {
             int inputBufferIndex;
             long pts = 132 + mFrameIndex * 1000000 / FRAME_RATE; // 132: magic number ?
-//            mFrameIndex += 1;
             if ((inputBufferIndex = mAVEncoders[kVideo].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
                 //pts = 132 + mFrameIndex * 1000000 / FRAME_RATE; // 132: magic number ?
                 //ByteBuffer inputBuffer = mInputBuffers[inputBufferIndex];
@@ -208,10 +232,67 @@ public class MediaCodecEncodeMuxer implements Runnable {
             // 9.2 + 5.5 + 13.1 = 27.8 ms
             @SuppressLint("DefaultLocale") String msg = String.format(">> doFrame#%d: %d %d %d %d += %d",
                     fc, (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000, (t4-t3)/1000000, (t4-t0)/1000000);
-            Log.w(TAG, msg);
+//            Log.w(TAG, msg);
+    }
+    int fc = 0;
+
+    private void doFrameAudio() throws InterruptedException {
+        long t0 = System.nanoTime();
+        //
+        long t1 = System.nanoTime();
+        byte[] dataAudio_n = mEncodeDataProvider.getSampleData();
+        if (dataAudio_n == null || dataAudio_n.length == 0) {
+            try {
+                Thread.sleep(5);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+        if (dataAudio_n.length % 2048 != 0) {
+            Log.e(TAG, ">> dataAudio_n.len % 2048 != 0: " + dataAudio_n.length);
+            throw new RuntimeException("dataAudio_n.len % 2048 != 0");
+        }
+        //
+//        byte[] dataAudio = sAudioSampleQueue.take();
+
+        for (int i=0; i<dataAudio_n.length / 2048; i++) {
+            byte[] dataAudio = new byte[2048];
+            System.arraycopy(dataAudio_n, i*2048, dataAudio, 0, 2048);
+
+            long pts = (System.nanoTime() - mAudioStartTime) / 1000;
+            int inputBufferIndex;
+            if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
+                ByteBuffer inputBuffer = mAVEncoders[kAudio].getInputBuffer(inputBufferIndex);
+                if (inputBuffer != null) {
+                    // inputBuffer.clear();
+                    inputBuffer.put(dataAudio);
+                    // int sum = 0;
+                    // for (byte b: dataAudio) {
+                    // sum += b;
+                    // }
+                    // Log.e(TAG, ">> inputData sum: " + sum);
+                    if (dataAudio.length != inputBuffer.capacity()) {
+                        // Log.e(TAG, String.format("inputBuffer: cap %d, limit %d, put data.len %d",
+                        // inputBuffer.capacity(), inputBuffer.limit(), dataAudio.length));
+                    }
+                    mAVEncoders[kAudio].queueInputBuffer(inputBufferIndex, 0, dataAudio.length, pts, 0);
+                } else {
+                    Log.e(TAG, "\t>> audioEncoder.getInputBuffer() returned null!");
+                }
+            } else {
+                Log.e(TAG, ">>>> inputBufferIndex: " + inputBufferIndex);
+            }
+            offeredSize += 2048;
+            if (++oc % 10 == 0)
+                Log.w(TAG, ">> offeredSize " + offeredSize);
+
+            drainEncoder(kAudio, false);
         }
     }
-    private int fc = 0;
+    int writtenSize = 0;
+    int offeredSize = 0;
+    int oc = 0;
 
     /**
      * Extracts all pending data from the encoder.
@@ -230,12 +311,15 @@ public class MediaCodecEncodeMuxer implements Runnable {
             inputEndOfStream(encoder);
         }
 
+        ByteBuffer[] encoderOutputBuffers = encoder.getOutputBuffers();
+        int wc = 0;
         while (true) {
-            int statusOrIndex = encoder.dequeueOutputBuffer(bufferInfo, 1000);
+            wc ++;
+            int statusOrIndex = encoder.dequeueOutputBuffer(bufferInfo, 100);
 
             if (statusOrIndex == MediaCodec.INFO_TRY_AGAIN_LATER) { // no output available yet
                 if (!endOfStream) {
-                    Log.e(TAG, "break #101 drainEncoder " + encoderName);
+                    Log.e(TAG, "break #101 drainEncoder " + encoderName + " wc#" + wc);
                     break; // out of while
                 }
                 else {
@@ -244,6 +328,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
             }
             else if (statusOrIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) { // deprecated
                 Log.e(TAG, ">>>>>> deprecated MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED");
+                encoderOutputBuffers = encoder.getOutputBuffers();
             }
             else if (statusOrIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 // should happen before receiving buffers, and should only happen once
@@ -255,7 +340,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
                 mAVTrackIndices[videoOrAudio] = mMuxer.addTrack(format);
 
                 //if (!mMuxerStarted && mAVTrackIndices[kVideo] >= 0 && mAVTrackIndices[kAudio] >= 0) {
-                if (!mMuxerStarted && mAVTrackIndices[kVideo] >= 0) {
+                if (!mMuxerStarted && mAVTrackIndices[kAudio] >= 0) {
                     mMuxer.start();
                     mMuxerStarted = true;
                     mAudioStartTime = System.nanoTime();
@@ -267,7 +352,8 @@ public class MediaCodecEncodeMuxer implements Runnable {
                 Log.e(TAG, ">> " + encoderName + "Encoder.dequeueOutputBuffer() bad statusOrIndex: " + statusOrIndex);
             }
             else {
-                ByteBuffer encodedData = encoder.getOutputBuffer(statusOrIndex);
+                //ByteBuffer encodedData = encoder.getOutputBuffer(statusOrIndex);
+                ByteBuffer encodedData = encoderOutputBuffers[statusOrIndex];
                 if (encodedData == null)
                     throw new RuntimeException("encoder.getOutputBuffer(" + statusOrIndex + ") returned null");
 
@@ -287,10 +373,12 @@ public class MediaCodecEncodeMuxer implements Runnable {
                     encodedData.limit(bufferInfo.offset + bufferInfo.size);
 
                     // 平均每秒 35.3 次
+                    // Record PCM 的压缩比为 18.3% [written_size / offered_size]
                     mMuxer.writeSampleData(mAVTrackIndices[videoOrAudio], encodedData, bufferInfo);
+                    writtenSize += bufferInfo.size;
                     if (!VERBOSE) {
-                        Log.i(TAG, String.format(">> %s.encodedData(pos %d, size %d, cap %d) sent to muxer",
-                                encoderName, bufferInfo.offset, bufferInfo.size, encodedData.capacity()));
+                        Log.i(TAG, String.format(">> %s.encodedData(pos %d, size %d, cap %d) sent to muxer, wc#%d, writtenSize %d",
+                                encoderName, bufferInfo.offset, bufferInfo.size, encodedData.capacity(), wc, writtenSize));
                     }
                 }
 

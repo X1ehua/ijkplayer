@@ -82,8 +82,8 @@ LOCAL_STATIC_LIBRARIES := android-ndk-profiler ijksoundtouch
 LOCAL_STATIC_LIBRARIES += avformat avcodec swscale swresample avfilter avutil
 
 # link libx264.a
-LIBX264_PATH := /Users/eric/Documents/x264/libs-arm64/lib
-LOCAL_LDLIBS += $(LIBX264_PATH)/libx264.a
+#LIBX264_PATH := /Users/eric/Documents/x264/libs-arm64/lib
+#LOCAL_LDLIBS += $(LIBX264_PATH)/libx264.a
 
 LOCAL_MODULE := ijkplayer
 

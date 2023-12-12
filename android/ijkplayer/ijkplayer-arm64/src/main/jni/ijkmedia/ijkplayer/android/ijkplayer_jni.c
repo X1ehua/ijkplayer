@@ -251,6 +251,8 @@ LABEL_RETURN:
     return;
 }
 
+void init_audio_sample_offer_callback(JNIEnv *env);
+
 static void IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
 {
     // MPTRACE("%s\n", __func__);
@@ -260,6 +262,8 @@ static void IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
 
     retval = ijkmp_prepare_async(mp);
     IJK_CHECK_MPRET_GOTO(retval, env, LABEL_RETURN);
+
+    init_audio_sample_offer_callback(env);
 
 LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
@@ -1293,4 +1297,44 @@ JNIEXPORT void JNI_OnUnload(JavaVM *jvm, void *reserved)
     ijkmp_global_uninit();
 
     pthread_mutex_destroy(&g_clazz.mutex);
+}
+
+static jclass     class_MediaCodecEncodeMuxer = NULL;
+static jmethodID  method_offerSampleData      = NULL;
+//static jbyteArray sampleData                  = NULL;
+static int        sampleDataLength            = 0;
+
+void init_audio_sample_offer_callback(JNIEnv *env)
+{
+    class_MediaCodecEncodeMuxer = (*env)->FindClass(env, "tv/danmaku/ijk/media/player/MediaCodecEncodeMuxer");
+
+    if (!class_MediaCodecEncodeMuxer) {
+        ALOGE("FindClass class_MediaCodecEncodeMuxer failed");
+        return;
+    }
+
+    method_offerSampleData =
+        (*env)->GetStaticMethodID(env, class_MediaCodecEncodeMuxer, "offerSampleData", "([BI)V");
+    ALOGI("method_offerSampleData: %p", method_offerSampleData);
+}
+
+void audio_sample_offer_callback(uint8_t *stream, int len)
+{
+    JNIEnv *env = NULL;
+    (*g_jvm)->AttachCurrentThread(g_jvm, &env, 0);
+
+    if (env && method_offerSampleData) {
+        jbyteArray sampleData = NULL;
+        if (!sampleData) {
+            sampleData = (*env)->NewByteArray(env, len);
+            sampleDataLength = len;
+        }
+        else {
+            assert(len == sampleDataLength);
+        }
+        (*env)->SetByteArrayRegion(env, sampleData, 0, len, (jbyte*)stream);
+        (*env)->CallStaticVoidMethod(env, class_MediaCodecEncodeMuxer, method_offerSampleData, sampleData, len);
+    }
+
+    //(*g_jvm)->DetachCurrentThread(g_jvm); // 此线程中还有其它地方在使用 jvm，所以不能 detach，否则会引发 crash
 }
