@@ -47,6 +47,7 @@ typedef struct SDL_AMediaCrypto             SDL_AMediaCrypto;
 typedef struct SDL_AMediaCodec_Common       SDL_AMediaCodec_Common;
 typedef struct SDL_AMediaCodec_Opaque       SDL_AMediaCodec_Opaque;
 typedef struct SDL_AMediaCodec              SDL_AMediaCodec;
+
 typedef struct SDL_AMediaCodec
 {
     SDL_mutex    *mutex;

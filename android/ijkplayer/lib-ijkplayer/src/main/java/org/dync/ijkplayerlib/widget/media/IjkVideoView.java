@@ -1074,6 +1074,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     private IjkMediaPlayer createIjkMediaPlayer() {
         IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
+        //ijkMediaPlayer.startRecord(5, false);
 
         ijkMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 

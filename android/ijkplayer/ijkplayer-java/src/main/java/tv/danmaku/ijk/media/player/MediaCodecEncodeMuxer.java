@@ -39,7 +39,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     private long    mFrameIndex = 0;
 
     private static final String OUTPUT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath()
-                                            + "/DCIM/cc/t2.mp4";
+                                            + "/DCIM/cc/t2.m4a";
 
     public MediaCodecEncodeMuxer(IEncodeDataProvider provider, int width, int height) {
         mEncodeDataProvider = provider;
@@ -64,10 +64,8 @@ public class MediaCodecEncodeMuxer implements Runnable {
         videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
         if (VERBOSE) Log.d(TAG, "videoFormat: " + videoFormat);
 
-        MediaFormat audioFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 48000, 1);
+        MediaFormat audioFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 48000, 2);
         audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-//        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_STEREO);
-        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
         audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, 128000);
     //  audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, IjkMediaPlayer.SAMPLE_BUFF_SIZE); // 2048*8
         audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 2048*8); // 16384
@@ -190,8 +188,10 @@ public class MediaCodecEncodeMuxer implements Runnable {
         System.arraycopy(stream, 0, sampleData, 0, len);
         sAudioSampleQueue.offer(sampleData);
     }
+    static int soc = 0;
 
     private void doFrameVideo() {
+        vfc++;
         long t0 = System.nanoTime();
         byte[] dataYUV = mEncodeDataProvider.getYuvData();
         long t1 = System.nanoTime();
@@ -231,13 +231,17 @@ public class MediaCodecEncodeMuxer implements Runnable {
             long t4 = System.nanoTime();
             // 9.2 + 5.5 + 13.1 = 27.8 ms
             @SuppressLint("DefaultLocale") String msg = String.format(">> doFrame#%d: %d %d %d %d += %d",
-                    fc, (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000, (t4-t3)/1000000, (t4-t0)/1000000);
+                    vfc, (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000, (t4-t3)/1000000, (t4-t0)/1000000);
 //            Log.w(TAG, msg);
     }
-    int fc = 0;
+    int vfc = 0;
+    int afc = 0;
+    long lastPts = 0;
 
     private void doFrameAudio() throws InterruptedException {
+        afc++;
         long t0 = System.nanoTime();
+
         //
         long t1 = System.nanoTime();
         byte[] dataAudio_n = mEncodeDataProvider.getSampleData();
@@ -259,8 +263,14 @@ public class MediaCodecEncodeMuxer implements Runnable {
         for (int i=0; i<dataAudio_n.length / 2048; i++) {
             byte[] dataAudio = new byte[2048];
             System.arraycopy(dataAudio_n, i*2048, dataAudio, 0, 2048);
+        Log.d(TAG, ">> buff-counter: " + ((dataAudio[0] & 0xff) | ((dataAudio[1] & 0xff) << 8)));
 
+        try {
             long pts = (System.nanoTime() - mAudioStartTime) / 1000;
+            long dts = pts - lastPts;
+            Log.i(TAG, String.format(">> dts %.2f", dts / 1000.0f));
+            lastPts = pts;
+
             int inputBufferIndex;
             if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
                 ByteBuffer inputBuffer = mAVEncoders[kAudio].getInputBuffer(inputBufferIndex);
@@ -288,12 +298,19 @@ public class MediaCodecEncodeMuxer implements Runnable {
                 Log.w(TAG, ">> offeredSize " + offeredSize);
 
             drainEncoder(kAudio, false);
+
+        }
+        catch (Exception e) {
+            Log.w(TAG, e.toString());
+        }
+
         }
     }
     int writtenSize = 0;
     int offeredSize = 0;
     int oc = 0;
 
+    ByteBuffer[] encoderOutputBuffers;
     /**
      * Extracts all pending data from the encoder.
      * If endOfStream is not set, this returns when there is no more data to drain.  If it
@@ -311,7 +328,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
             inputEndOfStream(encoder);
         }
 
-        ByteBuffer[] encoderOutputBuffers = encoder.getOutputBuffers();
+        encoderOutputBuffers = encoder.getOutputBuffers();
         int wc = 0;
         while (true) {
             wc ++;

@@ -29,11 +29,13 @@ APP_PIE := false
 APP_STL := c++_static
 
 #APP_CFLAGS:= -O0 -Wall -pipe
-APP_CFLAGS := -O0 -w -pipe \
+APP_CFLAGS := -O0 -Wall -pipe \
     -Werror=format \
+	-Wno-typedef-redefinition \
     -ffast-math \
     -fstrict-aliasing -Werror=strict-aliasing \
-    -Wno-psabi -Wa,--noexecstack \
+    -Wa,--noexecstack \
     -Wno-deprecated-declarations \
     -DANDROID
+#   -Wno-psabi -Wa,--noexecstack \
 #   -DANDROID -DNDEBUG

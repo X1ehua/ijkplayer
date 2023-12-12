@@ -2664,18 +2664,20 @@ reload:
 }
 
 /* prepare a new audio buffer */
-static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
+static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_size)
 {
-    FFPlayer *ffp = opaque;
-    VideoState *is = ffp->is;
-    int audio_size, len1;
+    FFPlayer   *ffp    = opaque;
+    VideoState *is     = ffp->is;
+    Uint8      *stream = buffer;      // stream 指针地址 & len 数值会在此函数中发生变化
+    int         len    = buffer_size;
+    int         audio_size, len1;
+
     if (!ffp || !is) {
         memset(stream, 0, len);
         return;
     }
 
     ffp->audio_callback_time = av_gettime_relative();
-    int stream_len = len;
 
     if (ffp->pf_playback_rate_changed) {
         ffp->pf_playback_rate_changed = 0;
@@ -2768,12 +2770,22 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
         }
     }
 
+// #define Initiative_Offer
+
+    static int bc = 0;
+    bc++;
+    //((short*)buffer)[0] = bc;
+    buffer[0] = bc & 0xff;
+    buffer[1] = (bc & 0xff00) >> 8;
+
+#ifdef Initiative_Offer
     /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
     if (is->audio_sample_offer_callback) {
-//        is->audio_sample_offer_callback(stream, stream_len);
+        is->audio_sample_offer_callback(buffer, buffer_size);
     }
 
-#if 1
+
+#else
     /* COPY 到单独的 buff 中，待 java poll 过去交给 MediaCodec 进行 encode
      * 具体的逻辑:
      * 由于 java 侧 EncodeMuxer.doFrame() 的频率要低于 aout_thread 中 audio_produce_callback()
@@ -2783,26 +2795,27 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *stream, int len)
      */
     pthread_mutex_lock(&is->samp_mutex);
     if (!is->samp_queue) {
-        is->samp_queue_len = stream_len * NB_SAMP_BUFFS;
+        is->samp_queue_len = buffer_size * NB_SAMP_BUFFS;
         is->samp_available_len = 0;
         is->samp_queue = av_fifo_alloc(is->samp_queue_len);
     }
     if (is->samp_available_len == is->samp_queue_len) {
-        av_fifo_drain(is->samp_queue, stream_len);
-        is->samp_available_len -= stream_len;
+        av_fifo_drain(is->samp_queue, buffer_size);
+        is->samp_available_len -= buffer_size;
+        ALOGE(">>>>>>>> av_fifo_drain() #%d", bc);
     }
-    is->samp_available_len += stream_len;
-    // for (int i=0; i<stream_len; i++) {
-    //     if (stream[i]) {
+    is->samp_available_len += buffer_size;
+    // for (int i=0; i<buffer_size; i++) {
+    //     if (buffer[i]) {
     //         i++;
     //     }
     // }
-    int write_len = av_fifo_generic_write(is->samp_queue, stream, stream_len, NULL);
-    if (write_len != stream_len) {
-        ALOGE(">> av_fifo_generic_write() error: write_len %d != stream_len %d", write_len, stream_len);
+    int write_len = av_fifo_generic_write(is->samp_queue, buffer, buffer_size, NULL);
+    if (write_len != buffer_size) {
+        ALOGE(">> av_fifo_generic_write() error: write_len %d != buffer_size %d", write_len, buffer_size);
     }
-    is->samp_queue_len_sum += write_len; // debug
-    //ALOGW(">> samp_queue_len_sum: %d", is->samp_queue_len_sum);
+    is->samp_written_len_sum += write_len; // debug
+    // ALOGW(">> samp_written_len_sum: %d", is->samp_written_len_sum);
     pthread_mutex_unlock(&is->samp_mutex);
 #endif
 }

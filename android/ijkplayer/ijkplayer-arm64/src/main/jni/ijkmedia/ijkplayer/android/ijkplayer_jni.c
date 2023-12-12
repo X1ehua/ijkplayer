@@ -1195,7 +1195,7 @@ static jint IjkMediaPlayer_native_copyAudioData(JNIEnv *env, jobject thiz, jbyte
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyAudioData: null IjkMediaPlayer", LABEL_RETURN);
 
-    uint8_t *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
+    uint8_t *buff = (uint8_t *)(*env)->GetByteArrayElements(env, jbuff, NULL);
     if (!buff) {
         (*env)->ThrowNew(env, "java/lang/IllegalArgumentException", "byteArr is null");
         return -1;
@@ -1203,7 +1203,7 @@ static jint IjkMediaPlayer_native_copyAudioData(JNIEnv *env, jobject thiz, jbyte
 
     retval = ijkmp_copy_audio_data(mp, buff, length);
 
-    (*env)->ReleaseByteArrayElements(env, jbuff, buff, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, jbuff, (jbyte *)buff, JNI_ABORT);
 
 LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
@@ -1324,9 +1324,9 @@ void audio_sample_offer_callback(uint8_t *stream, int len)
     (*g_jvm)->AttachCurrentThread(g_jvm, &env, 0);
 
     if (env && method_offerSampleData) {
-        jbyteArray sampleData = NULL;
+        static jbyteArray sampleData = NULL;
         if (!sampleData) {
-            sampleData = (*env)->NewByteArray(env, len);
+            sampleData = (*env)->NewByteArray(env, len); // TODO: where to release ?
             sampleDataLength = len;
         }
         else {

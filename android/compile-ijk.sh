@@ -69,7 +69,7 @@ do_sub_cmd () {
             if echo $IJK_NDK_REL | grep -qE '23|24|25|26|27'; then
                 $ANDROID_NDK/ndk-build $FF_MAKEFLAGS --output-sync=none
             else
-                $ANDROID_NDK/ndk-build $FF_MAKEFLAGS
+                $ANDROID_NDK/build/ndk-build $FF_MAKEFLAGS
             fi
 
             err_code=$?

@@ -428,7 +428,7 @@ typedef struct VideoState {
     AVFifoBuffer *samp_queue;
     int samp_queue_len;
     int samp_available_len;
-    int samp_queue_len_sum;
+    int samp_written_len_sum;
     pthread_mutex_t samp_mutex;
     AudioSampleOfferCallback audio_sample_offer_callback; 
 } VideoState;

@@ -26,7 +26,7 @@ include $(CLEAR_VARS)
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 LOCAL_CFLAGS += -mfloat-abi=soft
 endif
-LOCAL_CFLAGS += -std=c99 -w
+LOCAL_CFLAGS += -std=c99
 LOCAL_LDLIBS += -llog -landroid -ljnigraphics -lm -lz
 LOCAL_CPPFLAGS += -std=c++11
 

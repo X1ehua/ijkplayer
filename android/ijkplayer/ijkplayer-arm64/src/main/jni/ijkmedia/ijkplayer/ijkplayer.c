@@ -967,6 +967,8 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *buff_YV12, int width, int height)
 
         return 0;
     }
+
+    return -1; // should not reach
 }
 
 int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buff_YV12, int width, int height)
@@ -1113,25 +1115,13 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
         int sum = 0;
         for (int i=0; i<read_len; i++)
             sum += (signed char)buff_sample[i];
-        ALOGD(">> fifo_read sum: %d", sum);
-#if 0
-        int offset = 104;
-        ALOGD(">> fifo_read: %x %x %x %x %x %x %x %x",
-              buff_sample[offset+0],
-              buff_sample[offset+1],
-              buff_sample[offset+2],
-              buff_sample[offset+3],
-              buff_sample[offset+4],
-              buff_sample[offset+5],
-              buff_sample[offset+6],
-              buff_sample[offset+7]
-              );
-#endif
+        ALOGD(">> fifo_read sum: %d, samp_written N %.1f", sum, is->samp_written_len_sum/2048.0f);
+
         av_fifo_drain(is->samp_queue, read_len);
-       if (read_len != is->samp_queue_len_sum)
-            ALOGE(">> native_copyAudioData: read_len %d != %d samp_queue_len_sum", read_len, is->samp_queue_len_sum);
+       if (read_len != is->samp_written_len_sum)
+            ALOGE(">> native_copyAudioData: read_len %d != %d samp_written_len_sum", read_len, is->samp_written_len_sum);
         is->samp_available_len = 0;
-        is->samp_queue_len_sum = 0;
+        is->samp_written_len_sum = 0;
     }
     //else ALOGE(">> native_copyAudioData: read_len %d <= 0", read_len);
     pthread_mutex_unlock(&is->samp_mutex);
