@@ -1321,14 +1321,15 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     public final static int NB_SAMP_BUFFS        = 10;      // 在 ff_ffplay_def.h SampBuffQueue 定义
     public final static int SAMP_BUFF_SIZE       = 2048;   // 在 sdl_audio_produce_callback() 顶部定义
     public final static int SAMP_BUFF_QUEUE_SIZE = SAMP_BUFF_SIZE * NB_SAMP_BUFFS;
-    byte[] mSampleBuff = new byte[SAMP_BUFF_QUEUE_SIZE];
+    //byte[] mSampleBuff = new byte[SAMP_BUFF_QUEUE_SIZE];
+    AudioSampleData mAudioSampleData = new AudioSampleData(SAMP_BUFF_QUEUE_SIZE);
     // debug
     int nb_copiedSize_0 = 0;
     int last_copiedSize = -2;
 
     @Override // IEncodeDataProvider
-    public byte[] getSampleData() {
-        int copiedSize = native_copyAudioData(mSampleBuff, mSampleBuff.length);
+    public AudioSampleData getSampleData() {
+        int copiedSize = native_copyAudioData(mAudioSampleData.array(), mAudioSampleData.getArraySize());
         /*
         if (copiedSize <= 0) { // debug
             if (last_copiedSize > 0) {
@@ -1339,16 +1340,18 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         }
         last_copiedSize = copiedSize;
         */
-        if (copiedSize <= 0)
-            return null;
+        mAudioSampleData.setDataSize(copiedSize);
+        //if (copiedSize <= 0)
+            //return null;
 
         //Log.d(TAG, ">> native_copyAudioData() copiedSize " + copiedSize);
-        if (copiedSize == mSampleBuff.length)
-            return mSampleBuff;
+        //if (copiedSize == mSampleBuff.length)
+            //return mSampleBuff;
 
-        byte[] sampleData = new byte[copiedSize]; // TODO: 优化为 Direct ByteBuffer ? 使用共享内存
-        System.arraycopy(mSampleBuff, 0, sampleData, 0, copiedSize);
-        return sampleData;
+        //byte[] sampleData = new byte[copiedSize]; // TODO: 优化为 Direct ByteBuffer ? 使用共享内存
+        //System.arraycopy(mSampleBuff, 0, sampleData, 0, copiedSize);
+        //return sampleData;
+        return mAudioSampleData;
     }
     //int copiedSize_sum = 0;
 

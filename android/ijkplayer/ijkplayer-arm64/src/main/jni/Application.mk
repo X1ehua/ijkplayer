@@ -18,24 +18,24 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #APP_OPTIM := release
-APP_OPTIM := debug
+APP_OPTIM    := debug
 APP_PLATFORM := android-21
-APP_ABI := arm64-v8a
-APP_PIE := false
+APP_ABI      := arm64-v8a
+APP_PIE      := false
+APP_STL      := c++_static
 
 # NKD r23 使用 LOCAL_CLANG 和 LOCAL_TOOLCHAIN_VERSION，不再使用 NDK_TOOLCHAIN_VERSION
 #NDK_TOOLCHAIN_VERSION=4.9
 
-APP_STL := c++_static
-
 #APP_CFLAGS:= -O0 -Wall -pipe
 APP_CFLAGS := -O0 -Wall -pipe \
     -Werror=format \
-	-Wno-typedef-redefinition \
-    -ffast-math \
-    -fstrict-aliasing -Werror=strict-aliasing \
-    -Wa,--noexecstack \
+    -Werror=strict-aliasing \
+    -Wno-typedef-redefinition \
     -Wno-deprecated-declarations \
+    -Wa,--noexecstack \
+    -fstrict-aliasing \
+    -ffast-math \
     -DANDROID
 #   -Wno-psabi -Wa,--noexecstack \
 #   -DANDROID -DNDEBUG
