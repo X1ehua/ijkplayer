@@ -191,6 +191,7 @@ static int aout_open_audio_n(JNIEnv *env, SDL_Aout *aout, const SDL_AudioSpec *d
         return -1;
     }
 
+    // debug 数据: buffer_size 16416, opaque->atrack->(min_buffer_size & spec.buffer_size_in_bytes) 均为 16416
     opaque->buffer_size = SDL_Android_AudioTrack_get_min_buffer_size(opaque->atrack);
     if (opaque->buffer_size <= 0) {
         ALOGE("aout_open_audio_n: failed to getMinBufferSize()");

@@ -2774,7 +2774,6 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 
     static int bc = 0;
     bc++;
-    //((short*)buffer)[0] = bc;
     buffer[0] = bc & 0xff;
     buffer[1] = (bc & 0xff00) >> 8;
 
@@ -2794,6 +2793,18 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
      * samp_buff_q.buffs 都合并后取走，然后将这些 buff_stats 置为 STAT_POLLED
      */
     pthread_mutex_lock(&is->samp_mutex);
+
+# if 0 // debug
+    static int   bc_index  = 0;
+    static short bc_arr[NB_SAMP_BUFFS] = {0};
+    bc_arr[bc_index++] = bc;
+    if (bc_index == NB_SAMP_BUFFS) {
+        ALOGE(">> buff-counter #1: %d %d %d %d %d %d %d %d %d %d", // NB_SAMP_BUFFS: 10
+              bc_arr[0], bc_arr[1], bc_arr[2], bc_arr[3], bc_arr[4], bc_arr[5], bc_arr[6], bc_arr[7], bc_arr[8], bc_arr[9]);
+        bc_index = 0;
+    }
+# endif
+
     if (!is->samp_queue) {
         is->samp_queue_len = buffer_size * NB_SAMP_BUFFS;
         is->samp_available_len = 0;
@@ -2802,20 +2813,17 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     if (is->samp_available_len == is->samp_queue_len) {
         av_fifo_drain(is->samp_queue, buffer_size);
         is->samp_available_len -= buffer_size;
-        ALOGE(">>>>>>>> av_fifo_drain() #%d", bc);
+        //ALOGE(">>>>>>>> av_fifo_drain() #%d", bc);
     }
     is->samp_available_len += buffer_size;
-    // for (int i=0; i<buffer_size; i++) {
-    //     if (buffer[i]) {
-    //         i++;
-    //     }
-    // }
+
     int write_len = av_fifo_generic_write(is->samp_queue, buffer, buffer_size, NULL);
     if (write_len != buffer_size) {
         ALOGE(">> av_fifo_generic_write() error: write_len %d != buffer_size %d", write_len, buffer_size);
     }
     is->samp_written_len_sum += write_len; // debug
     // ALOGW(">> samp_written_len_sum: %d", is->samp_written_len_sum);
+
     pthread_mutex_unlock(&is->samp_mutex);
 #endif
 }
@@ -3959,7 +3967,7 @@ static VideoState *stream_open(FFPlayer *ffp, const char *filename, AVInputForma
         }
     }
     is->initialized_decoder = 1;
-    is->audio_sample_offer_callback = audio_sample_offer_callback;
+    //is->audio_sample_offer_callback = audio_sample_offer_callback;
 
     return is;
 fail:

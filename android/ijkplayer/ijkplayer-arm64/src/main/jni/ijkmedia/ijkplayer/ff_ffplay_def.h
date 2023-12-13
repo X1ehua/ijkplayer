@@ -273,7 +273,8 @@ typedef struct Decoder {
     int    first_frame_decoded;
 } Decoder;
 
-#define NB_SAMP_BUFFS 8
+#define NB_SAMP_BUFFS  10
+#define SAMP_BUFF_SIZE 2048
 
 typedef void (*AudioSampleOfferCallback)(Uint8 * stream, int len);
 

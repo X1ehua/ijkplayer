@@ -1318,23 +1318,35 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         return ret < 0 ? null : mYV12Data;
     }
 
-    public final static int NB_SAMP_BUFFS    = 8;                      // ff_ffplay_def.h SampBuffQueue
-    public final static int SAMPLE_BUFF_SIZE = 2048 * NB_SAMP_BUFFS;   // sdl_audio_produce_callback() 顶部
-    byte[] mSampleBuff = new byte[SAMPLE_BUFF_SIZE];
+    public final static int NB_SAMP_BUFFS        = 10;      // 在 ff_ffplay_def.h SampBuffQueue 定义
+    public final static int SAMP_BUFF_SIZE       = 2048;   // 在 sdl_audio_produce_callback() 顶部定义
+    public final static int SAMP_BUFF_QUEUE_SIZE = SAMP_BUFF_SIZE * NB_SAMP_BUFFS;
+    byte[] mSampleBuff = new byte[SAMP_BUFF_QUEUE_SIZE];
+    // debug
+    int nb_copiedSize_0 = 0;
+    int last_copiedSize = -2;
 
     @Override // IEncodeDataProvider
     public byte[] getSampleData() {
         int copiedSize = native_copyAudioData(mSampleBuff, mSampleBuff.length);
-        Log.w(TAG, ">> native_copyAudioData() copiedSize " + copiedSize);
+        /*
+        if (copiedSize <= 0) { // debug
+            if (last_copiedSize > 0) {
+                Log.d(TAG, ">> native_copyAudioData() copiedSize " + copiedSize + " x " + nb_copiedSize_0);
+                nb_copiedSize_0 = 0;
+            }
+            nb_copiedSize_0 ++;
+        }
+        last_copiedSize = copiedSize;
+        */
         if (copiedSize <= 0)
             return null;
 
-        //copiedSize_sum += copiedSize;
-        //Log.e(TAG, "AUDIO>> copiedSize_sum " + copiedSize_sum);
+        //Log.d(TAG, ">> native_copyAudioData() copiedSize " + copiedSize);
         if (copiedSize == mSampleBuff.length)
             return mSampleBuff;
 
-        byte[] sampleData = new byte[copiedSize];
+        byte[] sampleData = new byte[copiedSize]; // TODO: 优化为 Direct ByteBuffer ? 使用共享内存
         System.arraycopy(mSampleBuff, 0, sampleData, 0, copiedSize);
         return sampleData;
     }

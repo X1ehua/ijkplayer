@@ -1102,29 +1102,52 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
     if (!is->samp_queue)
         return -1;
 
+    pthread_mutex_lock(&is->samp_mutex);
+
     if (length < is->samp_available_len) {
         ALOGE("ffp_copy_audio_data() >> should not happen: dest buff len %d < samp_available_len %d",
               length, is->samp_available_len);
+        pthread_mutex_unlock(&is->samp_mutex);
         return -1;
     }
 
-    pthread_mutex_lock(&is->samp_mutex);
     int read_len = is->samp_available_len;
+
+#if 0
+    assert(read_len % SAMP_BUFF_SIZE == 0);
+    int n = read_len / SAMP_BUFF_SIZE;
+    char msg[512] = "";
+    for (int i=0; i<n; i++) {
+        av_fifo_generic_read(is->samp_queue, buff_sample + i * SAMP_BUFF_SIZE, SAMP_BUFF_SIZE, NULL);
+        //av_fifo_drain(is->samp_queue, SAMP_BUFF_SIZE);
+        Uint8 *ptr = buff_sample + i * SAMP_BUFF_SIZE;
+        int bc = ptr[0] | ptr[1] << 8;
+        char tmp[80] = {0};
+        sprintf(tmp, " %d", bc);
+        strcat(msg, tmp);
+    }
+    if (n > 0) ALOGI(">> buff-counter #2:%s", msg);
+
+    if (read_len != is->samp_written_len_sum)
+        ALOGE(">> native_copyAudioData: read_len %d != %d samp_written_len_sum", read_len, is->samp_written_len_sum);
+    is->samp_available_len = 0;
+    is->samp_written_len_sum = 0;
+#endif
+
     if (read_len > 0) {
         av_fifo_generic_read(is->samp_queue, buff_sample, read_len, NULL);
-        int sum = 0;
-        for (int i=0; i<read_len; i++)
-            sum += (signed char)buff_sample[i];
-        ALOGD(">> fifo_read sum: %d, samp_written N %.1f", sum, is->samp_written_len_sum/2048.0f);
+        // int sum = 0;                            // <!-- debug
+        // for (int i=0; i<read_len; i++)
+        //     sum += (signed char)buff_sample[i]; //   --> debug
+        // ALOGD(">> fifo_read sum: %d, samp_written N %.1f", sum, is->samp_written_len_sum/2048.0f);
 
-        av_fifo_drain(is->samp_queue, read_len);
-       if (read_len != is->samp_written_len_sum)
+        //av_fifo_drain(is->samp_queue, read_len);
+        if (read_len != is->samp_written_len_sum)
             ALOGE(">> native_copyAudioData: read_len %d != %d samp_written_len_sum", read_len, is->samp_written_len_sum);
         is->samp_available_len = 0;
         is->samp_written_len_sum = 0;
     }
-    //else ALOGE(">> native_copyAudioData: read_len %d <= 0", read_len);
-    pthread_mutex_unlock(&is->samp_mutex);
 
+    pthread_mutex_unlock(&is->samp_mutex);
     return read_len;
 }

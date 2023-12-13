@@ -263,7 +263,7 @@ static void IjkMediaPlayer_prepareAsync(JNIEnv *env, jobject thiz)
     retval = ijkmp_prepare_async(mp);
     IJK_CHECK_MPRET_GOTO(retval, env, LABEL_RETURN);
 
-    init_audio_sample_offer_callback(env);
+    //init_audio_sample_offer_callback(env);
 
 LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
@@ -1299,10 +1299,15 @@ JNIEXPORT void JNI_OnUnload(JavaVM *jvm, void *reserved)
     pthread_mutex_destroy(&g_clazz.mutex);
 }
 
+
+/* jniEnv->CallStaticVoidMethod() 会在 vivo 23 上面引发 crash, 故而先不使用此方式。
+ * 但由于结构更简单，不需要用到 AVFifoBuffer 相关逻辑, 所以代码保留以备用
+ */
+#if 0
 static jclass     class_MediaCodecEncodeMuxer = NULL;
 static jmethodID  method_offerSampleData      = NULL;
-//static jbyteArray sampleData                  = NULL;
-static int        sampleDataLength            = 0;
+static jbyteArray sampleBuff                  = NULL;
+static int        sampleBuffSize              = 0;
 
 void init_audio_sample_offer_callback(JNIEnv *env)
 {
@@ -1324,17 +1329,17 @@ void audio_sample_offer_callback(uint8_t *stream, int len)
     (*g_jvm)->AttachCurrentThread(g_jvm, &env, 0);
 
     if (env && method_offerSampleData) {
-        static jbyteArray sampleData = NULL;
-        if (!sampleData) {
-            sampleData = (*env)->NewByteArray(env, len); // TODO: where to release ?
-            sampleDataLength = len;
+        if (!sampleBuff) {
+            sampleBuff = (*env)->NewByteArray(env, len); // TODO: where to release ?
+            sampleBuffSize = len;
         }
         else {
-            assert(len == sampleDataLength);
+            assert(len == sampleBuffSize);
         }
-        (*env)->SetByteArrayRegion(env, sampleData, 0, len, (jbyte*)stream);
-        (*env)->CallStaticVoidMethod(env, class_MediaCodecEncodeMuxer, method_offerSampleData, sampleData, len);
+        (*env)->SetByteArrayRegion(env, sampleBuff, 0, len, (jbyte*)stream);
+        (*env)->CallStaticVoidMethod(env, class_MediaCodecEncodeMuxer, method_offerSampleData, sampleBuff, len);
     }
 
     //(*g_jvm)->DetachCurrentThread(g_jvm); // 此线程中还有其它地方在使用 jvm，所以不能 detach，否则会引发 crash
 }
+#endif
