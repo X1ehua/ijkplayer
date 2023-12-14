@@ -2771,11 +2771,14 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     }
 
 // #define Initiative_Offer
+// #define DEBUG_BUFF_COUNTER
 
+#ifdef DEBUG_BUFF_COUNTER
     static int bc = 0;
     bc++;
     buffer[0] = bc & 0xff;
     buffer[1] = (bc & 0xff00) >> 8;
+#endif
 
 #ifdef Initiative_Offer
     /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
@@ -2783,18 +2786,11 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
         is->audio_sample_offer_callback(buffer, buffer_size);
     }
 
-
 #else
-    /* COPY 到单独的 buff 中，待 java poll 过去交给 MediaCodec 进行 encode
-     * 具体的逻辑:
-     * 由于 java 侧 EncodeMuxer.doFrame() 的频率要低于 aout_thread 中 audio_produce_callback()
-     * 测试数据为 doFrame FPS 约 35.4，而 sdl_audio_produce_callback 的 FPS 约为 93.6
-     * 所以，每次在 JNI 调用 native_copyAudioData 时，须把所有状态为 SAMP_BUFF_STAT_FILLED 的
-     * samp_buff_q.buffs 都合并后取走，然后将这些 buff_stats 置为 STAT_POLLED
-     */
+    /* COPY 到单独的 samp_queue 里面，待 java poll 过去交给 MediaCodec 进行 encode */
     pthread_mutex_lock(&is->samp_mutex);
 
-# if 0 // debug
+# ifdef DEBUG_BUFF_COUNTER
     static int   bc_index  = 0;
     static short bc_arr[NB_SAMP_BUFFS] = {0};
     bc_arr[bc_index++] = bc;
@@ -2805,7 +2801,7 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     }
 # endif
 
-    if (!is->samp_queue) {
+    if (!is->samp_queue) { // init
         is->samp_queue_len = buffer_size * NB_SAMP_BUFFS;
         is->samp_available_len = 0;
         is->samp_queue = av_fifo_alloc(is->samp_queue_len);
@@ -2813,7 +2809,6 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     if (is->samp_available_len == is->samp_queue_len) {
         av_fifo_drain(is->samp_queue, buffer_size);
         is->samp_available_len -= buffer_size;
-        //ALOGE(">>>>>>>> av_fifo_drain() #%d", bc);
     }
     is->samp_available_len += buffer_size;
 
