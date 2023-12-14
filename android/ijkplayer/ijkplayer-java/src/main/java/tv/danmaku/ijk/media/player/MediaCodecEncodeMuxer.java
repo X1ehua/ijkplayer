@@ -43,8 +43,9 @@ public class MediaCodecEncodeMuxer implements Runnable {
     private final static long DEQUEUE_TIMEOUT_US = 1000L; // 1ms
     private static boolean sThreadRunning  = false;
 
-    private long mFrameIndex     = 0;
+//  private long mFrameIndex     = 0; // video 与 audio 共用 pts 以保持音画同步
     private long mAudioStartTime = -1;
+    private long mAVPts = -1;
 
     private static final String OUTPUT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath()
                                             + "/DCIM/cc/t2.mp4";
@@ -234,31 +235,27 @@ public class MediaCodecEncodeMuxer implements Runnable {
         }
 
         int inputBufferIndex;
-        long pts = 0;
+        //long pts = 0; // video 与 audio 共用 mAVPts 以保持音画同步
         if ((inputBufferIndex = mAVEncoders[kVideo].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
-            pts = 132 + mFrameIndex * 1000000 / FRAME_RATE; // 132: magic number ?
+            //pts = 132 + mFrameIndex * 1000000 / FRAME_RATE; // 132: magic number ?
             ByteBuffer inputBuffer = mAVEncoders[kVideo].getInputBuffer(inputBufferIndex);
-            if (inputBuffer != null) {
-                inputBuffer.put(dataYUV);
-                mAVEncoders[kVideo].queueInputBuffer(inputBufferIndex, 0, dataYUV.length, pts, 0);
-            }
-            else {
-                Log.w(TAG, ">>> videoEncoder.getInputBuffer() returned null");
-            }
-            mFrameIndex += 1;
+            inputBuffer.put(dataYUV);
+            mAVEncoders[kVideo].queueInputBuffer(inputBufferIndex, 0, dataYUV.length, mAVPts, 0);
+            //mFrameIndex += 1;
         }
         else {
-            Log.e(TAG, ">>>>>>>>>> inputBufferIndex of mVideoEncoder < 0: " + inputBufferIndex);
+            if (VERBOSE) Log.d(TAG, "videoEncoder's inputBuffer is not available");
         }
         long t2 = System.nanoTime();
 
         drainEncoder(kVideo, false);
         long t3 = System.nanoTime();
 
-        // 9.2 + 5.5 + 13.1 = 27.8 ms
-        @SuppressLint("DefaultLocale") String msg = String.format(">> doFrameVideo#%d: pts %d, dt %d %d %d += %d",
-                vfc, pts/1000, (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000, (t3-t0)/1000000);
-        //Log.w(TAG, msg);
+        if (VERBOSE) {
+            @SuppressLint("DefaultLocale") String msg = String.format(">> doFrameVideo#%d: pts %d, dt %d %d %d += %d",
+                    vfc, mAVPts/1000, (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000, (t3-t0)/1000000);
+            Log.w(TAG, msg);
+        }
     }
 
     int vfc = 0; // debug
@@ -309,22 +306,19 @@ public class MediaCodecEncodeMuxer implements Runnable {
             // -->
             //byte[] dataAudio = sAudioSampleQueue.take(); // c 代码中通过 jni 往 java 侧 offer 的方式
 
-            long pts = (System.nanoTime() - mAudioStartTime) / 1000;
-            //long dtdo {s = pts - lastPts; // TBC: dts 分布不均匀，解码时已是如此?
+            mAVPts = (System.nanoTime() - mAudioStartTime) / 1000;
+            //long dt = pts - lastPts; // TBC: dts 分布不均匀，解码时已是如此?
             //Log.i(TAG, String.format(">> dts %.2f", dts / 1000.0f));
             //lastPts = pts;
+            //Log.i(TAG, ">> audio pts " + mAVPts / 1000);
 
             int inputBufferIndex;
             if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
                 ByteBuffer inputBuffer = mAVEncoders[kAudio].getInputBuffer(inputBufferIndex);
-                if (inputBuffer != null) {
-                    inputBuffer.put(audioDataQueue);
-                    mAVEncoders[kAudio].queueInputBuffer(inputBufferIndex, i * SAMP_BUFF_SIZE, SAMP_BUFF_SIZE, pts, 0);
-                } else {
-                    Log.e(TAG, ">> audioEncoder.getInputBuffer() got null!");
-                }
+                inputBuffer.put(audioDataQueue);
+                mAVEncoders[kAudio].queueInputBuffer(inputBufferIndex, i * SAMP_BUFF_SIZE, SAMP_BUFF_SIZE, mAVPts, 0);
             } else {
-                Log.e(TAG, ">> inputBufferIndex: " + inputBufferIndex);
+                if (VERBOSE) Log.d(TAG, "audioEncoder's inputBuffer is not available");
             }
             //offeredSize += SAMP_BUFF_SIZE;
             //if (++oc % 10 == 0) Log.w(TAG, ">> offeredSize " + offeredSize);
