@@ -2663,6 +2663,16 @@ reload:
     return resampled_data_size;
 }
 
+static long get_current_timestamp_microsecond()
+{
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1) {
+        ALOGE("%s() clock_gettime() failed, return 0", __FUNCTION__);
+        return 0L;
+    }
+    return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+}
+
 /* prepare a new audio buffer */
 static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_size)
 {
@@ -2773,12 +2783,12 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 // #define Initiative_Offer
 // #define DEBUG_BUFF_COUNTER
 
-#ifdef DEBUG_BUFF_COUNTER
+// #ifdef DEBUG_BUFF_COUNTER
     static int bc = 0;
     bc++;
     buffer[0] = bc & 0xff;
     buffer[1] = (bc & 0xff00) >> 8;
-#endif
+// #endif
 
 #ifdef Initiative_Offer
     /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
@@ -2788,7 +2798,7 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 
 #else
     /* COPY 到单独的 samp_queue 里面，待 java poll 过去交给 MediaCodec 进行 encode */
-    pthread_mutex_lock(&is->samp_mutex);
+    pthread_mutex_lock(&is->record_cache.mutex);
 
 # ifdef DEBUG_BUFF_COUNTER
     static int   bc_index  = 0;
@@ -2801,6 +2811,46 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     }
 # endif
 
+    const int SAMPLE_FPS = 96; // 粗略的参考值，只用于初始化。不够用则会 realloc
+    RecordCache *rc = &is->record_cache;
+    long now_microsec = get_current_timestamp_microsecond();
+    if (!rc->initialized) { // init
+        rc->width  = 1280;
+        rc->height = 720;
+        rc->max_duration = 1000000 * 5; // 5 秒的值待由 initRecordCache() 传入
+        rc->bottom_pts = 0;
+        rc->origin_pts = now_microsec;
+
+        unsigned int size = (SAMPLE_FPS * rc->max_duration / 1000000) * sizeof(SampFrame);
+        rc->samp_fifo = av_fifo_alloc(size);
+
+        size = ceil(ffp->stat.vdps * rc->max_duration / 1000000) * sizeof(PictFrame);
+        rc->pict_fifo = av_fifo_alloc(size);
+
+        rc->initialized = 1;
+    }
+
+    SampFrame *samp_frame = (SampFrame *)malloc(sizeof(SampFrame));
+    samp_frame->pts = now_microsec - rc->origin_pts;
+    if (bc < 30) {
+        ALOGD("%d %d", bc, (int)samp_frame->pts);
+    }
+
+    if (samp_frame->pts - rc->bottom_pts >= rc->max_duration) {
+        SampFrame drain_samp_frame;
+        av_fifo_generic_read(rc->samp_fifo, &drain_samp_frame, sizeof(SampFrame), NULL);
+        rc->bottom_pts = drain_samp_frame.pts;
+    }
+
+    int space = av_fifo_space(rc->samp_fifo);
+    if (space < sizeof(SampFrame) * 10) {
+        av_fifo_grow(rc->samp_fifo, sizeof(SampFrame) * 10);
+    }
+
+    memcpy(samp_frame->samp_data, buffer, buffer_size); // TODO: buffer_size(2048) 必须等于 SAMP_BUFF_SIZE
+    av_fifo_generic_write(rc->samp_fifo, samp_frame, sizeof(SampFrame), NULL);
+
+    /*
     if (!is->samp_queue) { // init
         is->samp_queue_len = buffer_size * NB_SAMP_BUFFS;
         is->samp_available_len = 0;
@@ -2818,8 +2868,9 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     }
     is->samp_written_len_sum += write_len; // debug
     // ALOGW(">> samp_written_len_sum: %d", is->samp_written_len_sum);
+    */
 
-    pthread_mutex_unlock(&is->samp_mutex);
+    pthread_mutex_unlock(&is->record_cache.mutex);
 #endif
 }
 

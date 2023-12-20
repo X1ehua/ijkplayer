@@ -1318,11 +1318,10 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         return ret < 0 ? null : mYV12Data;
     }
 
-    public final static int NB_SAMP_BUFFS        = 10;      // 在 ff_ffplay_def.h SampBuffQueue 定义
-    public final static int SAMP_BUFF_SIZE       = 2048;   // 在 sdl_audio_produce_callback() 顶部定义
-    public final static int SAMP_BUFF_QUEUE_SIZE = SAMP_BUFF_SIZE * NB_SAMP_BUFFS;
-    //byte[] mSampleBuff = new byte[SAMP_BUFF_QUEUE_SIZE];
-    AudioSampleData mAudioSampleData = new AudioSampleData(SAMP_BUFF_QUEUE_SIZE);
+//  public final static int NB_SAMP_BUFFS      = 10;     // 在 ff_ffplay_def.h SampBuffQueue 定义
+    public final static int SAMP_FRAME_SIZE    = 2048;   // 在 sdl_audio_produce_callback() 顶部定义
+    public final static int SAMP_BUFF_SIZE_MAX = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
+    AudioSampleData mAudioSampleData = new AudioSampleData(SAMP_BUFF_SIZE_MAX);
     // debug
     int nb_copiedSize_0 = 0;
     int last_copiedSize = -2;
@@ -1330,30 +1329,33 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     @Override // IEncodeDataProvider
     public AudioSampleData getSampleData() {
         int copiedSize = native_copyAudioData(mAudioSampleData.array(), mAudioSampleData.getArraySize());
-        /*
-        if (copiedSize <= 0) { // debug
-            if (last_copiedSize > 0) {
-                Log.d(TAG, ">> native_copyAudioData() copiedSize " + copiedSize + " x " + nb_copiedSize_0);
-                nb_copiedSize_0 = 0;
-            }
-            nb_copiedSize_0 ++;
-        }
-        last_copiedSize = copiedSize;
-        */
         mAudioSampleData.setDataSize(copiedSize);
-        //if (copiedSize <= 0)
-            //return null;
-
-        //Log.d(TAG, ">> native_copyAudioData() copiedSize " + copiedSize);
-        //if (copiedSize == mSampleBuff.length)
-            //return mSampleBuff;
-
-        //byte[] sampleData = new byte[copiedSize]; // TODO: 优化为 Direct ByteBuffer ? 使用共享内存
-        //System.arraycopy(mSampleBuff, 0, sampleData, 0, copiedSize);
-        //return sampleData;
         return mAudioSampleData;
     }
     //int copiedSize_sum = 0;
+
+    public void __startRecord(int seconds, boolean snapshot) {
+        int max_buffSize = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
+        byte[] sampBuff = new byte[max_buffSize];
+
+        int copiedSize = native_copyAudioData(sampBuff, max_buffSize);
+        int frameNum = copiedSize/(SAMP_FRAME_SIZE + 4);
+        int offset = 0;
+        StringBuffer sbc = new StringBuffer();
+        StringBuffer sbt = new StringBuffer();
+        for (int i=0; i<frameNum; i++) {
+            int pts = sampBuff[offset]&0xff | (sampBuff[offset+1]&0xff)<<8 | (sampBuff[offset+2]&0xff)<<16 | (sampBuff[offset+3]&0xff)<<24;
+            int bc  = sampBuff[offset+4]&0xff | (sampBuff[offset+5]&0xff)<<8;
+            offset += SAMP_FRAME_SIZE + 4;
+            sbc.append(bc);
+            sbc.append(' ');
+            sbt.append(pts);
+            sbt.append(' ');
+        }
+        Log.w(TAG, String.format("buffSize %d, copiedSize %d, frameNum %d", max_buffSize, copiedSize, frameNum));
+        Log.w(TAG, sbc.toString());
+        Log.w(TAG, sbt.toString());
+    }
 
     public void startRecord(int seconds, boolean snapshot) {
         String recordFilePath = getRecordFilePath();

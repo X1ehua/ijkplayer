@@ -273,10 +273,58 @@ typedef struct Decoder {
     int    first_frame_decoded;
 } Decoder;
 
-#define NB_SAMP_BUFFS  10
+// ------------------------------ RecordCache ------------------------------
+// #define NB_SAMP_BUFFS  10
 #define SAMP_BUFF_SIZE 2048
 
 typedef void (*AudioSampleOfferCallback)(Uint8 * stream, int len);
+
+typedef struct SampFrame {
+    int pts; // microseconds
+    uint8_t samp_data[SAMP_BUFF_SIZE];
+} SampFrame;
+
+typedef struct PictFrame {
+    int pts; // microseconds
+    uint8_t *dataY; // ↘️
+    uint8_t *dataU; // ➡️ TODO: 优化为 SampFrame.samp_data 那样的连续内存?
+    uint8_t *dataV; // ↗️
+} PictFrame;
+
+/* 用于 record 的 AudioCache:
+ * - 取的时候，produce 还在继续进行(继续往 fifo 里写入)，结束 read 的条件，在于 java 端 last_pts - first_pts >= max_duration
+ * - TBC1: 需要计算上述过程所需的时间，若太长，可能会导致 next record 不能正常开始(如和前次有重叠，比如第一次 3s~6s，第二次 5s~8s)
+ * - TBC2: pict 的 encode 速度快于 24 FPS，这样不必再额外缓存待编码的 picts，否则需要太大的内存(1 frame = 1920*1080*1.5 ~= 3MB)
+ */
+typedef struct RecordCache {
+    AVFifoBuffer *samp_fifo; // 往里面写入一个个的 SampFrame *
+    AVFifoBuffer *pict_fifo; // 往里面写入一个个的 PictFrame *
+    int initialized;
+    int max_duration; // microseconds
+
+    /* 作用：
+     * 用于控制 samp_fifo & pict_fifo 的大小。当 peek_pts - bottom_pts >= max_duration 时，则需要排掉最底部的 frame
+     *
+     * 逻辑：
+     * 由于 sample 的 FPS 要高很多，所以 pts 计算只基于 samp_frame:
+     * 1. bottom_pts 以最开始写入 fifo 的 samp_frame 的 pts 为其初始值。 
+     * 2. 当 peek_pts - bottom_pts >= max_duration 时，则会排掉最底部的 samp_frame，
+     *    此时，会使用 av_fifo_read() 取出最底层的 samp_frame。同时，将此 samp_frame 的 pts 更新到 bottom_pts ——
+     *    虽然，在严格意义上应该是 drain 出当前最底层之后的 fifo 内最底层那个 samp_frame 的 pts，
+     *    但是，为了减少性能消耗，不去专门计算 drain 之后在 fifo 内最底层的那个 pts，且由于 samp_frame 的 FPS 较高（约 96），
+     *    使用这个 drain 掉的 frame 的 pts，只会让 bottom_pts 比 fifo 内最底层的 pts 小了约 1/96 秒
+     */
+    int bottom_pts; // microseconds
+    long origin_pts;
+
+    int width;
+    int height;
+    // int samp_queue_len;
+    // int samp_available_len;
+    // int samp_written_len_sum;
+    pthread_mutex_t mutex;
+    //AudioSampleOfferCallback audio_sample_offer_callback;
+} RecordCache;
 
 typedef struct VideoState {
     SDL_Thread *read_tid;
@@ -425,13 +473,7 @@ typedef struct VideoState {
     volatile int initialized_decoder;
     int seek_buffering;
 
-    // SampBuffQueue samp_buff_q; // for MediaCodec encoder in java
-    AVFifoBuffer *samp_queue;
-    int samp_queue_len;
-    int samp_available_len;
-    int samp_written_len_sum;
-    pthread_mutex_t samp_mutex;
-    AudioSampleOfferCallback audio_sample_offer_callback; 
+    RecordCache record_cache;
 } VideoState;
 
 /* options specified by the user */
