@@ -2783,12 +2783,12 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 // #define Initiative_Offer
 // #define DEBUG_BUFF_COUNTER
 
-// #ifdef DEBUG_BUFF_COUNTER
+#ifdef DEBUG_BUFF_COUNTER
     static int bc = 0;
     bc++;
     buffer[0] = bc & 0xff;
     buffer[1] = (bc & 0xff00) >> 8;
-// #endif
+#endif
 
 #ifdef Initiative_Offer
     /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
@@ -2797,7 +2797,6 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
     }
 
 #else
-    /* COPY 到单独的 samp_queue 里面，待 java poll 过去交给 MediaCodec 进行 encode */
     pthread_mutex_lock(&is->record_cache.mutex);
 
 # ifdef DEBUG_BUFF_COUNTER
@@ -2832,9 +2831,9 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 
     SampFrame *samp_frame = (SampFrame *)malloc(sizeof(SampFrame));
     samp_frame->pts = now_microsec - rc->origin_pts;
-    if (bc < 30) {
-        ALOGD("%d %d", bc, (int)samp_frame->pts);
-    }
+    // if (bc < 30) {
+    //     ALOGD("%d %d", bc, (int)samp_frame->pts);
+    // }
 
     if (samp_frame->pts - rc->bottom_pts >= rc->max_duration) {
         SampFrame drain_samp_frame;
@@ -2849,26 +2848,6 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
 
     memcpy(samp_frame->samp_data, buffer, buffer_size); // TODO: buffer_size(2048) 必须等于 SAMP_BUFF_SIZE
     av_fifo_generic_write(rc->samp_fifo, samp_frame, sizeof(SampFrame), NULL);
-
-    /*
-    if (!is->samp_queue) { // init
-        is->samp_queue_len = buffer_size * NB_SAMP_BUFFS;
-        is->samp_available_len = 0;
-        is->samp_queue = av_fifo_alloc(is->samp_queue_len);
-    }
-    if (is->samp_available_len == is->samp_queue_len) {
-        av_fifo_drain(is->samp_queue, buffer_size);
-        is->samp_available_len -= buffer_size;
-    }
-    is->samp_available_len += buffer_size;
-
-    int write_len = av_fifo_generic_write(is->samp_queue, buffer, buffer_size, NULL);
-    if (write_len != buffer_size) {
-        ALOGE(">> av_fifo_generic_write() error: write_len %d != buffer_size %d", write_len, buffer_size);
-    }
-    is->samp_written_len_sum += write_len; // debug
-    // ALOGW(">> samp_written_len_sum: %d", is->samp_written_len_sum);
-    */
 
     pthread_mutex_unlock(&is->record_cache.mutex);
 #endif

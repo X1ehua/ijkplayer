@@ -182,7 +182,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
         releaseEncoder();
         float dt = (System.nanoTime()-startTime)/1000000000.0f;
-        Log.i(TAG, String.format(">> releaseEncoder(), time duration %.1fs", dt));
+        Log.i(TAG, String.format(">> releaseEncoder(), duration %.2fs, cost %.2fs", mAVPts/1000000.0f, dt));
         try {
             Thread.sleep(1000);
             throw new RuntimeException("exit");

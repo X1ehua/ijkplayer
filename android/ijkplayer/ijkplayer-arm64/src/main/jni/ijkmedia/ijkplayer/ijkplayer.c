@@ -989,31 +989,6 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
 
     pthread_mutex_lock(&rc->mutex);
 
-#if 0 // realtime recording
-    if (length < is->samp_available_len) {
-        ALOGE("ffp_copy_audio_data() >> should not happen: dest buff len %d < samp_available_len %d",
-              length, is->samp_available_len);
-        pthread_mutex_unlock(&is->samp_mutex);
-        return -1;
-    }
-
-    int read_len = is->samp_available_len;
-
-    if (read_len > 0) {
-        av_fifo_generic_read(is->samp_queue, buff_sample, read_len, NULL);
-        // int sum = 0;                            // <!-- debug
-        // for (int i=0; i<read_len; i++)
-        //     sum += (signed char)buff_sample[i]; //   --> debug
-        // ALOGD(">> fifo_read sum: %d, samp_written N %.1f", sum, is->samp_written_len_sum/2048.0f);
-
-        //av_fifo_drain(is->samp_queue, read_len);
-        if (read_len != is->samp_written_len_sum)
-            ALOGE(">> native_copyAudioData: read_len %d != %d samp_written_len_sum", read_len, is->samp_written_len_sum);
-        is->samp_available_len = 0;
-        is->samp_written_len_sum = 0;
-    }
-#endif
-
     int size = av_fifo_size(rc->samp_fifo);
     if (size > length) {
         ALOGE("buff_sample length %d < fifo size %d", length, size);
@@ -1022,5 +997,5 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
     av_fifo_generic_read(rc->samp_fifo, buff_sample, size, NULL);
 
     pthread_mutex_unlock(&rc->mutex);
-    return size; //read_len;
+    return size;
 }
