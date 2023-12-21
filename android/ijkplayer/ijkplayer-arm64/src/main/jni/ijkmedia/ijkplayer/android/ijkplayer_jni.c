@@ -1168,21 +1168,21 @@ LABEL_RETURN:
 }
 #endif
 
-static jint IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint width, jint height)
+static jint IjkMediaPlayer_native_copyYV12Data(JNIEnv *env, jobject thiz, jbyteArray jbuff, jint buff_size)
 {
     jint ret = -1;
     IjkMediaPlayer *mp = jni_get_media_player(env, thiz);
     JNI_CHECK_GOTO(mp, env, NULL, "mpjni: copyYV12Data: null IjkMediaPlayer", LABEL_RETURN);
 
-    jbyte *buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
-    if (!buff) {
+    jbyte *pict_frames_buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
+    if (!pict_frames_buff) {
         (*env)->ThrowNew(env, "java/lang/IllegalArgumentException", "byteArr is null");
         return JNI_FALSE;
     }
 
-    ret = ijkmp_copy_YV12_data(mp, (uint8_t *)buff, width, height);
+    ret = ijkmp_copy_YV12_data(mp, (uint8_t *)pict_frames_buff, buff_size);
 
-    (*env)->ReleaseByteArrayElements(env, jbuff, buff, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, jbuff, pict_frames_buff, JNI_ABORT);
 
 LABEL_RETURN:
     ijkmp_dec_ref_p(&mp);
@@ -1264,7 +1264,7 @@ static JNINativeMethod g_methods[] = {
 //  { "native_stopRecord",      "()I",                          (void *)IjkMediaPlayer_native_stopRecord },
 //  { "native_getResolution",   "()[I",                         (void *)IjkMediaPlayer_native_getVideoResolution },
     { "native_snapshot",        "(Landroid/graphics/Bitmap;)I", (void *)IjkMediaPlayer_native_snapshot },
-    { "native_copyYV12Data",    "([BII)I",                      (void *)IjkMediaPlayer_native_copyYV12Data },
+    { "native_copyYV12Data",    "([BI)I",                       (void *)IjkMediaPlayer_native_copyYV12Data },
     { "native_copyAudioData",   "([BI)I",                       (void *)IjkMediaPlayer_native_copyAudioData },
 };
 

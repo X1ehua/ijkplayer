@@ -44,7 +44,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -58,9 +57,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import tv.danmaku.ijk.media.player.annotations.AccessedByNative;
 import tv.danmaku.ijk.media.player.annotations.CalledByNative;
@@ -181,7 +177,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     private String mRecordFolderPath = null;
 
     private MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
-    private byte[] mYV12Data = null;
+//  private byte[] mYV12Data = null; // 实时的单帧 YUV
 
     private final static int SNAPSHOT_JPEG_QUALITY = 90;
 
@@ -1027,6 +1023,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
             case MEDIA_SET_VIDEO_SIZE:
                 player.mVideoWidth = msg.arg1;
                 player.mVideoHeight = msg.arg2;
+                Log.i(TAG, ">> set video size: " + msg.arg1 + " x " + msg.arg2);
                 player.notifyOnVideoSizeChanged(msg.arg1, msg.arg2, player.mVideoSarNum, player.mVideoSarDen);
                 return;
 
@@ -1310,31 +1307,48 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         return mainFilename + ".mp4";
     }
 
+    /*
     @Override // IEncodeDataProvider
     public byte[] getYuvData() {
-        if (mYV12Data == null)
-            mYV12Data = new byte[mVideoWidth * mVideoHeight * 3 / 2];
-        int ret = native_copyYV12Data(mYV12Data, mVideoWidth, mVideoHeight);
-        return ret < 0 ? null : mYV12Data;
+        // if (mYV12Data == null) mYV12Data = new byte[mVideoWidth * mVideoHeight * 3 / 2];
+        // int ret = native_copyYV12Data(mYV12Data, buffSize);
+        // return ret < 0 ? null : mYV12Data;
     }
+    */
 
 //  public final static int NB_SAMP_BUFFS      = 10;     // 在 ff_ffplay_def.h SampBuffQueue 定义
     public final static int SAMP_FRAME_SIZE    = 2048;   // 在 sdl_audio_produce_callback() 顶部定义
-    public final static int SAMP_BUFF_SIZE_MAX = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
-    AudioSampleData mAudioSampleData = new AudioSampleData(SAMP_BUFF_SIZE_MAX);
+    AVRecordCache mAVCache = null;
     // debug
     int nb_copiedSize_0 = 0;
     int last_copiedSize = -2;
 
+    private void initAVRecordCache() {
+        int sampFrameSize = SAMP_FRAME_SIZE + 4;
+        int pictFrameSize = mVideoWidth * mVideoHeight * 3 / 2;
+        int vFPS = 24; // TODO: read from AVStream
+        int aFPS = 96; // TODO: dynamic calculate?
+        mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 5);
+    }
+
     @Override // IEncodeDataProvider
-    public AudioSampleData getSampleData() {
-        int copiedSize = native_copyAudioData(mAudioSampleData.array(), mAudioSampleData.getArraySize());
-        mAudioSampleData.setDataSize(copiedSize);
-        return mAudioSampleData;
+    public AVRecordCache getAVCache(AVCacheType type) {
+        if (mAVCache == null) {
+            initAVRecordCache();
+        }
+        if (type == AVCacheType.kVideoCache) {
+            int copiedSize = native_copyYV12Data(mAVCache.pictArray(), mAVCache.getPictBuffSize());
+            mAVCache.setPictDataSize(copiedSize);
+        }
+        else if (type == AVCacheType.kAudioCache) {
+            int copiedSize = native_copyAudioData(mAVCache.sampArray(), mAVCache.getSampBuffSize());
+            mAVCache.setSampDataSize(copiedSize);
+        }
+        return mAVCache;
     }
     //int copiedSize_sum = 0;
 
-    public void __startRecord(int seconds, boolean snapshot) {
+    public void test__startRecord(int seconds, boolean snapshot) {
         int max_buffSize = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
         byte[] sampBuff = new byte[max_buffSize];
 
@@ -1431,6 +1445,6 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
 //  public native int native_startRecord(String file);
 //  public native int native_stopRecord();
     public native int native_snapshot(Bitmap bitmap);
-    public native int native_copyYV12Data(byte[] buff, int width, int height);
+    public native int native_copyYV12Data(byte[] buff, int buffSize);
     public native int native_copyAudioData(byte[] buff, int length);
 }

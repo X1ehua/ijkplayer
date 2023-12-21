@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdatomic.h>
 
 #include "libavutil/avstring.h"
 #include "libavutil/eval.h"
@@ -73,7 +74,8 @@
 #include "ijkmeta.h"
 #include "ijkversion.h"
 #include "ijkplayer.h"
-#include <stdatomic.h>
+#include "cache_record.h"
+
 #if defined(__ANDROID__)
 #include "ijksoundtouch/ijksoundtouch_wrap.h"
 #endif
@@ -2353,7 +2355,9 @@ static int ffplay_video_thread(void *arg)
             pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
             ret = queue_picture(ffp, frame, pts, duration, frame->pkt_pos, is->viddec.pkt_serial);
 
-            // record 之后，再释放 frame
+            // 将 frame 里面的 dataYUV 复制到 is->record_cache 之后，再释放 frame
+            cache_pict_frame(is, frame, frame_rate.num * 1.0f / frame_rate.den);
+
             av_frame_unref(frame);
 #if CONFIG_AVFILTER
         }
@@ -2663,16 +2667,6 @@ reload:
     return resampled_data_size;
 }
 
-static long get_current_timestamp_microsecond()
-{
-    struct timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1) {
-        ALOGE("%s() clock_gettime() failed, return 0", __FUNCTION__);
-        return 0L;
-    }
-    return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-}
-
 /* prepare a new audio buffer */
 static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_size)
 {
@@ -2780,77 +2774,7 @@ static void sdl_audio_produce_callback(void *opaque, Uint8 *buffer, int buffer_s
         }
     }
 
-// #define Initiative_Offer
-// #define DEBUG_BUFF_COUNTER
-
-#ifdef DEBUG_BUFF_COUNTER
-    static int bc = 0;
-    bc++;
-    buffer[0] = bc & 0xff;
-    buffer[1] = (bc & 0xff00) >> 8;
-#endif
-
-#ifdef Initiative_Offer
-    /* 通过 JNI 将此 stream 数据 offer 到 java 侧 ArrayBlockingQueue 里面 */
-    if (is->audio_sample_offer_callback) {
-        is->audio_sample_offer_callback(buffer, buffer_size);
-    }
-
-#else
-    pthread_mutex_lock(&is->record_cache.mutex);
-
-# ifdef DEBUG_BUFF_COUNTER
-    static int   bc_index  = 0;
-    static short bc_arr[NB_SAMP_BUFFS] = {0};
-    bc_arr[bc_index++] = bc;
-    if (bc_index == NB_SAMP_BUFFS) {
-        ALOGE(">> buff-counter #1: %d %d %d %d %d %d %d %d %d %d", // NB_SAMP_BUFFS: 10
-              bc_arr[0], bc_arr[1], bc_arr[2], bc_arr[3], bc_arr[4], bc_arr[5], bc_arr[6], bc_arr[7], bc_arr[8], bc_arr[9]);
-        bc_index = 0;
-    }
-# endif
-
-    const int SAMPLE_FPS = 96; // 粗略的参考值，只用于初始化。不够用则会 realloc
-    RecordCache *rc = &is->record_cache;
-    long now_microsec = get_current_timestamp_microsecond();
-    if (!rc->initialized) { // init
-        rc->width  = 1280;
-        rc->height = 720;
-        rc->max_duration = 1000000 * 5; // 5 秒的值待由 initRecordCache() 传入
-        rc->bottom_pts = 0;
-        rc->origin_pts = now_microsec;
-
-        unsigned int size = (SAMPLE_FPS * rc->max_duration / 1000000) * sizeof(SampFrame);
-        rc->samp_fifo = av_fifo_alloc(size);
-
-        size = ceil(ffp->stat.vdps * rc->max_duration / 1000000) * sizeof(PictFrame);
-        rc->pict_fifo = av_fifo_alloc(size);
-
-        rc->initialized = 1;
-    }
-
-    SampFrame *samp_frame = (SampFrame *)malloc(sizeof(SampFrame));
-    samp_frame->pts = now_microsec - rc->origin_pts;
-    // if (bc < 30) {
-    //     ALOGD("%d %d", bc, (int)samp_frame->pts);
-    // }
-
-    if (samp_frame->pts - rc->bottom_pts >= rc->max_duration) {
-        SampFrame drain_samp_frame;
-        av_fifo_generic_read(rc->samp_fifo, &drain_samp_frame, sizeof(SampFrame), NULL);
-        rc->bottom_pts = drain_samp_frame.pts;
-    }
-
-    int space = av_fifo_space(rc->samp_fifo);
-    if (space < sizeof(SampFrame) * 10) {
-        av_fifo_grow(rc->samp_fifo, sizeof(SampFrame) * 10);
-    }
-
-    memcpy(samp_frame->samp_data, buffer, buffer_size); // TODO: buffer_size(2048) 必须等于 SAMP_BUFF_SIZE
-    av_fifo_generic_write(rc->samp_fifo, samp_frame, sizeof(SampFrame), NULL);
-
-    pthread_mutex_unlock(&is->record_cache.mutex);
-#endif
+    cache_samp_frame(is, buffer, buffer_size);
 }
 
 static int audio_open(FFPlayer *opaque, int64_t wanted_channel_layout, int wanted_nb_channels, int wanted_sample_rate, struct AudioParams *audio_hw_params)
@@ -3404,7 +3328,8 @@ static int media_read_thread(void *arg)
                     break;
                 }
             }
-            err = avformat_find_stream_info(fmt_ctx, opts); // flv 走到这里, nb_streams = 1 here
+            /* 初始化 fmt_ctx->streams & fmt_ctx->nb_streams */
+            err = avformat_find_stream_info(fmt_ctx, opts); // mp4 & flv 走到这里, nb_streams 0 -> 2
         } while(0);
         ffp_notify_msg1(ffp, FFP_MSG_FIND_STREAM_INFO);
 

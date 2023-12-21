@@ -299,7 +299,6 @@ typedef struct PictFrame {
 typedef struct RecordCache {
     AVFifoBuffer *samp_fifo; // 往里面写入一个个的 SampFrame *
     AVFifoBuffer *pict_fifo; // 往里面写入一个个的 PictFrame *
-    int initialized;
     int max_duration; // microseconds
 
     /* 作用：

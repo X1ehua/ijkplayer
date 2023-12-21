@@ -1,6 +1,9 @@
 package tv.danmaku.ijk.media.player;
 
 public interface IEncodeDataProvider {
-    byte[] getYuvData();
-    AudioSampleData getSampleData();
+    public static enum AVCacheType {
+        kAudioCache,
+        kVideoCache
+    };
+    AVRecordCache getAVCache(AVCacheType type);
 }
