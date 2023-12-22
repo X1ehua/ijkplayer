@@ -1064,6 +1064,7 @@ static void stream_close(FFPlayer *ffp)
         av_freep(&ffp->get_img_info);
     }
     av_free(is->filename);
+    free_record_cache(&is->record_cache);
     av_free(is);
     ffp->is = NULL;
 }

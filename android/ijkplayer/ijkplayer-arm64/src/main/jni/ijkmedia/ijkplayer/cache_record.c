@@ -134,3 +134,32 @@ void cache_samp_frame(VideoState *is, const Uint8 *buffer, int buffer_size)
     pthread_mutex_unlock(&is->record_cache.mutex);
 #endif
 }
+
+void free_record_cache(RecordCache *rc)
+{
+    pthread_mutex_lock(&rc->mutex);
+    if (rc->samp_fifo) {
+        av_fifo_free(rc->samp_fifo);
+    }
+
+    PictFrame *pict_frames = NULL;
+    int size = 0;
+    if (rc->pict_fifo) {
+        size = av_fifo_size(rc->pict_fifo);
+        pict_frames = (PictFrame *)malloc(size);
+        av_fifo_generic_peek(rc->pict_fifo, pict_frames, size, NULL);
+        av_fifo_free(rc->pict_fifo);
+    }
+    pthread_mutex_unlock(&rc->mutex);
+
+    if (!pict_frames)
+        return;
+
+    for (int i=0; i < size / sizeof(PictFrame); ++i) {
+        PictFrame *pict_frame = &pict_frames[i];
+        free(pict_frame->dataY);
+        free(pict_frame->dataU);
+        free(pict_frame->dataV);
+    }
+    free(pict_frames);
+}

@@ -987,11 +987,12 @@ long get_microsec_timestamp();
 int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_size)
 {
     assert(mp && mp->ffplayer && mp->ffplayer->is);
-    pthread_mutex_lock(&mp->mutex);
+    RecordCache *rc = &mp->ffplayer->is->record_cache;
+
+    pthread_mutex_lock(&rc->mutex);
     //int ret = ffp_copy_YV12_data(mp->ffplayer, pict_frames_buff, buff_size);
 
     long t0 = get_microsec_timestamp();
-    RecordCache *rc = &mp->ffplayer->is->record_cache;
     int size      = av_fifo_size(rc->pict_fifo);
     int sizeY     = rc->width * rc->height;
     int frame_num = size / sizeof(PictFrame);
@@ -1004,7 +1005,7 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
     PictFrame *pict_frames = (PictFrame *)malloc(size);
     av_fifo_generic_peek(rc->pict_fifo, pict_frames, size, NULL);
 
-    pthread_mutex_unlock(&mp->mutex); // 下面的 for loop 比较耗时，所以尽早 unlock
+    pthread_mutex_unlock(&rc->mutex); // 下面的 for loop 比较耗时，所以尽早 unlock
 
     long t1 = get_microsec_timestamp();
     ALOGW(">> %s(): time cost #101 %.3fms", __FUNCTION__, (t1 - t0)/1000.0f);
