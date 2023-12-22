@@ -854,7 +854,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     @Override
     public int getCurrentPosition() {
         if (isInPlaybackState()) {
-            return (int) mMediaPlayer.getCurrentPosition();
+            return (int) mMediaPlayer.getCurrentPosition(); // native getCurrentPosition()
         }
         return 0;
     }

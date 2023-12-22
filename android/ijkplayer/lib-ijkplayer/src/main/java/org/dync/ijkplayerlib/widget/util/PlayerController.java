@@ -1543,7 +1543,7 @@ public class PlayerController {
      */
     private class AutoControlPanelRunnable implements Runnable {
 
-        public static final int AUTO_INTERVAL = 5000;
+        public static final int AUTO_INTERVAL = 5000 * 10; // 无触屏事件时，自动隐藏工具条
 
         public void start(long delayMillis) {
             mHandler.removeCallbacks(this);

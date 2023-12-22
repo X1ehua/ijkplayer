@@ -382,8 +382,8 @@ public class VideoView extends RelativeLayout {
                 .setBrightnessController()
                 .setVideoParentRatio(IRenderView.AR_16_9_FIT_PARENT)
                 .setVideoRatio(IRenderView.AR_16_9_FIT_PARENT)
-                // .setPortrait(true)
-                // .setOnlyFullScreen(true)
+                //.setPortrait(true)
+                //.setOnlyFullScreen(true)
                 .setKeepScreenOn(true)
                 .setNetWorkTypeTie(true)
                 .setNetWorkListener(new PlayerController.OnNetWorkListener() {

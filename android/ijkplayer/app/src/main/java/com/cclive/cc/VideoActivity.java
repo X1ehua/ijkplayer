@@ -545,7 +545,7 @@ public class VideoActivity extends BaseActivity implements IMediaPlayer.OnRecord
                         }
                     }
                 })
-                .setAutoControlListener(llBottom) // 触摸以下控件可以取消自动隐藏布局的线程
+                .setAutoControlListener(llBottom) // 触摸以下控件可以取消 "自动隐藏播放工具条" 的线程
                 .setOnConfigurationChangedListener(new PlayerController.OnConfigurationChangedListener() {
                     @Override
                     public void onChanged(int requestedOrientation) {
