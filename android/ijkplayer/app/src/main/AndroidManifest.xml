@@ -20,6 +20,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
+        android:largeHeap="true"
         tools:targetApi="m">
         <!-- # 主界面换成 VideoActivity
         <activity android:name=".MainActivity">

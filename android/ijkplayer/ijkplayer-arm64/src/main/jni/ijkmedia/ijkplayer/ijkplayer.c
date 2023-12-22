@@ -982,10 +982,16 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *buff_YV12, int width, int he
 }
 #endif
 
-int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *pict_frames_buff, int buff_size)
+long get_microsec_timestamp();
+
+int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_size)
 {
-    assert(ffp && ffp->is);
-    RecordCache *rc = &ffp->is->record_cache;
+    assert(mp && mp->ffplayer && mp->ffplayer->is);
+    pthread_mutex_lock(&mp->mutex);
+    //int ret = ffp_copy_YV12_data(mp->ffplayer, pict_frames_buff, buff_size);
+
+    long t0 = get_microsec_timestamp();
+    RecordCache *rc = &mp->ffplayer->is->record_cache;
     int size      = av_fifo_size(rc->pict_fifo);
     int sizeY     = rc->width * rc->height;
     int frame_num = size / sizeof(PictFrame);
@@ -995,28 +1001,27 @@ int ffp_copy_YV12_data(FFPlayer *ffp, Uint8 *pict_frames_buff, int buff_size)
         return -1;
     }
 
+    PictFrame *pict_frames = (PictFrame *)malloc(size);
+    av_fifo_generic_peek(rc->pict_fifo, pict_frames, size, NULL);
+
+    pthread_mutex_unlock(&mp->mutex); // 下面的 for loop 比较耗时，所以尽早 unlock
+
+    ALOGW(">> %s(): time cost %.2fms", __FUNCTION__, (get_microsec_timestamp() - t0)/1000.0f);
+
     for (int i=0; i<frame_num; ++i) {
-        PictFrame pict_frame;
-        av_fifo_generic_read(rc->pict_fifo, &pict_frame, sizeof(PictFrame), NULL);
-        memcpy(pict_frames_buff, pict_frame.dataY, sizeY);
+        PictFrame *pict_frame = &pict_frames[i];
+        *((int32_t *)pict_frames_buff) = pict_frame->pts;
+        pict_frames_buff += 4;
+        memcpy(pict_frames_buff, pict_frame->dataY, sizeY);
         Uint8 *ptrUV = pict_frames_buff + sizeY;
         for (int j = 0; j < sizeY / 4; ++j) {
-            *ptrUV++ = *pict_frame.dataV++; // YV12 的格式：YYYYYYYY...UVUV...
-            *ptrUV++ = *pict_frame.dataU++;
+            *ptrUV++ = *pict_frame->dataU++; // YV12 的格式：YYYYYYYY...UVUV...
+            *ptrUV++ = *pict_frame->dataV++;
         }
         pict_frames_buff += sizeY + sizeY / 2;
     }
 
     return total;
-}
-
-int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_size)
-{
-    assert(mp);
-    pthread_mutex_lock(&mp->mutex);
-    int ret = ffp_copy_YV12_data(mp->ffplayer, pict_frames_buff, buff_size);
-    pthread_mutex_unlock(&mp->mutex);
-    return ret;
 }
 
 int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
@@ -1035,7 +1040,7 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
         size = -1;
         goto end;
     }
-    av_fifo_generic_read(rc->samp_fifo, buff_sample, size, NULL);
+    av_fifo_generic_peek(rc->samp_fifo, buff_sample, size, NULL);
 
 end:
     pthread_mutex_unlock(&rc->mutex);

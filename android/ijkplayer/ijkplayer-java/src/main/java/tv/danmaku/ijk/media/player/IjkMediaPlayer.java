@@ -1325,7 +1325,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
 
     private void initAVRecordCache() {
         int sampFrameSize = SAMP_FRAME_SIZE + 4;
-        int pictFrameSize = mVideoWidth * mVideoHeight * 3 / 2;
+        int pictFrameSize = mVideoWidth * mVideoHeight * 3 / 2 + 4;
         int vFPS = 24; // TODO: read from AVStream
         int aFPS = 96; // TODO: dynamic calculate?
         mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 5);
