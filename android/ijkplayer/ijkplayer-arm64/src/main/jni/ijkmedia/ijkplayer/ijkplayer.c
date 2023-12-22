@@ -995,7 +995,7 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
     int size      = av_fifo_size(rc->pict_fifo);
     int sizeY     = rc->width * rc->height;
     int frame_num = size / sizeof(PictFrame);
-    int total     = frame_num * sizeY * 3/2;
+    int total     = frame_num * (sizeY * 3/2 + 4);
     if (total > buff_size) {
         ALOGE(">> pict_frames_buff length not enough: %d < %d", buff_size, total);
         return -1;
@@ -1006,12 +1006,17 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
 
     pthread_mutex_unlock(&mp->mutex); // 下面的 for loop 比较耗时，所以尽早 unlock
 
-    ALOGW(">> %s(): time cost %.2fms", __FUNCTION__, (get_microsec_timestamp() - t0)/1000.0f);
+    long t1 = get_microsec_timestamp();
+    ALOGW(">> %s(): time cost #101 %.3fms", __FUNCTION__, (t1 - t0)/1000.0f);
 
+    char pts_str[4096] = {0};
     for (int i=0; i<frame_num; ++i) {
         PictFrame *pict_frame = &pict_frames[i];
+        char buff[80] = {0};
+        sprintf(buff, "%d,", pict_frame->pts);
+        strcat(pts_str, buff);
         *((int32_t *)pict_frames_buff) = pict_frame->pts;
-        pict_frames_buff += 4;
+        pict_frames_buff += 4; // sizeof(int32_t)
         memcpy(pict_frames_buff, pict_frame->dataY, sizeY);
         Uint8 *ptrUV = pict_frames_buff + sizeY;
         for (int j = 0; j < sizeY / 4; ++j) {
@@ -1020,7 +1025,10 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
         }
         pict_frames_buff += sizeY + sizeY / 2;
     }
+    free(pict_frames);
+    ALOGE("%lu:%d:%s", strlen(pts_str), frame_num, pts_str);
 
+    ALOGW(">> %s(): time cost #102 %.3fms", __FUNCTION__, (get_microsec_timestamp() - t1)/1000.0f);
     return total;
 }
 

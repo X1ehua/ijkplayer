@@ -203,22 +203,22 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
         int frameSize = avCache.getPictFrameSize();
         int frameNum = avCache.getPictDataSize() / frameSize;
-        Log.i(TAG, ">> frameSize " + frameSize + ", frameNum " + frameNum);
-        StringBuilder sb = new StringBuilder(">> video pts: ");
+        int frameMod = avCache.getPictDataSize() % frameSize;
+        String msg = String.format(">> video frameNum %d/%d, pts: ", frameNum, frameMod);
+        StringBuilder sb = new StringBuilder(msg);
 
         byte[] dataYUV = new byte[frameSize - 4];
         for (int i = 0, offset = 0; i < frameNum; ++i, offset += frameSize) {
             // TODO: java 能否定义一个 ByteBuffer 之类的，直接指向 avCache.pictArray() + offset 的位置
             int pts = pictArr[offset]   & 0xff        | (pictArr[offset+1] & 0xff) << 8 |
                      (pictArr[offset+2] & 0xff) << 16 | (pictArr[offset+3] & 0xff) << 24;
-            System.arraycopy(avCache.pictArray(), offset, dataYUV, 0, frameSize - 4);
+
+            sb.append(pts);
+            sb.append(',');
+
             pts -= mAVPtsOrigin;
             mEndPts = pts;
-            if (i < 10) {
-                Log.i(TAG, i + ">> vPts: " + (pts/1000));
-            }
-            sb.append(pts);
-            sb.append(' ');
+            System.arraycopy(avCache.pictArray(), offset, dataYUV, 0, frameSize - 4);
 
             int inputBufferIndex;
             //long pts = 0; // video 与 audio 共用 mAVPts 以保持音画同步
@@ -233,20 +233,28 @@ public class MediaCodecEncodeMuxer implements Runnable {
             }
 
             drainEncoder(kVideo, false);
+            //if (i < 50) Log.i(TAG, ">> drainEncoder(kVideo) " + i);
+
+            try {
+                /* video FPS 远不及 audio，所以需要通过 sleep 来避免 video enc & mux 过快导致的 FPS 异常 */
+                Thread.sleep(10); // TODO: 当需要输出 120 FPS 的 mp4 时，这里需要作出调整
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         Log.i(TAG, sb.toString());
         long t2 = System.nanoTime();
 
         if (VERBOSE) {
-            @SuppressLint("DefaultLocale") String msg = String.format(">> doVideoFrame#%d: dt %d %d += %d",
+            @SuppressLint("DefaultLocale") String log = String.format(">> doVideoFrame#%d: dt %d %d += %d",
                     vfc, (t1-t0)/1000000, (t2-t1)/1000000, (t2-t0)/1000000);
-            Log.w(TAG, msg);
+            Log.w(TAG, log);
         }
     }
 
     int vfc = 0; // debug
     int afc = 0;
-    int tbc = 0; // total buff-count
     long lastPts = 0;
 
     int max_buffSize = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
@@ -276,7 +284,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
         int offset = 0;
         int frameNum = dataSize/(SAMP_FRAME_SIZE + 4);
-        StringBuilder sb = new StringBuilder(">> audio pts: ");
+        StringBuilder sb = new StringBuilder(">> audio frameNum " + frameNum + ", pts: ");
 
         // for (int i = 0; i < dataSize / SAMP_FRAME_SIZE; i++) {
         for (int i = 0; i < frameNum; i++, offset += (SAMP_FRAME_SIZE + 4) ) {
@@ -290,14 +298,12 @@ public class MediaCodecEncodeMuxer implements Runnable {
             //        (sampBuff[offset+6] & 0xff) << 16 | (sampBuff[offset+7] & 0xff) << 24;
             if (i > (int)(frameNum*0.8)) {
                 sb.append(pts);
-                sb.append(' ');
+                sb.append(',');
             }
-
-            tbc++;
-            //byte[] dataAudio = sAudioSampleQueue.take(); // c 代码中通过 jni 往 java 侧 offer 的方式
-
             pts -= mAVPtsOrigin;
             mEndPts = pts;
+
+            //byte[] dataAudio = sAudioSampleQueue.take(); // c 代码中通过 jni 往 java 侧 offer 的方式
 
             int inputBufferIndex;
             if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
@@ -310,6 +316,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
             // 将 encoder 编码产出的 encodedData 取出，交由 muxer 写至 out file
             drainEncoder(kAudio, false);
+            //if (i % 100 < 30) Log.d(TAG, ">> drainEncoder(kAudio) " + i);
         }
         Log.i(TAG, sb.toString());
     }
