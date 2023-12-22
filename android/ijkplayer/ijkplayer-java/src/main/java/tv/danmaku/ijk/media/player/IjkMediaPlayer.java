@@ -168,15 +168,15 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     private boolean mScreenOnWhilePlaying;
     private boolean mStayAwake;
 
-    private int mVideoWidth;
-    private int mVideoHeight;
+    private static int sVideoWidth;
+    private static int sVideoHeight;
     private int mVideoSarNum;
     private int mVideoSarDen;
 
     private String mDataSource;
     private String mRecordFolderPath = null;
 
-    private MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
+    private static MediaCodecEncodeMuxer mMediaCodecEncodeMuxer;
 //  private byte[] mYV12Data = null; // 实时的单帧 YUV
 
     private final static int SNAPSHOT_JPEG_QUALITY = 90;
@@ -228,6 +228,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
      */
     public IjkMediaPlayer() {
         this(sLocalLibLoader);
+        sThis = this;
     }
 
     /**
@@ -237,7 +238,10 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
      */
     public IjkMediaPlayer(IjkLibLoader libLoader) {
         initPlayer(libLoader);
+        sThis = this;
     }
+
+    private static IjkMediaPlayer sThis;
 
     private void initPlayer(IjkLibLoader libLoader) {
         loadLibrariesOnce(libLoader);
@@ -662,12 +666,12 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
 
     @Override
     public int getVideoWidth() {
-        return mVideoWidth;
+        return sVideoWidth;
     }
 
     @Override
     public int getVideoHeight() {
-        return mVideoHeight;
+        return sVideoHeight;
     }
 
     @Override
@@ -725,8 +729,8 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         // make sure none of the listeners get called anymore
         mEventHandler.removeCallbacksAndMessages(null);
 
-        mVideoWidth = 0;
-        mVideoHeight = 0;
+        sVideoWidth = 0;
+        sVideoHeight = 0;
     }
 
     private native void _reset();
@@ -1021,16 +1025,17 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
                 return;
 
             case MEDIA_SET_VIDEO_SIZE:
-                player.mVideoWidth = msg.arg1;
-                player.mVideoHeight = msg.arg2;
+                player.sVideoWidth = msg.arg1;
+                player.sVideoHeight = msg.arg2;
                 Log.i(TAG, ">> set video size: " + msg.arg1 + " x " + msg.arg2);
                 player.notifyOnVideoSizeChanged(msg.arg1, msg.arg2, player.mVideoSarNum, player.mVideoSarDen);
+                startRecorder();
                 return;
 
             case MEDIA_SET_VIDEO_SAR:
                 player.mVideoSarNum = msg.arg1;
                 player.mVideoSarDen = msg.arg2;
-                player.notifyOnVideoSizeChanged(player.mVideoWidth, player.mVideoHeight, msg.arg1, msg.arg2);
+                player.notifyOnVideoSizeChanged(player.sVideoWidth, player.sVideoHeight, msg.arg1, msg.arg2);
                 return;
 
             case MEDIA_ERROR:
@@ -1303,14 +1308,15 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
             }
         }
 
-        String mainFilename = mRecordFolderPath + new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date());
-        return mainFilename + ".mp4";
+        String filename = new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date()) + ".mp4";
+        filename = "t2.mp4";
+        return mRecordFolderPath + filename;
     }
 
     /*
     @Override // IEncodeDataProvider
     public byte[] getYuvData() {
-        // if (mYV12Data == null) mYV12Data = new byte[mVideoWidth * mVideoHeight * 3 / 2];
+        // if (mYV12Data == null) mYV12Data = new byte[sVideoWidth * sVideoHeight * 3 / 2];
         // int ret = native_copyYV12Data(mYV12Data, buffSize);
         // return ret < 0 ? null : mYV12Data;
     }
@@ -1325,7 +1331,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
 
     private void initAVRecordCache() {
         int sampFrameSize = SAMP_FRAME_SIZE + 4;
-        int pictFrameSize = mVideoWidth * mVideoHeight * 3 / 2 + 4;
+        int pictFrameSize = sVideoWidth * sVideoHeight * 3 / 2 + 4;
         int vFPS = 24; // TODO: read from AVStream
         int aFPS = 96; // TODO: dynamic calculate?
         mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 5);
@@ -1371,17 +1377,23 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         Log.w(TAG, sbt.toString());
     }
 
-    public void startRecord(int seconds, boolean snapshot) {
+    private static void startRecorder() {
+        // 初始化 MediaCodecEncoderMuxer(encoders & muxer)，在收到 “开始录制” 的指令时，直接开录
+        if (mMediaCodecEncodeMuxer == null) {
+            mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(sThis, sVideoWidth, sVideoHeight);
+            mMediaCodecEncodeMuxer.prepareEncoders();
+        }
+    }
+
+    public void startRecord(OnRecordListener listener, int seconds, boolean snapshot) {
         String recordFilePath = getRecordFilePath();
 
         Log.w(TAG, ">> startRecord(" + recordFilePath + ")");
-        // int[] videoResolution = native_getResolution();
-        mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, mVideoWidth, mVideoHeight);
-        mMediaCodecEncodeMuxer.startThread();
+        mMediaCodecEncodeMuxer.startRecord(listener, recordFilePath);
 
-//        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-//        executor.schedule(this::stopRecord, seconds, TimeUnit.SECONDS);
-//        executor.shutdown();
+        //ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        //executor.schedule(this::stopRecord, seconds, TimeUnit.SECONDS);
+        //executor.shutdown();
 
         if (snapshot) {
             snapshot(recordFilePath.replaceFirst(".mp4", ".jpg"));
@@ -1407,7 +1419,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     public void doSnapshot(String path) {
         long t0 = System.currentTimeMillis();
 
-        Bitmap bitmap = Bitmap.createBitmap(mVideoWidth, mVideoHeight, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(sVideoWidth, sVideoHeight, Bitmap.Config.ARGB_8888);
         int ret = native_snapshot(bitmap);
         if (ret != 0) {
             Log.e(TAG, ">> native_snapshot() failed, ret " + ret);

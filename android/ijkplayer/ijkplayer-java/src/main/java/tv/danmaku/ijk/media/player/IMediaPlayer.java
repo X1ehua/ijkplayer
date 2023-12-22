@@ -179,6 +179,11 @@ public interface IMediaPlayer {
         void onTimedText(IMediaPlayer mp, IjkTimedText text);
     }
 
+    interface OnRecordListener {
+        void onFinished();
+        void onProgress(float percentage); // percentage: 0.0f ~ 100.0f
+    }
+
     /*--------------------
      * Optional
      */
@@ -214,7 +219,7 @@ public interface IMediaPlayer {
     void setDataSource(IMediaDataSource mediaDataSource);
 
     // for video recording
-    void startRecord(int seconds, boolean snapshot);
+    void startRecord(OnRecordListener listener, int seconds, boolean snapshot);
 
     void stopRecord();
 

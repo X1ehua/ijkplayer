@@ -28,13 +28,13 @@ public class MediaCodecEncodeMuxer implements Runnable {
     private final int mHeight;
     private final int mBitRate;
 
-    private MediaMuxer mMuxer;
-    private boolean    mMuxerStarted;
+    private MediaMuxer mMuxer = null;
+    private boolean    mMuxerStarted = false;
 
     private final static int kVideo = 0;
     private final static int kAudio = 1;
 
-    private final int[]                   mAVTrackIndices = new int[2];
+    private final int[]                   mAVTrackIndices = new int[] { -1, -1 };
     private final MediaCodec[]            mAVEncoders     = new MediaCodec[2];
     private final MediaCodec.BufferInfo[] mAVBufferInfos  = new MediaCodec.BufferInfo[2];
     private final IEncodeDataProvider     mEncodeDataProvider;
@@ -45,9 +45,6 @@ public class MediaCodecEncodeMuxer implements Runnable {
 //  private long mFrameIndex     = 0; // video 与 audio 共用 pts 以保持音画同步
 //  private long mAudioStartTime = -1;
     private int mEndPts = 0;
-
-    private static final String OUTPUT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath()
-                                            + "/DCIM/cc/t2.mp4";
 
     public MediaCodecEncodeMuxer(IEncodeDataProvider provider, int width, int height) {
         mEncodeDataProvider = provider;
@@ -84,26 +81,28 @@ public class MediaCodecEncodeMuxer implements Runnable {
         mAVEncoders[kAudio] = MediaCodec.createEncoderByType("audio/mp4a-latm"); // MediaCodec.MIMETYPE_AUDIO_AAC
         mAVEncoders[kVideo].configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         mAVEncoders[kAudio].configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-        mAVEncoders[kVideo].start();
-        mAVEncoders[kAudio].start();
 
-        try {
-            mMuxer = new MediaMuxer(OUTPUT_PATH, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        }
-        catch (FileNotFoundException e) {
-            Log.w(TAG, e.toString());
-            throw new RuntimeException("new MediaMuxer() failed");
-        }
-
-        mAVTrackIndices[kVideo] = -1;
-        mAVTrackIndices[kAudio] = -1;
-        mMuxerStarted = false;
+        mEncodersPrepared = true;
     }
 
-    public void startThread() {
-        Thread thread = new Thread(this);
-        thread.setName("EncodeMuxer");
-        thread.start();
+    private boolean mEncodersPrepared = false;
+    private String mOutputPath = null;
+
+    public void prepareEncoders() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    long t0 = System.nanoTime();
+                    prepareEncoder(); // 耗时较长，放在主线程会导致阻塞/卡顿
+                    Log.i(TAG, ">> prepareEncoder() cost " + (System.nanoTime()-t0)/1000000 + "ms");
+                }
+                catch(Exception e) {
+                    Log.e(TAG, ">> prepareEncoder() failed:");
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     public void stopThread() {
@@ -111,20 +110,40 @@ public class MediaCodecEncodeMuxer implements Runnable {
         Log.w(TAG, ">> stopThread()");
     }
 
+    public void startRecord(IMediaPlayer.OnRecordListener listener, String outputPath) {
+        if (sRecordingStarted) {
+            Log.e(TAG, ">> recording in progress !");
+            return;
+        }
+
+        mRecordListener = listener;
+        mAVEncoders[kVideo].start();
+        mAVEncoders[kAudio].start();
+
+        assert mMuxer == null;
+        mOutputPath = outputPath;
+        Thread thread = new Thread(this);
+        thread.setName("EncMuxer");
+        thread.start();
+    }
+
+    private static boolean sRecordingStarted = false;
+
     @Override //@SuppressWarnings("deprecation")
     public void run() {
         try {
             long t0 = System.nanoTime();
-            prepareEncoder(); // 耗时较长，放在主线程会导致阻塞/卡顿
-            Log.d(TAG, ">> prepareEncoder() time cost: " + (System.nanoTime()-t0)/1000000 + "ms");
+            mMuxer = new MediaMuxer(mOutputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            // cost ~19ms on HUAWEI P30, so we put it in thread
+            Log.e(TAG, ">> new MediaMuxer() cost " + (System.nanoTime()-t0)/1000000 + "ms");
+            sRecordingStarted = true;
         }
-        catch(Exception e) {
-            Log.e(TAG, ">> prepareEncoder() failed:");
-            e.printStackTrace();
-            return;
+        catch (IOException e) {
+            Log.w(TAG, e.toString());
+            throw new RuntimeException("new MediaMuxer() failed"); // TODO: toast ?
         }
 
-        sThreadRunning = true;
+        //sThreadRunning = true;
         long startTime = System.nanoTime();
 
         final boolean[] videoThreadRunning = {true};
@@ -133,10 +152,13 @@ public class MediaCodecEncodeMuxer implements Runnable {
         Thread videoThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                /*
                 while (sThreadRunning) {
                     doVideoFrame();
-                    sThreadRunning = false; // 读取 cache
+                    sThreadRunning = false;
                 }
+                */
+                videoEncodeAndMux();
                 videoThreadRunning[0] = false;
             }
         });
@@ -146,44 +168,45 @@ public class MediaCodecEncodeMuxer implements Runnable {
         Thread audioThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                /*
                 while (sThreadRunning) {
-                    try {
-                        doAudioFrame();
-                        sThreadRunning = false; // 读取 cache
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    doAudioFrame();
+                    sThreadRunning = false; // 读取 cache
                 }
+                */
+                audioEncodeAndMux();
                 audioThreadRunning[0] = false;
             }
         });
         audioThread.setName("AudioEncoder");
         audioThread.start();
 
-        do {
+        /* 等待上面的 videoThread & audioThread 都结束，再走到后面 drainEncoder() 写入 EOS */
+        // while (audioThreadRunning[0]);
+        // while (videoThreadRunning[0]);
+        while (videoThreadRunning[0] || audioThreadRunning[0]) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(20);
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        while (videoThreadRunning[0] || audioThreadRunning[0]);
-        // while (audioThreadRunning[0]);
-        // while (videoThreadRunning[0]);
-        /* ⬆️ 确保 videoThread & audioThread 均已结束后，再写入 EOS: */
 
-        try {
-            drainEncoder(kVideo, true);
-            drainEncoder(kAudio, true);
-        }
-        catch (Exception e) {
-            Log.w(TAG, ">> drainEncoder(true) failed: " + e.toString());
-        }
+        drainEncoder(kVideo, true);
+        drainEncoder(kAudio, true);
 
-        releaseEncoder();
+        for (MediaCodec encoder : mAVEncoders) {
+            encoder.stop();
+        }
+        //mMuxer.stop();
+        mMuxer.release();
+        mMuxer = null;
+        //releaseEncoder();
+
         float dt = (System.nanoTime()-startTime)/1000000000.0f;
-        Log.i(TAG, String.format(">> releaseEncoder(), duration %.2fs, cost %.2fs", mEndPts/1000000.0f, dt));
+        Log.w(TAG, String.format(">> record done, duration %.2fs, cost %.2fs", mEndPts/1000000.0f, dt));
+        /*
         try {
             Thread.sleep(1000);
             throw new RuntimeException("exit");
@@ -191,9 +214,16 @@ public class MediaCodecEncodeMuxer implements Runnable {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
+        */
 
-    private void doVideoFrame() {
+        sRecordingStarted = false;
+        if (mRecordListener != null) {
+            mRecordListener.onFinished();
+        }
+    }
+    private IMediaPlayer.OnRecordListener mRecordListener;
+
+    private void videoEncodeAndMux() {
         vfc++;
         long t0 = System.nanoTime();
         AVRecordCache avCache = mEncodeDataProvider.getAVCache(IEncodeDataProvider.AVCacheType.kVideoCache);
@@ -261,7 +291,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     byte[] sampBuff = new byte[max_buffSize];
     int mAVPtsOrigin = -1;
 
-    private void doAudioFrame() throws InterruptedException {
+    private void audioEncodeAndMux() { //throws InterruptedException {
         afc++;
 
         long t0 = System.nanoTime();

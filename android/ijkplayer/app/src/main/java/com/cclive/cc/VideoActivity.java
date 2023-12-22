@@ -59,7 +59,7 @@ import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedDuratio
 import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedSize;
 import static org.dync.ijkplayerlib.widget.util.PlayerController.formatedSpeed;
 
-public class VideoActivity extends BaseActivity {
+public class VideoActivity extends BaseActivity implements IMediaPlayer.OnRecordListener {
     private static final String TAG = "ijkJava";
     private String mVideoPath;
     private Uri mVideoUri;
@@ -261,6 +261,25 @@ public class VideoActivity extends BaseActivity {
         ImageLoader.getInstance().init(config.build());
     }
 
+    @Override
+    public void onFinished() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mBtnStartRecord != null) {
+                    mBtnStartRecord.setEnabled(true);
+                }
+            }
+        });
+    }
+
+    private View mBtnStartRecord = null;
+
+    @Override
+    public void onProgress(float percentage) {
+        // TODO: 将 recording progress percentage 在某个 UI 元素上体现出来
+    }
+
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
@@ -278,7 +297,11 @@ public class VideoActivity extends BaseActivity {
                 break;
             case R.id.btn_start_record:
                 //mPlayerController.toggleAspectRatio();
-                mPlayerController.startRecord(3, false);
+                mPlayerController.startRecord(this, 3, false);
+                if (mBtnStartRecord == null) {
+                    mBtnStartRecord = findViewById(R.id.btn_start_record);
+                }
+                mBtnStartRecord.setEnabled(false);
                 break;
             case R.id.btn_snapshot:
                 mPlayerController.snapshot(null);

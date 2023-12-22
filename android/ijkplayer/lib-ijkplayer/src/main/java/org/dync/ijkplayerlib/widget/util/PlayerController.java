@@ -338,21 +338,20 @@ public class PlayerController {
                 int position = (int) ((duration * progress * 1.0) / 1000);
                 newPosition = position;
                 String time = generateTime(position);
-                //                Log.d(TAG, "onProgressChanged: time= " + time + ", progress= " + progress);
+                //Log.d(TAG, "onProgressChanged: time= " + time + ", progress= " + progress);
                 if (maxPlaytime != -1 && maxPlaytime + 1000 < position) {
-                    //                    Log.d(TAG, "onProgressChanged: -------------");
+                    //Log.d(TAG, "onProgressChanged: -------------");
                     isMaxTime = true;
-                    long pos = seekBarMaxProgress * maxPlaytime / duration;
+                    long pos = (long) seekBarMaxProgress * maxPlaytime / duration;
                     seekBar.setProgress((int) pos);
                     mHandler.sendEmptyMessage(MESSAGE_SHOW_PROGRESS);
                 } else {
                     isMaxTime = false;
                 }
             }
-
         }
 
-        /**开始拖动*/
+        /** 开始拖动 */
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
             if (getDuration() < 1) {
@@ -365,7 +364,7 @@ public class PlayerController {
             }
         }
 
-        /**停止拖动*/
+        /** 停止拖动 */
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             if (getDuration() < 1) {
@@ -374,8 +373,8 @@ public class PlayerController {
             if (mVideoView != null) {
                 long duration = getDuration();
                 newPosition = (long) ((duration * seekBar.getProgress() * 1.0) / seekBarMaxProgress);
-                //                mVideoView.seekTo((int) ((duration * seekBar.getProgress() * 1.0) / 1000));
-                //                mHandler.removeMessages(MESSAGE_SHOW_PROGRESS);
+                //mVideoView.seekTo((int) ((duration * seekBar.getProgress() * 1.0) / 1000));
+                //mHandler.removeMessages(MESSAGE_SHOW_PROGRESS);
             }
             isDragging = false;
             if (!isMaxTime && newPosition >= 0) {
@@ -389,19 +388,19 @@ public class PlayerController {
         }
     };
 
-    /**
-     * 切换播放器
-     *
-     * @param playerType
-     * @return
-     */
     public PlayerController switchPlayer(int playerType) {
         mVideoView.switchPlayer(playerType);
         return this;
     }
 
-    public void startRecord(int seconds, boolean snapshot) {
-        mVideoView.getMediaPlayer().startRecord(seconds, snapshot);
+    public void startRecord(IMediaPlayer.OnRecordListener listener, int seconds, boolean snapshot) {
+        IMediaPlayer player = mVideoView.getMediaPlayer();
+        if (player != null) {
+            player.startRecord(listener, seconds, snapshot);
+        }
+        else {
+            Log.e(TAG, "mVideoView.getMediaPlayer() got null, startRecord() failed");
+        }
     }
 
     public void stopRecord() {
@@ -412,9 +411,7 @@ public class PlayerController {
         mVideoView.getMediaPlayer().snapshot(path);
     }
 
-    /**
-     * 百分比显示切换
-     */
+    /** 百分比显示切换 */
     public PlayerController toggleAspectRatio() {
         if (mVideoView != null) {
             mVideoView.toggleAspectRatio();
@@ -449,23 +446,15 @@ public class PlayerController {
             ROTATION_180,
             ROTATION_270};
     private int mCurrentRotationIndex = 0;
-    private int mCurrentRotation = rotations[0];
 
     public PlayerController toggleVideoRotation() {
         mCurrentRotationIndex++;
         mCurrentRotationIndex %= rotations.length;
 
-        mCurrentRotation = rotations[mCurrentRotationIndex];
-        setPlayerRotation(mCurrentRotation);
+        setPlayerRotation(rotations[mCurrentRotationIndex]);
         return this;
     }
 
-    /**
-     * 旋转指定角度
-     *
-     * @param rotation 参数可以设置 {@link #rotations}里面的值
-     * @return
-     */
     public PlayerController setPlayerRotation(int rotation) {
 
         if (mVideoView != null) {
