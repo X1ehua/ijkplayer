@@ -1024,7 +1024,6 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
                 player.sVideoHeight = msg.arg2;
                 Log.i(TAG, ">> set video size: " + msg.arg1 + " x " + msg.arg2);
                 player.notifyOnVideoSizeChanged(msg.arg1, msg.arg2, player.mVideoSarNum, player.mVideoSarDen);
-                startRecorder();
                 return;
 
             case MEDIA_SET_VIDEO_SAR:
@@ -1305,8 +1304,11 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
 
         String filename = new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date()) + ".mp4";
         //filename = "t2.mp4";
+        filename = fileId + ".mp4";
+        fileId++;
         return mRecordFolderPath + filename;
     }
+    int fileId = 1;
 
     /*
     @Override // IEncodeDataProvider
@@ -1329,7 +1331,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         int pictFrameSize = sVideoWidth * sVideoHeight * 3 / 2 + 4;
         int vFPS = 24; // TODO: read from AVStream
         int aFPS = 96; // TODO: dynamic calculate?
-        mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 5);
+        mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 3);
     }
 
     @Override
@@ -1376,18 +1378,13 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         Log.w(TAG, sbt.toString());
     }
 
-    private static void startRecorder() {
-        // 初始化 MediaCodecEncoderMuxer(encoders & muxer)，在收到 “开始录制” 的指令时，直接开录
-        if (mMediaCodecEncodeMuxer == null) {
-            mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(sThis, sVideoWidth, sVideoHeight);
-            mMediaCodecEncodeMuxer.prepareEncoders();
-        }
-    }
-
     public void startRecord(OnRecordListener listener, int seconds, boolean snapshot) {
         String recordFilePath = getRecordFilePath();
 
         Log.w(TAG, ">> startRecord(" + recordFilePath + ")");
+        if (mMediaCodecEncodeMuxer == null) {
+            mMediaCodecEncodeMuxer = new MediaCodecEncodeMuxer(this, sVideoWidth, sVideoHeight);
+        }
         mMediaCodecEncodeMuxer.startRecord(listener, recordFilePath);
 
         //ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();

@@ -49,7 +49,7 @@ void cache_pict_frame(VideoState *is, const AVFrame *frame, float fps)
     int space = av_fifo_space(rc->pict_fifo);
     if (space < sizeof(PictFrame) * 10) {
         av_fifo_grow(rc->pict_fifo, sizeof(PictFrame) * 10);
-        ALOGI(">> av_fifo_grow(pict_fifo, %d)", (int)sizeof(PictFrame) * 10);
+        ALOGI(">> av_fifo_grow(pict_fifo, PictFrame * %d)", 10);
     }
 
     int sizeY = frame->width * frame->height;
@@ -101,7 +101,7 @@ void cache_samp_frame(VideoState *is, const Uint8 *buffer, int buffer_size)
     RecordCache *rc = &is->record_cache;
     long now_microsec = get_microsec_timestamp();
     if (!rc->samp_fifo) { // 初始化 audio 部分
-        rc->max_duration = 1000000 * 5; // 5 秒的值待由 initRecordCache() 传入
+        rc->max_duration = 1000000 * 3; // 5 秒的值待由 initRecordCache() 传入
         rc->bottom_pts = 0;
         rc->origin_pts = now_microsec;  // audio FPS 比 video 高很多，所以这些共用属性我们放在 audio 的部分初始化
 
@@ -125,7 +125,7 @@ void cache_samp_frame(VideoState *is, const Uint8 *buffer, int buffer_size)
     int space = av_fifo_space(rc->samp_fifo);
     if (space < sizeof(SampFrame) * 10) {
         av_fifo_grow(rc->samp_fifo, sizeof(SampFrame) * 10);
-        ALOGI(">> av_fifo_grow(samp_fifo, %d)", (int)sizeof(SampFrame) * 10);
+        ALOGI(">> av_fifo_grow(samp_fifo, SampFrame * %d)", 10);
     }
 
     memcpy(samp_frame.samp_data, buffer, buffer_size); // TODO: buffer_size(2048) 必须等于 SAMP_BUFF_SIZE

@@ -1010,12 +1010,12 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
     long t1 = get_microsec_timestamp();
     ALOGW(">> %s(): time cost #101 %.3fms", __FUNCTION__, (t1 - t0)/1000.0f);
 
-    char pts_str[4096] = {0};
+    //char pts_str[4096] = {0};
     for (int i=0; i<frame_num; ++i) {
         PictFrame *pict_frame = &pict_frames[i];
-        char buff[80] = {0};
-        sprintf(buff, "%d,", pict_frame->pts);
-        strcat(pts_str, buff);
+        // char buff[80] = {0};
+        // sprintf(buff, "%d,", pict_frame->pts);
+        // strcat(pts_str, buff);
         *((int32_t *)pict_frames_buff) = pict_frame->pts;
         pict_frames_buff += 4; // sizeof(int32_t)
         memcpy(pict_frames_buff, pict_frame->dataY, sizeY);
@@ -1027,7 +1027,7 @@ int ijkmp_copy_YV12_data(IjkMediaPlayer *mp, Uint8 *pict_frames_buff, int buff_s
         pict_frames_buff += sizeY + sizeY / 2;
     }
     free(pict_frames);
-    ALOGE("%lu:%d:%s", strlen(pts_str), frame_num, pts_str);
+    // ALOGE("%lu:%d:%s", strlen(pts_str), frame_num, pts_str);
 
     ALOGW(">> %s(): time cost #102 %.3fms", __FUNCTION__, (get_microsec_timestamp() - t1)/1000.0f);
     return total;
@@ -1044,12 +1044,14 @@ int ijkmp_copy_audio_data(IjkMediaPlayer *mp, Uint8 *buff_sample, int length)
         goto end;
 
     size = av_fifo_size(rc->samp_fifo);
-    if (length < size) {
-        ALOGE("buff_sample.length %d < record_cache.samp_fifo.size %d", length, size);
-        size = -1;
-        goto end;
+    if (size <= length) {
+        av_fifo_generic_peek(rc->samp_fifo, buff_sample, size, NULL);
     }
-    av_fifo_generic_peek(rc->samp_fifo, buff_sample, size, NULL);
+    else if (size > length) {
+        ALOGE(">> buff_sample.length %d < record_cache.samp_fifo.size %d", length, size);
+        av_fifo_generic_peek_at(rc->samp_fifo, buff_sample, size - length, length, NULL);
+        size = length;
+    }
 
 end:
     pthread_mutex_unlock(&rc->mutex);
