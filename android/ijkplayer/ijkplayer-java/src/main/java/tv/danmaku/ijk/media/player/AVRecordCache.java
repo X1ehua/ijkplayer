@@ -30,9 +30,15 @@ public final class AVRecordCache {
         mPictFrameSize   = pictFrameSize;
     }
 
+    public void reset() {
+        mSampDataSize = 0;
+        mPictDataSize = 0;
+    }
+
     public int getPictFrameSize() {
         return mPictFrameSize;
     }
+
     public byte[] sampArray() {
         return mSampByteArr;
     }

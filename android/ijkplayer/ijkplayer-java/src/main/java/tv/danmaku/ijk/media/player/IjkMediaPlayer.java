@@ -66,11 +66,6 @@ import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 import tv.danmaku.ijk.media.player.misc.IjkTrackInfo;
 import tv.danmaku.ijk.media.player.pragma.DebugLog;
 
-/**
- * @author bbcallen
- *
- *         Java wrapper of ffplay.
- */
 public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncodeDataProvider {
     private final static String TAG = "ijkJava";
 
@@ -1309,7 +1304,7 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         }
 
         String filename = new SimpleDateFormat("MMdd-HHmmss", Locale.US).format(new Date()) + ".mp4";
-        filename = "t2.mp4";
+        //filename = "t2.mp4";
         return mRecordFolderPath + filename;
     }
 
@@ -1337,8 +1332,13 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
         mAVCache = new AVRecordCache(sampFrameSize, pictFrameSize, aFPS, vFPS, 5);
     }
 
+    @Override
+    public AVRecordCache getAVCache() {
+        return mAVCache;
+    }
+
     @Override // IEncodeDataProvider
-    public AVRecordCache getAVCache(AVCacheType type) {
+    public void updateCache(AVCacheType type) {
         if (mAVCache == null) {
             initAVRecordCache();
         }
@@ -1350,7 +1350,6 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
             int copiedSize = native_copyAudioData(mAVCache.sampArray(), mAVCache.getSampBuffSize());
             mAVCache.setSampDataSize(copiedSize);
         }
-        return mAVCache;
     }
     //int copiedSize_sum = 0;
 
@@ -1401,8 +1400,9 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer implements IEncode
     }
 
     public void stopRecord() {
-        if (mMediaCodecEncodeMuxer != null)
-            mMediaCodecEncodeMuxer.stopThread();
+        //if (mMediaCodecEncodeMuxer != null)
+        //    mMediaCodecEncodeMuxer.stopThread();
+        throw new RuntimeException(">> Deprecated stopRecord()! Don't call it.");
     }
 
     public void snapshot(final String path) {

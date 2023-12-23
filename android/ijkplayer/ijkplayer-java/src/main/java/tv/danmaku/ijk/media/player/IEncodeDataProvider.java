@@ -5,5 +5,6 @@ public interface IEncodeDataProvider {
         kAudioCache,
         kVideoCache
     };
-    AVRecordCache getAVCache(AVCacheType type);
+    void updateCache(AVCacheType type);
+    AVRecordCache getAVCache();
 }
