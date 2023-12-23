@@ -37,7 +37,9 @@ void cache_pict_frame(VideoState *is, const AVFrame *frame, float fps)
         logged = true;
     }
 
-    if (pict_frame.pts - rc->bottom_pts >= rc->max_duration) {
+    int space = av_fifo_space(rc->pict_fifo);
+    // if (pict_frame.pts - rc->bottom_pts >= rc->max_duration) {
+    if (space < sizeof(PictFrame)) {
         PictFrame drain_pict_frame;
         av_fifo_generic_read(rc->pict_fifo, &drain_pict_frame, sizeof(PictFrame), NULL);
         rc->bottom_pts = drain_pict_frame.pts;
@@ -46,11 +48,12 @@ void cache_pict_frame(VideoState *is, const AVFrame *frame, float fps)
         free(drain_pict_frame.dataV);
     }
 
-    int space = av_fifo_space(rc->pict_fifo);
-    if (space < sizeof(PictFrame) * 10) {
-        av_fifo_grow(rc->pict_fifo, sizeof(PictFrame) * 10);
-        ALOGI(">> av_fifo_grow(pict_fifo, PictFrame * %d)", 10);
-    }
+    // int space = av_fifo_space(rc->pict_fifo);
+    // const int add = 10;
+    // if (space < sizeof(PictFrame) * add) {
+    //     av_fifo_grow(rc->pict_fifo, sizeof(PictFrame) * add);
+    //     ALOGI(">> av_fifo_grow(PictFrame * %d), space:%d PictFrame * %d ", add, space, space/sizeof(PictFrame));
+    // }
 
     int sizeY = frame->width * frame->height;
     pict_frame.dataY = (Uint8 *)malloc(sizeY);
@@ -116,17 +119,20 @@ void cache_samp_frame(VideoState *is, const Uint8 *buffer, int buffer_size)
     //     ALOGD("%d %d", bc, (int)samp_frame.pts);
     // }
 
-    if (samp_frame.pts - rc->bottom_pts >= rc->max_duration) {
+    int space = av_fifo_space(rc->samp_fifo);
+    // if (samp_frame.pts - rc->bottom_pts >= rc->max_duration) {
+    if (space < sizeof(SampFrame)) {
         SampFrame drain_samp_frame;
         av_fifo_generic_read(rc->samp_fifo, &drain_samp_frame, sizeof(SampFrame), NULL);
         rc->bottom_pts = drain_samp_frame.pts;
     }
 
-    int space = av_fifo_space(rc->samp_fifo);
-    if (space < sizeof(SampFrame) * 10) {
-        av_fifo_grow(rc->samp_fifo, sizeof(SampFrame) * 10);
-        ALOGI(">> av_fifo_grow(samp_fifo, SampFrame * %d)", 10);
-    }
+    // int space = av_fifo_space(rc->samp_fifo);
+    // const int add = 10;
+    // if (space < sizeof(SampFrame) * add) {
+    //     av_fifo_grow(rc->samp_fifo, sizeof(SampFrame) * add);
+    //     ALOGI(">> av_fifo_grow(SampFrame * %d), space:%d SampFrame * %d ", add, space, space/sizeof(SampFrame));
+    // }
 
     memcpy(samp_frame.samp_data, buffer, buffer_size); // TODO: buffer_size(2048) 必须等于 SAMP_BUFF_SIZE
     av_fifo_generic_write(rc->samp_fifo, &samp_frame, sizeof(SampFrame), NULL);

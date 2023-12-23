@@ -7,6 +7,7 @@ import static tv.danmaku.ijk.media.player.IEncodeDataProvider.AVCacheType;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -48,7 +49,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
 //  private long mFrameIndex     = 0; // video 与 audio 共用 pts 以保持音画同步
 //  private long mAudioStartTime = -1;
-    private int mEndPts = 0;
+    private int mLastPts = 0;
 
     public MediaCodecEncodeMuxer(IEncodeDataProvider provider, int width, int height) {
         mEncodeDataProvider = provider;
@@ -58,7 +59,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
     }
 
     @SuppressWarnings("deprecation") // 此处必须使用 COLOR_FormatYUV420SemiPlanar
-    private void prepareEncoder() throws IOException {
+    private void prepareEncodersAndMuxer() throws IOException {
         long t0 = System.nanoTime();
         mAVBufferInfos[kVideo] = new MediaCodec.BufferInfo();
         mAVBufferInfos[kAudio] = new MediaCodec.BufferInfo();
@@ -102,12 +103,12 @@ public class MediaCodecEncodeMuxer implements Runnable {
         mMuxer = new MediaMuxer(mOutputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4); // 2~8ms
         long t9 = System.nanoTime();
 
-        String msg = String.format(">> prepare dt: 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d += %d",
+        String msg = String.format(">> prepareEncodersAndMuxer() time cost: 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d += %dms",
                 (t1-t0)/1000000, (t2-t1)/1000000, (t3-t2)/1000000,
                 (t4-t3)/1000000, (t5-t4)/1000000, (t6-t5)/1000000,
                 (t7-t6)/1000000, (t8-t7)/1000000, (t9-t8)/1000000,
                 (t8-t0)/1000000);
-        Log.e(TAG, msg);
+        Log.d(TAG, msg);
     }
 
     private String mOutputPath = null;
@@ -130,7 +131,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
         mAVTrackIndices[kAudio] = -1;
         mAVTrackIndices[kVideo] = -1;
         mAVPtsOrigin = -1;
-        writeCounter[0] = writeCounter[1] = 0;
+        writeCounter[0] = writeCounter[1] = 0; // debug
 
         Thread thread = new Thread(this);
         thread.setName("EncMuxer");
@@ -148,7 +149,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
 
         /* 第2点. 初始化 encoders & muxer，比较耗时，所以放在 fetch audio & video data 之后 */
         try {
-            prepareEncoder();
+            prepareEncodersAndMuxer();
         }
         catch (IOException e) {
             Log.w(TAG, e.toString());
@@ -172,7 +173,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
                     sThreadRunning = false;
                 }
                 */
-                videoEncodeAndMux();
+                videoEncodeAndWrite();
                 videoThreadRunning[0] = false;
             }
         });
@@ -188,7 +189,7 @@ public class MediaCodecEncodeMuxer implements Runnable {
                     sThreadRunning = false; // 读取 cache
                 }
                 */
-                audioEncodeAndMux();
+                audioEncodeAndWrite();
                 audioThreadRunning[0] = false;
             }
         });
@@ -212,25 +213,15 @@ public class MediaCodecEncodeMuxer implements Runnable {
         mEncodeDataProvider.getAVCache().reset();
         releaseEncodersAndMuxer();
 
-        float dt = (System.nanoTime()-startTime)/1000000000.0f;
-        Log.w(TAG, String.format(">> record done, duration %.2fs, cost %.2fs", mEndPts/1000000.0f, dt));
-        /*
-        try {
-            Thread.sleep(1000);
-            throw new RuntimeException("exit");
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        */
+        float dt = (System.nanoTime() - startTime) / 1000000000.0f;
+        Log.e(TAG, String.format(">> record done, last pts %.2fs, cost %.2fs", mLastPts/1000000.0f, dt));
 
         sRecordingStarted = false;
-        if (mRecordListener != null) {
+        if (mRecordListener != null)
             mRecordListener.onFinished();
-        }
     }
 
-    private void videoEncodeAndMux() {
+    private void videoEncodeAndWrite() {
         AVRecordCache avCache = mEncodeDataProvider.getAVCache();
         byte[]        pictArr = avCache.pictArray();
 
@@ -238,21 +229,19 @@ public class MediaCodecEncodeMuxer implements Runnable {
         int frameNum  = avCache.getPictDataSize() / frameSize;
         int frameMod  = avCache.getPictDataSize() % frameSize;
         String msg = String.format(">> video frameNum %d/%d, pts: ", frameNum, frameMod);
-        StringBuilder sb = new StringBuilder(msg);
+        //StringBuilder sb = new StringBuilder(msg);
 
+        int pts = 0;
         byte[] dataYUV = new byte[frameSize - 4];
         for (int i = 0, offset = 0; i < frameNum; ++i, offset += frameSize) {
             // TODO: java 能否定义一个 ByteBuffer 之类的，直接指向 avCache.pictArray() + offset 的位置
-            int pts = pictArr[offset]   & 0xff        | (pictArr[offset+1] & 0xff) << 8 |
-                     (pictArr[offset+2] & 0xff) << 16 | (pictArr[offset+3] & 0xff) << 24;
+            pts = pictArr[offset]   & 0xff        | (pictArr[offset+1] & 0xff) << 8 |
+                 (pictArr[offset+2] & 0xff) << 16 | (pictArr[offset+3] & 0xff) << 24;
+            //sb.append(pts); sb.append(','); // debug
             if (mAVPtsOrigin == -1)
                 mAVPtsOrigin = pts;
-
-            sb.append(pts);
-            sb.append(',');
-
             pts -= mAVPtsOrigin;
-            mEndPts = pts;
+
             System.arraycopy(avCache.pictArray(), offset, dataYUV, 0, frameSize - 4);
 
             int inputBufferIndex;
@@ -278,16 +267,16 @@ public class MediaCodecEncodeMuxer implements Runnable {
                 e.printStackTrace();
             }
         }
+        mLastPts = pts;
         //Log.i(TAG, sb.toString());
+        Log.i(TAG, ">> video last pts: " + new DecimalFormat("#.000").format(pts/1000000.0f));
     }
 
-    long lastPts = 0;
-
-    int max_buffSize = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 5); // 1.5倍
+    int max_buffSize = (SAMP_FRAME_SIZE + 4) * (96*3/2 * 3); // 1.5倍
     byte[] sampBuff = new byte[max_buffSize];
     int mAVPtsOrigin = -1;
 
-    private void audioEncodeAndMux() {
+    private void audioEncodeAndWrite() {
         AVRecordCache avCache  = mEncodeDataProvider.getAVCache();
         byte[]        sampBuff = avCache.sampArray();
         int           dataSize = avCache.getSampDataSize();
@@ -305,18 +294,14 @@ public class MediaCodecEncodeMuxer implements Runnable {
         int frameNum = dataSize/(SAMP_FRAME_SIZE + 4);
         StringBuilder sb = new StringBuilder(">> audio frameNum " + frameNum + ", pts: ");
 
+        int pts = 0;
         for (int i = 0; i < frameNum; i++, offset += (SAMP_FRAME_SIZE + 4) ) {
-            int pts = sampBuff[offset]   & 0xff        | (sampBuff[offset+1] & 0xff) << 8 |
-                     (sampBuff[offset+2] & 0xff) << 16 | (sampBuff[offset+3] & 0xff) << 24;
+            pts = sampBuff[offset]   & 0xff        | (sampBuff[offset+1] & 0xff) << 8 |
+                 (sampBuff[offset+2] & 0xff) << 16 | (sampBuff[offset+3] & 0xff) << 24;
+            //if (i > (int)(frameNum*0.8)) { sb.append(pts); sb.append(','); } // debug
             if (mAVPtsOrigin == -1)
                 mAVPtsOrigin = pts;
-
-            if (i > (int)(frameNum*0.8)) {
-                sb.append(pts);
-                sb.append(',');
-            }
             pts -= mAVPtsOrigin;
-            mEndPts = pts;
 
             int inputBufferIndex;
             if ((inputBufferIndex = mAVEncoders[kAudio].dequeueInputBuffer(DEQUEUE_TIMEOUT_US)) >= 0) {
@@ -332,6 +317,8 @@ public class MediaCodecEncodeMuxer implements Runnable {
             //if (i % 100 < 30) Log.d(TAG, ">> drainEncoder(kAudio) " + i);
         }
         //Log.i(TAG, sb.toString());
+        mLastPts = pts;
+        Log.d(TAG, ">> audio last pts: " + new DecimalFormat("#.000").format(pts/1000000.0f));
     }
 
     int writtenSize = 0; // debug
@@ -457,7 +444,6 @@ public class MediaCodecEncodeMuxer implements Runnable {
             mMuxer.release();
             mMuxer = null;
             mMuxerStarted = false;
-            Log.e(TAG, ">>> mMuxerStarted = false in releaseAll()");
         }
     }
 }
